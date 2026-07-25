@@ -7,6 +7,7 @@ import com.yuka.ailearningserver.ai.dto.ExplainRequest;
 import com.yuka.ailearningserver.ai.dto.FlashcardGenerationRequest;
 import com.yuka.ailearningserver.ai.dto.FlashcardsWire;
 import com.yuka.ailearningserver.ai.dto.GenerationResponse;
+import com.yuka.ailearningserver.ai.dto.NoteAction;
 import com.yuka.ailearningserver.ai.dto.NoteActionRequest;
 import com.yuka.ailearningserver.ai.dto.QuizRequest;
 import com.yuka.ailearningserver.ai.dto.QuizResponse;
@@ -22,20 +23,25 @@ import com.yuka.ailearningserver.ai.provider.AiProvider;
 import com.yuka.ailearningserver.ai.provider.ChatRequest;
 import com.yuka.ailearningserver.ai.provider.ChatStreamListener;
 import com.yuka.ailearningserver.ai.provider.ChatTurn;
+import com.yuka.ailearningserver.ai.stream.RelayCallback;
+import com.yuka.ailearningserver.ai.stream.SseRelay;
 import com.yuka.ailearningserver.common.exception.BusinessException;
 import com.yuka.ailearningserver.flashcard.FlashcardService;
 import com.yuka.ailearningserver.flashcard.dto.CreateCardRequest;
 import com.yuka.ailearningserver.flashcard.dto.DeckResponse;
 import org.springframework.stereotype.Service;
+import org.springframework.web.servlet.mvc.method.annotation.SseEmitter;
 import tools.jackson.databind.ObjectMapper;
 
 import java.util.List;
 
 /**
  * Every non-chat AI use-case: explain/summary/suggestions/quiz/flashcards/
- * study-plan/notes-actions/analytics narratives. Each call is one-shot —
- * {@link AiProvider#chat} is synchronous, so no SSE plumbing is needed here
- * (that's {@code AiConversationService}'s job for the live chat case).
+ * study-plan/notes-actions/analytics narratives. Almost every call is one-shot —
+ * {@link AiProvider#chat} is synchronous, so no SSE plumbing is needed for those.
+ * The single exception is {@link #streamNoteAction}, which the Notes selection
+ * toolbar consumes token by token; it borrows the same {@link SseRelay}
+ * {@code AiConversationService} uses rather than introducing a second one.
  */
 @Service
 public class AiGenerationService {
@@ -45,15 +51,17 @@ public class AiGenerationService {
     private final PromptBuilder promptBuilder;
     private final FlashcardService flashcardService;
     private final ObjectMapper objectMapper;
+    private final SseRelay sseRelay;
 
     public AiGenerationService(AiProvider aiProvider, LearningContextService learningContextService,
                                PromptBuilder promptBuilder, FlashcardService flashcardService,
-                               ObjectMapper objectMapper) {
+                               ObjectMapper objectMapper, SseRelay sseRelay) {
         this.aiProvider = aiProvider;
         this.learningContextService = learningContextService;
         this.promptBuilder = promptBuilder;
         this.flashcardService = flashcardService;
         this.objectMapper = objectMapper;
+        this.sseRelay = sseRelay;
     }
 
     public GenerationResponse explain(Long userId, ExplainRequest request) {
@@ -89,7 +97,40 @@ public class AiGenerationService {
     }
 
     public GenerationResponse noteAction(Long userId, NoteActionRequest request) {
-        PromptTemplate template = switch (request.action()) {
+        String content = generateRaw(userId, templateFor(request.action()), noteActionHints(request), request.text());
+        return new GenerationResponse(content);
+    }
+
+    /**
+     * The streaming twin of {@link #noteAction} (Phase 16 Step 5), for the
+     * Notes selection toolbar: identical prompt, identical context, identical
+     * ungrounded semantics — only the transport differs. It reuses
+     * {@link SseRelay}, the same relay {@code AiConversationService} drives for
+     * live chat, so there is exactly one streaming path in the application.
+     * <p>
+     * Nothing is persisted: a note action is a proposal the user accepts or
+     * discards in the editor, so both relay callbacks are deliberate no-ops
+     * (unlike chat, where the assistant turn is written to the conversation).
+     */
+    public SseEmitter streamNoteAction(Long userId, NoteActionRequest request) {
+        LearningContext context = learningContextService.build(userId, noteActionHints(request));
+        List<ChatTurn> messages = promptBuilder.build(templateFor(request.action()), context, List.of(),
+                request.text());
+        return sseRelay.stream(new ChatRequest(messages), new RelayCallback() {
+            @Override
+            public void onFinished(String fullText, boolean cancelled) {
+                // Nothing to persist — the editor owns the result until accepted.
+            }
+
+            @Override
+            public void onFailed(String partialText, Throwable error) {
+                // SseRelay already emitted the error envelope and logged it.
+            }
+        });
+    }
+
+    private static PromptTemplate templateFor(NoteAction action) {
+        return switch (action) {
             case EXPLAIN -> PromptTemplate.EXPLAIN;
             case REWRITE -> PromptTemplate.NOTE_REWRITE;
             case CONTINUE -> PromptTemplate.NOTE_CONTINUE;
@@ -98,10 +139,11 @@ public class AiGenerationService {
             case TRANSLATE -> PromptTemplate.NOTE_TRANSLATE;
             case SUMMARIZE -> PromptTemplate.NOTE_SUMMARIZE;
         };
-        String content = generateRaw(userId, template,
-                new ContextHints(null, request.subjectName(), request.subjectDescription(), null, "选中文本", request.text()),
+    }
+
+    private static ContextHints noteActionHints(NoteActionRequest request) {
+        return new ContextHints(null, request.subjectName(), request.subjectDescription(), null, "选中文本",
                 request.text());
-        return new GenerationResponse(content);
     }
 
     public QuizResponse quiz(Long userId, QuizRequest request) {

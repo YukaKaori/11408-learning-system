@@ -1,6 +1,6 @@
 -- H2 (MySQL mode) schema for tests — Flyway is disabled on the test profile,
 -- so the tables exercised by the suite are mirrored here. Keep in sync with
--- db/migration/V1__create_user_tables.sql through V6.
+-- db/migration/V1__create_user_tables.sql through V7.
 
 DROP TABLE IF EXISTS users;
 CREATE TABLE users
@@ -144,6 +144,20 @@ CREATE TABLE review_logs
     created_at     DATETIME NOT NULL,
     updated_at     DATETIME NOT NULL,
     deleted        TINYINT  NOT NULL DEFAULT 0,
+    PRIMARY KEY (id)
+);
+
+DROP TABLE IF EXISTS note_links;
+CREATE TABLE note_links
+(
+    id             BIGINT       NOT NULL,
+    user_id        BIGINT       NOT NULL,
+    source_note_id BIGINT       NOT NULL,
+    target_note_id BIGINT       NULL,
+    target_title   VARCHAR(255) NOT NULL,
+    created_at     DATETIME     NOT NULL,
+    updated_at     DATETIME     NOT NULL,
+    deleted        TINYINT      NOT NULL DEFAULT 0,
     PRIMARY KEY (id)
 );
 

@@ -29,8 +29,23 @@ export interface UpdateNotePayload {
   subjectId?: string
 }
 
+/**
+ * Mirror of BacklinkResponse.java — a note that links to the one being viewed.
+ * Served from the derived `note_links` index (rebuilt server-side on save);
+ * the client never writes it.
+ */
+export interface BacklinkDto {
+  id: string
+  title: string
+  updatedAt: number
+}
+
 export function listNotes() {
   return api.get<NoteDto[]>('/v1/notes')
+}
+
+export function listBacklinks(id: string) {
+  return api.get<BacklinkDto[]>(`/v1/notes/${id}/backlinks`)
 }
 
 export function getNote(id: string) {

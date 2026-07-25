@@ -1,4 +1,5 @@
 import { api } from '@/api/http'
+import { streamTokens } from '@/api/sse'
 import type { FlashcardDeckDto } from './flashcard'
 
 /**
@@ -156,6 +157,22 @@ export function noteAiAction(payload: SubjectContext & { action: NoteAiAction; t
     ...payload,
     action: payload.action.toUpperCase(),
   })
+}
+
+/**
+ * Streaming twin of {@link noteAiAction} — same request body and the same
+ * ungrounded prompt server-side, delivered token by token. Backs the Notes
+ * selection toolbar (Phase 16 Step 5); abort by aborting `signal`.
+ */
+export function streamNoteAiAction(
+  payload: SubjectContext & { action: NoteAiAction; text: string },
+  signal?: AbortSignal,
+): AsyncGenerator<string, void, undefined> {
+  return streamTokens(
+    '/v1/ai/notes/actions/stream',
+    { ...payload, action: payload.action.toUpperCase() },
+    signal,
+  )
 }
 
 export function generateWeeklySummary(statsSnapshot: string) {

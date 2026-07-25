@@ -2,6 +2,7 @@ package com.yuka.ailearningserver.note;
 
 import com.yuka.ailearningserver.auth.security.AuthenticatedUser;
 import com.yuka.ailearningserver.common.api.ApiResponse;
+import com.yuka.ailearningserver.note.dto.BacklinkResponse;
 import com.yuka.ailearningserver.note.dto.CreateNoteRequest;
 import com.yuka.ailearningserver.note.dto.NoteResponse;
 import com.yuka.ailearningserver.note.dto.UpdateNoteRequest;
@@ -36,6 +37,12 @@ public class NoteController {
     @GetMapping("/{id}")
     public ApiResponse<NoteResponse> get(@AuthenticationPrincipal AuthenticatedUser principal, @PathVariable Long id) {
         return ApiResponse.success(noteService.get(principal.id(), id));
+    }
+
+    @GetMapping("/{id}/backlinks")
+    public ApiResponse<List<BacklinkResponse>> backlinks(@AuthenticationPrincipal AuthenticatedUser principal,
+                                                         @PathVariable Long id) {
+        return ApiResponse.success(noteService.backlinks(principal.id(), id));
     }
 
     @PostMapping

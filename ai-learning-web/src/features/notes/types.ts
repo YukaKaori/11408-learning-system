@@ -14,23 +14,13 @@ export interface Note {
   updatedAt: number
 }
 
-export interface OutlineItem {
-  /** Heading depth 1–3. */
-  level: number
-  text: string
-}
-
-/** Extract h1–h3 headings from markdown for the outline rail. */
-export function outlineOf(note: { content: string }): OutlineItem[] {
-  const items: OutlineItem[] = []
-  for (const line of note.content.split('\n')) {
-    const match = /^(#{1,3})\s+(.+)$/.exec(line.trim())
-    if (match) items.push({ level: match[1]!.length, text: match[2]! })
-  }
-  return items
-}
-
-/** First non-heading, non-empty line — the list-row preview. */
+/**
+ * First non-heading, non-empty line — the list-row preview.
+ *
+ * (The outline is no longer derived here: since Phase 16 Step 4 it comes from
+ * the editor's ProseMirror document — see `editor/useNoteOutline.ts` — which
+ * gives each heading a position to jump to and ignores `#` inside code blocks.)
+ */
 export function excerptOf(note: { content: string }): string {
   for (const line of note.content.split('\n')) {
     const text = line.trim()
