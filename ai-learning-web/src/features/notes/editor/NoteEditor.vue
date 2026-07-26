@@ -1,5 +1,6 @@
 <script setup lang="ts">
 import { computed, ref, watch } from 'vue'
+import { useI18n } from 'vue-i18n'
 import { EditorContent, useEditor } from '@tiptap/vue-3'
 import { getEditorMarkdown, noteEditorExtensions } from './extensions'
 import { insertWikiLinkAt } from './WikiLinkNode'
@@ -23,6 +24,9 @@ import { buildTitleIndex, matchLinkTargets, normalizeWikiTitle, type LinkTarget 
  * resolved/dangling is a decoration, `[[` opens a solid autocomplete, and
  * following a link is emitted upward (`navigate`) — this component never routes
  * or creates notes itself.
+ *
+ * Step 6 adds the empty-note placeholder — a decoration, not content, so a
+ * pristine note still serializes to the empty string.
  *
  * Undo/redo comes from StarterKit's history (Cmd/Ctrl+Z, Shift for redo) and
  * markdown shortcuts (`# `, `- `, `**b**`, ``` ``` ```, …) from its input rules.
@@ -50,6 +54,8 @@ const emit = defineEmits<{
   /** The inline AI action created a deck and the user wants to see it. */
   'view-flashcards': []
 }>()
+
+const { t } = useI18n()
 
 // --- Wiki-link resolution ------------------------------------------------
 // Mirrors the server's index: normalized title → note id, latest-updated wins.
@@ -130,9 +136,12 @@ function onSuggestionKeyDown(event: KeyboardEvent): boolean {
 
 // --- Editor --------------------------------------------------------------
 
+const placeholderText = computed(() => t('notes.contentPlaceholder'))
+
 const editor = useEditor({
   extensions: noteEditorExtensions({
     wikiLink: { isResolved, onNavigate: (title) => emit('navigate', title) },
+    placeholder: () => placeholderText.value,
     suggestion: {
       onUpdate: (state) => {
         suggestion.value = state
@@ -170,15 +179,25 @@ watch(
   (value) => editor.value?.setEditable(value),
 )
 
-// Link decorations are a function of the *note list*, which can change without
-// the document changing (a note renamed, created or deleted elsewhere). An
-// empty transaction re-runs the decoration pass without touching the doc or
-// history — nothing else in the pipeline reacts to a no-op transaction.
-watch(titleIndex, () => {
+/**
+ * Re-run the decoration pass without touching the document or the history.
+ * Nothing else in the pipeline reacts to a no-op transaction, so this is the
+ * cheapest way to redraw decorations whose *inputs* changed while the doc
+ * didn't.
+ */
+function redecorate() {
   const instance = editor.value
   if (!instance) return
   instance.view.dispatch(instance.state.tr.setMeta('addToHistory', false))
-})
+}
+
+// Link decorations are a function of the *note list*, which can change without
+// the document changing (a note renamed, created or deleted elsewhere).
+watch(titleIndex, redecorate)
+
+// The placeholder decoration caches nothing, but it is only recomputed on a
+// transaction — so a locale switch needs one.
+watch(placeholderText, redecorate)
 
 // Keep the highlighted row inside the list as it shrinks while typing.
 watch(rows, (list) => {
@@ -323,6 +342,19 @@ defineExpose({ editor })
 
 .note-editor :deep(.ProseMirror-selectednode) {
   outline: var(--border-width-md) solid var(--color-primary-soft);
+}
+
+/* --- Empty note --------------------------------------------------------- */
+/* Floated with zero height so the prompt sits on the first line without
+   displacing the caret, and is not selectable or copyable. */
+.note-editor :deep(.ProseMirror .is-empty::before) {
+  content: attr(data-placeholder);
+  float: left;
+  height: 0;
+  pointer-events: none;
+  /* The invitation to write is the only thing on a blank canvas — it uses the
+     secondary ramp so it is actually readable, not the tertiary one. */
+  color: var(--color-text-secondary);
 }
 
 /* --- Wiki links -------------------------------------------------------- */

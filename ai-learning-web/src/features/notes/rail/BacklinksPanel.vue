@@ -1,9 +1,9 @@
 <script setup lang="ts">
-import { watch } from 'vue'
+import { computed, watch } from 'vue'
 import { useI18n } from 'vue-i18n'
-import { AppButton, AppSkeleton } from '@/components'
 import { listBacklinks } from '@/api/modules/note'
 import { useAsync } from '@/composables/useAsync'
+import RailSection from './RailSection.vue'
 
 /**
  * The context rail's Backlinks section (Phase 16 Step 4): every note that links
@@ -13,6 +13,9 @@ import { useAsync } from '@/composables/useAsync'
  * never computes the graph client-side, so a link made from a note that isn't
  * currently loaded still shows up, and dangling links resolved by title (the
  * backend's fallback) appear without any extra round trip.
+ *
+ * Step 6 moved its view-state rendering onto {@link RailSection} so it matches
+ * every other section in the rail.
  */
 const props = defineProps<{
   noteId: string | null
@@ -32,64 +35,44 @@ watch(
   () => [props.noteId, props.noteTitle],
   () => void reload(),
 )
+
+const backlinks = computed(() => data.value ?? [])
 </script>
 
 <template>
-  <section class="backlinks">
-    <h3 class="rail-title">{{ t('notes.backlinks') }}</h3>
-    <AppSkeleton v-if="loading" :lines="2" />
-    <div v-else-if="error" class="rail-error">
-      <p class="rail-empty">{{ t(error.messageKey) }}</p>
-      <AppButton size="sm" variant="ghost" @click="reload">{{ t('common.retry') }}</AppButton>
-    </div>
-    <p v-else-if="!data || data.length === 0" class="rail-empty">{{ t('notes.backlinksEmpty') }}</p>
-    <ul v-else class="backlink-list">
-      <li v-for="note in data" :key="note.id">
+  <RailSection
+    :title="t('notes.backlinks')"
+    :loading="loading"
+    :error="error ? t(error.messageKey) : null"
+    :empty="t('notes.backlinksEmpty')"
+    :is-empty="backlinks.length === 0"
+    @retry="reload"
+  >
+    <ul class="backlink-list">
+      <li v-for="note in backlinks" :key="note.id">
         <button type="button" class="backlink-item" @click="emit('select', note.id)">
           <span class="backlink-title">{{ note.title }}</span>
           <span class="backlink-date">{{ d(note.updatedAt, 'short') }}</span>
         </button>
       </li>
     </ul>
-  </section>
+  </RailSection>
 </template>
 
 <style scoped>
-.rail-title {
-  margin: 0 0 var(--space-3);
-  font-size: var(--text-xs);
-  font-weight: 600;
-  letter-spacing: var(--tracking-wide);
-  text-transform: uppercase;
-  color: var(--color-text-tertiary);
-}
-
-.rail-empty {
-  margin: 0;
-  font-size: var(--text-xs);
-  color: var(--color-text-tertiary);
-}
-
-.rail-error {
-  display: flex;
-  flex-direction: column;
-  align-items: flex-start;
-  gap: var(--space-2);
-}
-
 .backlink-list {
   margin: 0;
   padding: 0;
   list-style: none;
   display: flex;
   flex-direction: column;
-  gap: var(--space-1);
+  gap: var(--space-0-5);
 }
 
 .backlink-item {
   display: flex;
   flex-direction: column;
-  gap: 2px;
+  gap: var(--space-0-5);
   width: 100%;
   padding: var(--space-2);
   border: none;

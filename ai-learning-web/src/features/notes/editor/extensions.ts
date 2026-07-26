@@ -2,6 +2,8 @@ import type { Editor } from '@tiptap/core'
 import StarterKit from '@tiptap/starter-kit'
 import type { Extensions } from '@tiptap/vue-3'
 import { Markdown, type MarkdownStorage } from 'tiptap-markdown'
+import { MarkdownSoftBreak } from './markdownSoftBreak'
+import { NotePlaceholder } from './placeholder'
 import { WikiLink, type WikiLinkOptions } from './WikiLinkNode'
 import { WikiLinkSuggestion, type WikiLinkSuggestionOptions } from './wikiLinkSuggestion'
 
@@ -10,6 +12,11 @@ export interface NoteEditorSchemaOptions {
   wikiLink?: Partial<WikiLinkOptions>
   /** `[[` autocomplete wiring; omitted where there is no popup to drive. */
   suggestion?: WikiLinkSuggestionOptions
+  /**
+   * Empty-document prompt, read as a getter so it follows the active locale.
+   * Omitted where there is no reader (tests, serialization).
+   */
+  placeholder?: () => string
 }
 
 /**
@@ -24,10 +31,13 @@ export interface NoteEditorSchemaOptions {
  * horizontal rule — plus the custom `[[wiki-link]]` inline node (Step 4) and
  * undo/redo history.
  *
+ * Step 6 adds the empty-note placeholder — hand-rolled (`./placeholder`), so it
+ * still costs no dependency.
+ *
  * Deferred within the phase (need extensions Step 0 did not install, so adding
  * them is a separate, deliberate step — not smuggled in here): task lists
- * (checkboxes), external image render, and the placeholder extension. Markdown
- * remains the persistence format; TipTap is only the editing view over it.
+ * (checkboxes) and external image render. Markdown remains the persistence
+ * format; TipTap is only the editing view over it.
  */
 export function noteEditorExtensions(options: NoteEditorSchemaOptions = {}): Extensions {
   const extensions: Extensions = [
@@ -39,6 +49,10 @@ export function noteEditorExtensions(options: NoteEditorSchemaOptions = {}): Ext
       underline: false,
     }),
     WikiLink.configure(options.wikiLink),
+    // Repairs soft breaks the markdown parser would otherwise delete. Always
+    // on: it is a correctness fix for the persistence path, not a feature, so
+    // it must apply everywhere the schema does — including the round-trip tests.
+    MarkdownSoftBreak,
     Markdown.configure({
       // Closed schema: never parse or emit raw HTML — markdown in, markdown out.
       html: false,
@@ -50,6 +64,10 @@ export function noteEditorExtensions(options: NoteEditorSchemaOptions = {}): Ext
       transformCopiedText: true,
     }),
   ]
+
+  if (options.placeholder) {
+    extensions.push(NotePlaceholder.configure({ text: options.placeholder }))
+  }
 
   if (options.suggestion) {
     extensions.push(WikiLinkSuggestion(options.suggestion))

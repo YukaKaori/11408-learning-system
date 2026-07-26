@@ -15,6 +15,14 @@ const props = withDefaults(
     clearable?: boolean
     iconLeft?: IconName
     label?: string
+    /**
+     * Accessible name for the control itself, for fields whose meaning is
+     * carried by their surroundings rather than a visible `label` (a document
+     * title that *is* the heading, a bare search box). Bound to the `<input>`,
+     * not the wrapper — a bare `aria-label` attribute would land on the root
+     * element and name nothing.
+     */
+    ariaLabel?: string
     errorMessage?: string
     autocomplete?: string
   }>(),
@@ -27,10 +35,25 @@ const props = withDefaults(
     clearable: false,
     iconLeft: undefined,
     label: undefined,
+    ariaLabel: undefined,
     errorMessage: undefined,
     autocomplete: undefined,
   },
 )
+
+/**
+ * Focus events are **declared**, not left to attribute fallthrough.
+ *
+ * `blur` and `focus` do not bubble, so an undeclared `@blur` on this component
+ * would be attached to the wrapper `<div>` and never fire — the listener looks
+ * wired at the call site and silently does nothing. (Phase 16's note-title
+ * save was lost exactly this way.) Declaring them re-emits from the `<input>`
+ * itself, which is the element that actually focuses.
+ */
+const emit = defineEmits<{
+  blur: [event: FocusEvent]
+  focus: [event: FocusEvent]
+}>()
 
 const model = defineModel<string | number>({ default: '' })
 
@@ -64,8 +87,11 @@ function clear() {
         :placeholder="placeholder"
         :disabled="disabled"
         :autocomplete="autocomplete"
+        :aria-label="ariaLabel"
         :aria-invalid="invalid || undefined"
         :aria-describedby="errorMessage ? errorId : undefined"
+        @blur="emit('blur', $event)"
+        @focus="emit('focus', $event)"
       />
       <button
         v-if="type === 'password'"

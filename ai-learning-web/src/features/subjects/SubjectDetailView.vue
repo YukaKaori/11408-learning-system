@@ -17,7 +17,7 @@ import {
 import { useAsync } from '@/composables/useAsync'
 import { useDuration } from '@/composables/useDuration'
 import { useSubjectsStore } from '@/stores/subjects'
-import { excerptOf } from '@/features/notes/types'
+import { excerptOf } from '@/features/notes/excerpt'
 import { listNotes } from '@/api/modules/note'
 import {
   createMaterial,

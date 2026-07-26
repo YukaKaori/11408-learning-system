@@ -278,12 +278,32 @@ const enUS: typeof zhCN = {
     pin: 'Pin note',
     unpin: 'Unpin note',
     deleteNote: 'Delete note',
+    noteTitle: 'Note title',
+    backToList: 'Notes',
     empty: 'No notes yet',
+    searchEmpty: 'No notes match your search',
     noSelection: 'Select a note to start reading',
+    state: {
+      emptyTitle: 'Start your knowledge base',
+      emptyBody:
+        'Your first note is the starting point. Connect ideas with [[wiki links]], and select any text to bring in AI.',
+      unselectedBody: 'Pick a note from the list, or write a new one.',
+      errorBody: 'Your notes could not be loaded just now. Try again in a moment.',
+    },
     outline: 'Outline',
     outlineEmpty: 'This note has no headings',
     backlinks: 'Backlinks',
     backlinksEmpty: 'No notes link here yet',
+    rail: {
+      label: 'Note context',
+      planned: 'Planned',
+      related: 'Related notes',
+      relatedNote:
+        'Once semantic retrieval ships, notes from your corpus that relate to this one will appear here.',
+      cards: 'Cards from this note',
+      cardsNote:
+        'Flashcards generated from this note will be collected here, with their review progress.',
+    },
     linkSuggest: {
       label: 'Link a note',
       empty: 'No matching notes',
