@@ -1,6 +1,9 @@
 package com.yuka.ailearningserver.common;
 
 import java.time.DateTimeException;
+import java.time.Instant;
+import java.time.LocalDate;
+import java.time.LocalDateTime;
 import java.time.ZoneId;
 
 /**
@@ -30,5 +33,38 @@ public final class ClientZone {
             }
         }
         return ZoneId.systemDefault();
+    }
+
+    /**
+     * The caller's "today" as a half-open instant range, expressed in the
+     * system-zone {@link LocalDateTime} space every datetime column stores.
+     *
+     * <p>This is the single definition of a day boundary. Review day-bucketing
+     * (the new-card cap, "reviewed today") and the workspace's today-sessions
+     * window both read it, so the same request can never disagree with itself
+     * about which day it is — the defect Phase 17 fixes in
+     * {@code WorkspaceService}, which previously bucketed on the server's
+     * {@code LocalDate.now()} while due counts bucketed on the client's.
+     *
+     * @param date  the caller's local date — carried so a response can report
+     *              which day it bucketed by without recomputing it (and
+     *              possibly landing on the other side of midnight)
+     * @param start start of the caller's today, inclusive
+     * @param end   start of the caller's tomorrow, exclusive
+     */
+    public record DayRange(LocalDate date, LocalDateTime start, LocalDateTime end) {
+    }
+
+    /** {@code [startOfToday, startOfTomorrow)} in {@code zone}. */
+    public static DayRange today(ZoneId zone) {
+        LocalDate today = LocalDate.now(zone);
+        return new DayRange(
+                today,
+                toSystemLocal(today.atStartOfDay(zone).toInstant()),
+                toSystemLocal(today.plusDays(1).atStartOfDay(zone).toInstant()));
+    }
+
+    private static LocalDateTime toSystemLocal(Instant instant) {
+        return LocalDateTime.ofInstant(instant, ZoneId.systemDefault());
     }
 }

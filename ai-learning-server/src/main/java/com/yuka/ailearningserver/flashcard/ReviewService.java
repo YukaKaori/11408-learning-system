@@ -1,6 +1,7 @@
 package com.yuka.ailearningserver.flashcard;
 
 import com.baomidou.mybatisplus.core.conditions.query.LambdaQueryWrapper;
+import com.yuka.ailearningserver.common.ClientZone;
 import com.yuka.ailearningserver.common.OwnershipGuard;
 import com.yuka.ailearningserver.config.AppProperties;
 import com.yuka.ailearningserver.flashcard.dto.GradeResponse;
@@ -22,7 +23,6 @@ import org.springframework.transaction.annotation.Transactional;
 
 import java.time.Duration;
 import java.time.Instant;
-import java.time.LocalDate;
 import java.time.LocalDateTime;
 import java.time.ZoneId;
 import java.util.List;
@@ -184,11 +184,11 @@ public class ReviewService {
 
     /** The current user's review truth for today, bucketed in the caller's timezone. */
     public ReviewSummaryResponse summary(Long userId, ZoneId zone) {
-        LocalDateTime[] range = todayRange(zone);
+        ClientZone.DayRange range = ClientZone.today(zone);
         List<ReviewLog> today = reviewLogMapper.selectList(new LambdaQueryWrapper<ReviewLog>()
                 .eq(ReviewLog::getUserId, userId)
-                .ge(ReviewLog::getReviewedAt, range[0])
-                .lt(ReviewLog::getReviewedAt, range[1]));
+                .ge(ReviewLog::getReviewedAt, range.start())
+                .lt(ReviewLog::getReviewedAt, range.end()));
 
         int again = 0, hard = 0, good = 0, easy = 0, introduced = 0;
         for (ReviewLog log : today) {
@@ -216,22 +216,13 @@ public class ReviewService {
     // --- daily new-card cap -------------------------------------------------
 
     private int remainingNewToday(Long userId, ZoneId zone) {
-        LocalDateTime[] range = todayRange(zone);
+        ClientZone.DayRange range = ClientZone.today(zone);
         long introduced = reviewLogMapper.selectCount(new LambdaQueryWrapper<ReviewLog>()
                 .eq(ReviewLog::getUserId, userId)
                 .isNull(ReviewLog::getElapsedDays)
-                .ge(ReviewLog::getReviewedAt, range[0])
-                .lt(ReviewLog::getReviewedAt, range[1]));
+                .ge(ReviewLog::getReviewedAt, range.start())
+                .lt(ReviewLog::getReviewedAt, range.end()));
         return Math.max(0, newCardsPerDay - (int) introduced);
-    }
-
-    /** [startOfToday, startOfTomorrow) in {@code zone}, expressed in the system-zone
-     *  {@code LocalDateTime} space the {@code reviewed_at} column stores. */
-    private static LocalDateTime[] todayRange(ZoneId zone) {
-        LocalDate today = LocalDate.now(zone);
-        Instant start = today.atStartOfDay(zone).toInstant();
-        Instant end = today.plusDays(1).atStartOfDay(zone).toInstant();
-        return new LocalDateTime[]{toLocalDateTime(start), toLocalDateTime(end)};
     }
 
     // --- entity <-> pure state ---------------------------------------------
