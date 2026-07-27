@@ -357,6 +357,18 @@ defineExpose({ editor })
   color: var(--color-text-secondary);
 }
 
+/* --- Images ------------------------------------------------------------- */
+/* An inline atom, so it sits in the text flow; `vertical-align: bottom` keeps a
+   large image from dragging the line box's baseline down. The width cap is the
+   load-bearing rule — an unconstrained external image would otherwise overflow
+   the editor column. */
+.note-editor :deep(.note-image) {
+  max-width: 100%;
+  height: auto;
+  vertical-align: bottom;
+  border-radius: var(--radius-md);
+}
+
 /* --- Wiki links -------------------------------------------------------- */
 .note-editor :deep(.wiki-link) {
   padding: 0.05em 0.25em;

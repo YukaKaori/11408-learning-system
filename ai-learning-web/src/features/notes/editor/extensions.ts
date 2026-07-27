@@ -2,6 +2,7 @@ import type { Editor } from '@tiptap/core'
 import StarterKit from '@tiptap/starter-kit'
 import type { Extensions } from '@tiptap/vue-3'
 import { Markdown, type MarkdownStorage } from 'tiptap-markdown'
+import { NoteImage } from './ImageNode'
 import { MarkdownSoftBreak } from './markdownSoftBreak'
 import { NotePlaceholder } from './placeholder'
 import { WikiLink, type WikiLinkOptions } from './WikiLinkNode'
@@ -28,16 +29,15 @@ export interface NoteEditorSchemaOptions {
  *
  * v1 schema: headings h1–h3, paragraph, bold / italic / inline-code /
  * strikethrough, link, bullet + ordered list, blockquote, fenced code block,
- * horizontal rule — plus the custom `[[wiki-link]]` inline node (Step 4) and
- * undo/redo history.
+ * horizontal rule — plus the custom `[[wiki-link]]` inline node (Step 4), the
+ * external `![image](…)` inline node (Phase 17 Step 1) and undo/redo history.
  *
  * Step 6 adds the empty-note placeholder — hand-rolled (`./placeholder`), so it
  * still costs no dependency.
  *
- * Deferred within the phase (need extensions Step 0 did not install, so adding
- * them is a separate, deliberate step — not smuggled in here): task lists
- * (checkboxes) and external image render. Markdown remains the persistence
- * format; TipTap is only the editing view over it.
+ * Still deferred (a separate, deliberate step — not smuggled in here): task
+ * lists (checkboxes). Markdown remains the persistence format; TipTap is only
+ * the editing view over it.
  */
 export function noteEditorExtensions(options: NoteEditorSchemaOptions = {}): Extensions {
   const extensions: Extensions = [
@@ -49,6 +49,11 @@ export function noteEditorExtensions(options: NoteEditorSchemaOptions = {}): Ext
       underline: false,
     }),
     WikiLink.configure(options.wikiLink),
+    // Closes the Phase 16 §4.1 data loss: without a node matching markdown-it's
+    // `<img>`, every `![alt](url)` was dropped on parse and the loss written
+    // back by autosave. Unconditional — it is a persistence-path correctness
+    // fix, so it must hold everywhere the schema does, tests included.
+    NoteImage,
     // Repairs soft breaks the markdown parser would otherwise delete. Always
     // on: it is a correctness fix for the persistence path, not a feature, so
     // it must apply everywhere the schema does — including the round-trip tests.
