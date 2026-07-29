@@ -64,15 +64,22 @@ half-step for tight UI (icon gaps, tag padding).
 
 Base scale `--radius-sm/md/lg/xl/full`, plus semantic aliases components actually
 consume: `--radius-button`, `--radius-input`, `--radius-card`, `--radius-dialog`,
-`--radius-panel`, `--radius-glass`. Change the alias, not the component, to retune a
-surface's roundedness.
+`--radius-panel`. Change the alias, not the component, to retune a surface's
+roundedness. (`--radius-glass` was defined here in Phase 3 and consumed by nobody
+for eight phases; Phase 17.2 deleted it. Concentric radii for the material are a
+later refinement — see `docs/liquid-material-system.md` § Roadmap.)
 
 ### Shadow
 
 `--shadow-sm/md/lg` for resting elevation, `--shadow-float` for popovers/dropdowns,
-`--shadow-glass` for translucent floating surfaces (dialog, drawer). Every shadow has
-a distinct dark-mode value — dark shadows use higher opacity black, not the same
-rgba as light mode.
+`--shadow-overlay` for the deepest step (dialog, drawer, floating panels). Every
+shadow has a distinct dark-mode value — dark shadows use higher opacity black, not
+the same rgba as light mode.
+
+> **Phase 17.2:** `--shadow-overlay` was named `--shadow-glass` until the material
+> consolidation. It is a plain elevation value that happened to carry "glass" in its
+> name — it is not part of the material. `--shadow-glass` survives as a deprecated
+> alias until its last consumers are migrated.
 
 **`--shadow-glow-primary`** (Phase 7): a very-low-alpha purple halo applied to
 exactly three interactive-emphasis surfaces — `AppButton`'s solid-primary
@@ -86,6 +93,15 @@ invisible in the other" should reuse this zero-alpha-shadow trick rather than
 branching the component's CSS per theme.
 
 ### Glass tokens
+
+> ⚠️ **Superseded — this section describes the legacy material.**
+> `docs/liquid-material-system.md` is the current authority. The family below is
+> the *second*, forbidden glassmorphism material found by
+> `docs/liquid-glass-apple-audit.md` §3.1; Phase 17.2 retired it and marked the
+> definitions terminal. The canonical vocabulary is `--material-*` with the
+> `chrome` / `hero` / `floating` presets. Do not add a consumer of the tokens
+> below — `glassBudget.spec.ts` fails on it. This section is rewritten when the
+> last consumer is migrated.
 
 `--glass-bg`, `--glass-border`, `--glass-blur`, `--glass-highlight` back the
 glass `AppCard` variant and the `.el-dialog`/`.el-drawer` surfaces. **Since

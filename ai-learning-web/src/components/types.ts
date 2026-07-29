@@ -6,4 +6,9 @@ export type Tone = 'primary' | 'secondary' | 'success' | 'warning' | 'danger' | 
 
 export type ButtonVariant = 'solid' | 'soft' | 'outline' | 'ghost' | 'plain'
 
-export type CardVariant = 'flat' | 'elevated' | 'glass'
+/**
+ * Cards are content containers, so there is no `glass` member: content is never
+ * glass. Elevated surfaces that genuinely qualify compose `GlassSurface` with a
+ * declared material — see `docs/liquid-material-system.md`.
+ */
+export type CardVariant = 'flat' | 'elevated'

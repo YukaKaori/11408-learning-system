@@ -31,11 +31,77 @@
  *     transparent for touch / reduced-motion users (strength stays 0)
  */
 
+/* ------------------------------------------------------------------ */
+/* Material presets — the named slabs (Phase 17.2 Phase B)             */
+/* ------------------------------------------------------------------ */
+
+/*
+ * A surface declares WHAT IT IS (`data-material="chrome|hero|floating"`) and
+ * inherits the whole optical prescription; it never hand-types dials. Each
+ * preset maps the canonical `--material-*` tokens (tokens.css) onto the
+ * `--glass-*` runtime contract that GlassSurface reads, so the primitive's
+ * API is untouched.
+ *
+ * Rank → Apple variant, and the rule behind it:
+ *
+ *   chrome    Clear     permanent navigation over a stage that supplies its
+ *                       own dimming; the lowest optical drama in the system
+ *   hero      Clear     the flagship slab, stage-tuned denser (.34) because
+ *                       the lotus artwork behind it is brighter than the
+ *                       dock's backdrop — a documented override, not a magic
+ *                       number, and still within the Clear band
+ *   floating  Regular   transient surfaces over arbitrary user content, with
+ *                       no stage to dim for them: legibility comes from the
+ *                       material's own body
+ *
+ * Values are byte-identical to what the three surfaces ship today; this phase
+ * is bookkeeping, not a retune. Nothing declares these attributes yet — the
+ * surfaces are tagged in Phase C, which is what makes Phase B a zero-pixel
+ * change by construction.
+ *
+ * Deliberately NOT preset here: `--glass-light-x/y/angle/strength` and
+ * `--glass-proximity`. Those are per-frame state written by useGlassSpotlight
+ * and they MUST default to 0, or reduced-motion and coarse-pointer users lose
+ * the zero-by-construction guarantee that freezes the travelling light.
+ */
+
+[data-material='chrome'] {
+  --glass-density: var(--material-density-clear);
+  --glass-tint: var(--material-tint-chrome);
+  --glass-depth: var(--material-depth);
+  --glass-fresnel: var(--material-fresnel);
+  --glass-edge-glow: var(--material-edge-glow-chrome);
+  --glass-inner-glow: var(--material-inner-glow-chrome);
+}
+
+[data-material='hero'] {
+  --glass-density: var(--material-density-clear-stage);
+  --glass-tint: var(--material-tint-hero);
+  --glass-depth: var(--material-depth);
+  --glass-fresnel: var(--material-fresnel);
+  --glass-edge-glow: var(--material-edge-glow-hero);
+  --glass-inner-glow: var(--material-inner-glow-hero);
+}
+
+[data-material='floating'] {
+  --glass-density: var(--material-density-regular);
+  --glass-tint: var(--material-tint-floating);
+  --glass-depth: var(--material-depth);
+  --glass-fresnel: var(--material-fresnel);
+  --glass-edge-glow: var(--material-edge-glow-floating);
+  --glass-inner-glow: var(--material-inner-glow-floating);
+}
+
 .glass-material {
   /* Fixed dusk on-glass palette */
   --on-glass-text: rgba(240, 238, 250, 0.94);
   --on-glass-text-dim: rgba(230, 228, 244, 0.66);
   --on-glass-text-faint: rgba(230, 228, 244, 0.42);
+  /* The hairline that separates regions ON the slab. Until Phase 17.2 this
+     carried the same name as the legacy global it shadowed, which made its
+     one consumer (the login footer) look like a glassmorphism leak when it
+     was always resolving to this on-glass value. */
+  --on-glass-border: rgba(255, 255, 255, 0.12);
 
   /* Token remap — inherited by every control inside the material */
   --color-text: var(--on-glass-text);
@@ -43,7 +109,6 @@
   --color-text-tertiary: var(--on-glass-text-faint);
   --color-border: rgba(255, 255, 255, 0.14);
   --color-border-strong: rgba(255, 255, 255, 0.22);
-  --glass-border: rgba(255, 255, 255, 0.12);
   --color-surface-hover: rgba(255, 255, 255, 0.07);
 
   /* Brand steps fixed to the dark-theme values: the smoked slab is

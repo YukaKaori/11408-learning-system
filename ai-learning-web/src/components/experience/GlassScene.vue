@@ -81,7 +81,7 @@ const { active }: { active: Ref<boolean> } = props.spotlight
   background: var(--scene-veil-bg);
   backdrop-filter: blur(var(--scene-veil-blur)) saturate(140%);
   -webkit-backdrop-filter: blur(var(--scene-veil-blur)) saturate(140%);
-  box-shadow: inset 0 1px 0 var(--glass-highlight);
+  box-shadow: inset 0 1px 0 var(--scene-veil-lip);
   transform: translateZ(0);
   transition: background-color var(--duration-slow) var(--ease-out);
 }

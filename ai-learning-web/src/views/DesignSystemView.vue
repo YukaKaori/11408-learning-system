@@ -124,10 +124,6 @@ function removeTag(tag: string) {
           <template #header>Elevated</template>
           Soft shadow, no visible border.
         </AppCard>
-        <AppCard variant="glass">
-          <template #header>Glass</template>
-          Translucent, blurred backdrop — used for floating surfaces.
-        </AppCard>
       </div>
     </AppSection>
 

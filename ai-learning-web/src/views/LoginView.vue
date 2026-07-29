@@ -271,6 +271,7 @@ function toggleLocale() {
     <GlassSurface
       ref="cardRef"
       class="login-card"
+      material="hero"
       :class="{ 'is-recessed': gallery !== 'login' }"
       :inert="gallery !== 'login'"
       width="100%"
@@ -485,13 +486,10 @@ function toggleLocale() {
   max-width: 520px;
   margin-top: clamp(72px, 12vh, 160px);
   animation: app-slide-up 640ms var(--ease-out) 60ms both;
-  --glass-depth: 1;
-  --glass-fresnel: 1;
-  --glass-density: 0.34;
-  /* Theme = glass temperature: light is a lighter, warmer smoke; dark is
-     deeper and violet-cast. Both are unmistakably dark glass. */
-  --glass-tint: light-dark(rgb(17 18 24), rgb(7 9 15));
-  --glass-edge-glow: 0.68;
+  /* Optics come from `material="hero"` (styles/glass.css): the Clear variant,
+     stage-tuned denser than the dock because the lotus artwork behind this
+     slab is brighter than the dock's backdrop. `.stage-shroud` is the dimming
+     layer Clear requires. Nothing optical is declared here. */
 }
 
 /*
@@ -535,7 +533,7 @@ function toggleLocale() {
   box-shadow:
     var(--shadow-glow-primary),
     var(--shadow-md),
-    inset 0 1px 0 var(--glass-highlight);
+    inset 0 1px 0 var(--scene-brand-lip);
 }
 
 .login-title {
@@ -591,7 +589,7 @@ function toggleLocale() {
   justify-content: center;
   margin-top: var(--space-6);
   padding-top: var(--space-4);
-  border-top: var(--border-width-sm) solid var(--glass-border);
+  border-top: var(--border-width-sm) solid var(--on-glass-border);
 }
 
 .footer-controls {

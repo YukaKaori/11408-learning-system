@@ -1,5 +1,6 @@
 <script setup lang="ts">
 import { computed, onBeforeUnmount, onMounted, ref, useId } from 'vue'
+import type { MaterialPreset } from './materials'
 
 /**
  * Liquid-glass surface ported from React Bits' <GlassSurface />.
@@ -51,6 +52,13 @@ type Channel = 'R' | 'G' | 'B'
 
 const props = withDefaults(
   defineProps<{
+    /**
+     * Which named slab this is. REQUIRED — there is no anonymous glass: the
+     * preset carries density, tint, depth, fresnel and the two glow strengths
+     * from `glass.css`, so surfaces never hand-type optical dials. See
+     * `materials.ts` and `docs/liquid-material-system.md`.
+     */
+    material: MaterialPreset
     /** Width in px (number) or any CSS length (string). */
     width?: number | string
     /** Height in px (number) or any CSS length (string). */
@@ -195,6 +203,7 @@ defineExpose({ element: containerRef })
     ref="containerRef"
     class="glass-surface"
     :class="svgSupported ? 'glass-surface--svg' : 'glass-surface--fallback'"
+    :data-material="material"
     :style="containerStyle"
   >
     <svg class="glass-surface__filter" xmlns="http://www.w3.org/2000/svg" aria-hidden="true">

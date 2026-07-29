@@ -276,6 +276,7 @@ const actions = INLINE_AI_ACTIONS
     <GlassSurface
       ref="surfaceRef"
       class="toolbar-slab"
+      material="floating"
       width="100%"
       height="auto"
       :border-radius="16"
@@ -366,17 +367,14 @@ const actions = INLINE_AI_ACTIONS
  * is only legible on unmistakably dark glass. Edge energy stays low (thin rim,
  * gentle displacement, whisper dispersion) — this is a quiet utility panel, not
  * a hero surface.
+ *
+ * The dials come from `material="floating"` (styles/glass.css) — the Regular
+ * variant, because nothing dims the reading canvas behind this slab and the
+ * material must carry legibility on its own. Nothing optical is declared here.
  */
 .selection-toolbar {
   position: absolute;
   z-index: 30;
-  --glass-depth: 1;
-  --glass-fresnel: 1;
-  --glass-density: 0.62;
-  /* Theme = glass temperature; both values are dark glass, per the house rule. */
-  --glass-tint: light-dark(rgb(12 13 19), rgb(7 8 14));
-  --glass-edge-glow: 0.7;
-  --glass-inner-glow: 0.5;
   /* One-shot settle on mount: light arrives, the slab does not travel. */
   animation: toolbar-settle var(--duration-base) var(--ease-out) both;
 }

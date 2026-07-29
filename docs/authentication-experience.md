@@ -76,18 +76,27 @@ The signature interaction: the pointer melts a soft hole into the veil.
 
 ## Glass system
 
-All glass values are tokens (`tokens.css`), themed for light and dark:
+> **Rewritten by Phase 17.2** (material consolidation). This section previously
+> described the legacy glassmorphism family (`--glass-bg/border/blur/highlight`),
+> which no longer exists. See `docs/liquid-material-system.md`.
 
-- `--glass-bg` / `--glass-border` / `--glass-blur` — panel glass (login card,
-  philosophy cards via `AppCard variant="glass"`).
-- `--glass-highlight` — the 1 px inset top sheen that makes glass feel physical.
-- `--scene-veil-bg` / `--scene-veil-blur` / `--scene-scrim` / `--scene-text*` /
-  `--scene-aura` — the full-screen scene layer.
+Two separate systems, and the distinction matters:
 
-The login card is `--glass-bg` over the scene at ~420 px with
-`--radius-glass`; the welcome philosophy cards are the same material floating
-over soft aura gradients (`--scene-aura` + `--color-primary-soft`) that echo
-the flower's palette into the scrolled sections.
+- **The material** — the login card is a `GlassSurface` declaring
+  `material="hero"`: the Clear variant, stage-tuned to density `.34` because the
+  lotus artwork behind it is brighter than the dock's backdrop. Its optics come
+  entirely from the preset in `glass.css`; the view hand-types no dials. The
+  landing dock is the same material at `material="chrome"`.
+- **The scene** — `--scene-veil-bg` / `--scene-veil-blur` / `--scene-scrim` /
+  `--scene-text*` / `--scene-aura` / `--scene-veil-lip` / `--scene-chip-*` /
+  `--scene-brand-lip`, the full-screen environmental layer the card floats over.
+  The veil is a *scrim*, not a panel material. As of Phase 17.2 this family is
+  finally self-contained: it borrowed four tokens from the retired material and
+  now owns equivalents at the same per-theme values.
+
+The welcome philosophy cards were `AppCard variant="glass"` and are now
+`variant="elevated"` — solid surfaces over the aura gradients (`--scene-aura` +
+`--color-primary-soft`). They are reading surfaces, and content is never glass.
 
 ## Motion system
 

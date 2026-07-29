@@ -129,7 +129,7 @@ onBeforeUnmount(() => window.removeEventListener('scroll', onScroll))
           <AppCard
             v-for="(item, index) in philosophyItems"
             :key="item.key"
-            variant="glass"
+            variant="elevated"
             class="philosophy-card"
             data-reveal
             :style="{ '--reveal-delay': `${index * 90}ms`, '--float-delay': `${index * -2}s` }"
@@ -260,9 +260,9 @@ onBeforeUnmount(() => window.removeEventListener('scroll', onScroll))
 .hero-eyebrow {
   margin: 0 0 var(--space-5);
   padding: var(--space-1) var(--space-4);
-  border: var(--border-width-sm) solid var(--glass-border);
+  border: var(--border-width-sm) solid var(--scene-chip-border);
   border-radius: var(--radius-full);
-  background-color: var(--glass-bg);
+  background-color: var(--scene-chip-bg);
   font-size: var(--font-label-size);
   font-weight: var(--font-label-weight);
   letter-spacing: var(--font-label-tracking);
@@ -322,11 +322,12 @@ onBeforeUnmount(() => window.removeEventListener('scroll', onScroll))
   animation: app-slide-up 600ms var(--ease-out) 500ms both;
 }
 
-/* Outline button sits on glass, not on a surface — retint via local tokens. */
+/* Outline button rides the scene veil, not an app surface — retint from the
+   scene's own chip tokens. */
 .hero-actions :deep(.variant-outline) {
   --color-text: var(--scene-text);
-  --color-border-strong: var(--glass-border);
-  --color-surface-hover: var(--glass-bg);
+  --color-border-strong: var(--scene-chip-border);
+  --color-surface-hover: var(--scene-chip-bg);
 }
 
 .scroll-hint {
@@ -357,7 +358,7 @@ onBeforeUnmount(() => window.removeEventListener('scroll', onScroll))
   padding-block: var(--space-20);
 }
 
-/* Soft rose-tinted glow behind glass cards — echo of the flower identity. */
+/* Soft rose-tinted glow behind the card grid — echo of the flower identity. */
 .section-aura {
   position: absolute;
   inset: 0;
@@ -417,7 +418,8 @@ onBeforeUnmount(() => window.removeEventListener('scroll', onScroll))
   color: var(--color-primary);
 }
 
-/* Section 1 — floating glass cards */
+/* Section 1 — philosophy cards. Solid content surfaces since Phase 17.2: they
+   are reading surfaces on a marketing page, and content is never glass. */
 .philosophy-grid {
   position: relative;
   display: grid;

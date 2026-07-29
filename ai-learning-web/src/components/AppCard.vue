@@ -48,14 +48,13 @@ withDefaults(
   box-shadow: var(--shadow-md);
 }
 
-.variant-glass {
-  border: 1px solid var(--glass-border);
-  background-color: var(--glass-bg);
-  /* Physical top edge for the glass sheet, same trick as the welcome scene's veil. */
-  box-shadow: var(--shadow-glass), inset 0 1px 0 var(--glass-highlight);
-  backdrop-filter: blur(var(--glass-blur));
-  -webkit-backdrop-filter: blur(var(--glass-blur));
-}
+/*
+ * There is no glass variant. AppCard is a content container — cards hold the
+ * work, and the work is never glass (see docs/liquid-material-system.md §1).
+ * The `glass` variant shipped through Phase 16 was the legacy glassmorphism
+ * material: white fill, uniform 1px border, blur-as-the-whole-material. It was
+ * removed in Phase 17.2; its call sites are `elevated` and `flat`.
+ */
 
 .interactive {
   cursor: pointer;

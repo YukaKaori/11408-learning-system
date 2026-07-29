@@ -66,6 +66,7 @@ defineExpose({ focusItem })
 <template>
   <GlassSurface
     class="glass-dock"
+    material="chrome"
     width="100%"
     height="auto"
     surface-flow
@@ -106,15 +107,11 @@ defineExpose({ focusItem })
  * attenuation means barely any body density and bright, light-gathering
  * edges. The slab stays dark enough for the dusk labels; it must never
  * read frosted or white.
+ *
+ * The optical dials come from `material="chrome"` (the Clear variant, over a
+ * stage that supplies its own dimming) — see styles/glass.css. Nothing
+ * optical is declared here.
  */
-.glass-dock {
-  --glass-depth: 1;
-  --glass-fresnel: 1;
-  --glass-density: 0.16;
-  --glass-tint: light-dark(rgb(24 26 36), rgb(13 15 24));
-  --glass-edge-glow: 0.85;
-  --glass-inner-glow: 0.65;
-}
 
 /*
  * One row of floating labels, centered like the Text meshes on the bar.
