@@ -33,7 +33,7 @@ interface NavEntry {
 }
 
 const navEntries: NavEntry[] = [
-  { to: '/workspace', icon: 'home', labelKey: 'nav.workspace' },
+  { to: '/today', icon: 'home', labelKey: 'nav.today' },
   { to: '/subjects', icon: 'book-open', labelKey: 'nav.subjects' },
   { to: '/ai-tutor', icon: 'bot', labelKey: 'nav.aiTutor' },
   { to: '/flashcards', icon: 'layers', labelKey: 'nav.flashcards' },

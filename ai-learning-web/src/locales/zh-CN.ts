@@ -4,7 +4,7 @@ export default {
   },
   nav: {
     menu: '菜单',
-    workspace: '工作台',
+    today: '今日',
     subjects: '科目',
     aiTutor: 'AI 导师',
     flashcards: '记忆卡片',
@@ -57,32 +57,59 @@ export default {
       remove: '移除',
     },
   },
-  workspace: {
+  today: {
     greeting: {
       morning: '早上好，{name}',
       afternoon: '下午好，{name}',
       evening: '晚上好，{name}',
     },
-    focus: {
-      task: '今日重点：{title}',
-      review: '今天有 {n} 张卡片待复习，先完成复习吧。',
-      fresh: '规划你的一天，从一个任务或学习时段开始。',
+    line: {
+      separator: ' · ',
+      cards: '{n} 张卡片待复习',
+      tasks: '{n} 个任务',
+      session: '{time} 有学习安排',
+      sessions: '{n} 个学习安排',
+      goal: '{done} / {goal} 分钟',
+      goalLabel: '今日学习目标',
+      streak: '{n} 天',
+      streakLabel: '连续学习天数',
     },
-    actions: {
-      newNote: '新建笔记',
-      askAi: '问 AI',
-      startSession: '开始学习',
+    plan: {
+      reviewTitle: '{n} 张卡片待复习',
+      now: '现在',
+      today: '今天',
+      overdueBy: '已逾期 {n} 天',
+      more: '今天还有 {n} 项安排',
+      tier: {
+        overdue: '已逾期：',
+      },
+      verb: {
+        review: '去复习',
+        open: '打开',
+      },
     },
-    stats: {
-      streak: '连续学习',
-      streakUnit: '{n} 天',
-      studyToday: '今日学习',
-      goalProgress: '{done} / {goal} 分钟',
-      dueCards: '待复习卡片',
-      dueCardsUnit: '{n} 张',
-      activeSubjects: '进行中的科目',
-      activeSubjectsUnit: '{n} 个',
+    complete: {
+      title: '今天完成了',
+      text: '复习 {reviews} 张卡片 · 完成 {tasks} 个任务 · 学习 {minutes} 分钟。',
     },
+    clear: {
+      title: '今天没有安排',
+      text: '没有到期的复习，也没有今天到期的任务。想学点什么都可以。',
+    },
+    empty: {
+      title: '从第一个科目开始',
+      text: '创建一个科目，把笔记、卡片和学习时间组织起来，今日就会开始为你排计划。',
+      cta: '创建科目',
+    },
+    ledger: {
+      title: '概览',
+    },
+  },
+  // The Ledger's sections keep the `workspace.*` namespace they shipped with —
+  // they are the same content, demoted. The dashboard-only blocks (focus,
+  // actions, stats, upcomingTasks, todaySessions, suggestions) went out with
+  // the panels they labelled in Phase 17 Step 3.
+  workspace: {
     continueLearning: {
       title: '继续学习',
       lastActive: '最近活动：{time}',
@@ -104,30 +131,6 @@ export default {
       weekTotal: '本周共 {time}',
       empty: '本周还没有学习记录',
       emptyCta: '安排学习时段',
-    },
-    upcomingTasks: {
-      title: '待办任务',
-      empty: '没有待办任务，在下方快速添加一个。',
-      quickAddPlaceholder: '快速添加任务…',
-      quickAdd: '添加任务',
-    },
-    todaySessions: {
-      title: '今日安排',
-      empty: '今天没有学习安排',
-      emptyCta: '安排学习时段',
-    },
-    suggestions: {
-      title: 'AI 建议',
-      streakRisk: '今天还没有学习，完成一次学习保持 {n} 天的连续记录。',
-      streakRiskAction: '开始学习',
-      dueCards: '有 {n} 张卡片到期了，现在复习效果最好。',
-      dueCardsAction: '去复习',
-      overdue: '有 {n} 个任务已过期，处理一下或调整计划。',
-      overdueAction: '查看日历',
-      noSubjects: '创建第一个科目，把笔记、卡片和学习时间组织起来。',
-      noSubjectsAction: '创建科目',
-      allClear: '一切井然有序。有问题随时问 AI 导师。',
-      allClearAction: '问 AI 导师',
     },
   },
   subjects: {

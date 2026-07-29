@@ -6,7 +6,7 @@ const enUS: typeof zhCN = {
   },
   nav: {
     menu: 'Menu',
-    workspace: 'Workspace',
+    today: 'Today',
     subjects: 'Subjects',
     aiTutor: 'AI Tutor',
     flashcards: 'Flashcards',
@@ -59,32 +59,59 @@ const enUS: typeof zhCN = {
       remove: 'Remove',
     },
   },
-  workspace: {
+  today: {
     greeting: {
       morning: 'Good morning, {name}',
       afternoon: 'Good afternoon, {name}',
       evening: 'Good evening, {name}',
     },
-    focus: {
-      task: "Today's focus: {title}",
-      review: '{n} cards are due today — start with a review.',
-      fresh: 'Plan your day — start with a task or a study session.',
+    line: {
+      separator: ' · ',
+      cards: '{n} cards due',
+      tasks: '{n} tasks',
+      session: 'a session at {time}',
+      sessions: '{n} sessions',
+      goal: '{done} / {goal} min',
+      goalLabel: "Today's study goal",
+      streak: '{n} days',
+      streakLabel: 'Learning streak',
     },
-    actions: {
-      newNote: 'New note',
-      askAi: 'Ask AI',
-      startSession: 'Start session',
+    plan: {
+      reviewTitle: '{n} cards due',
+      now: 'now',
+      today: 'today',
+      overdueBy: 'overdue {n}d',
+      more: '{n} more scheduled today',
+      tier: {
+        overdue: 'Overdue:',
+      },
+      verb: {
+        review: 'Review',
+        open: 'Open',
+      },
     },
-    stats: {
-      streak: 'Learning streak',
-      streakUnit: '{n} days',
-      studyToday: 'Studied today',
-      goalProgress: '{done} / {goal} min',
-      dueCards: 'Cards due',
-      dueCardsUnit: '{n} cards',
-      activeSubjects: 'Active subjects',
-      activeSubjectsUnit: '{n}',
+    complete: {
+      title: 'Day complete',
+      text: '{reviews} cards reviewed · {tasks} tasks closed · {minutes} minutes studied.',
     },
+    clear: {
+      title: 'Nothing due today',
+      text: 'No reviews are due and nothing is scheduled. Study whatever you like.',
+    },
+    empty: {
+      title: 'Start with a subject',
+      text: 'Create a subject to organize notes, cards and study time — Today will start planning from there.',
+      cta: 'Create a subject',
+    },
+    ledger: {
+      title: 'Overview',
+    },
+  },
+  // The Ledger's sections keep the `workspace.*` namespace they shipped with —
+  // they are the same content, demoted. The dashboard-only blocks (focus,
+  // actions, stats, upcomingTasks, todaySessions, suggestions) went out with
+  // the panels they labelled in Phase 17 Step 3.
+  workspace: {
     continueLearning: {
       title: 'Continue learning',
       lastActive: 'Last active {time}',
@@ -106,30 +133,6 @@ const enUS: typeof zhCN = {
       weekTotal: '{time} this week',
       empty: 'No study activity this week yet',
       emptyCta: 'Schedule a session',
-    },
-    upcomingTasks: {
-      title: 'Upcoming tasks',
-      empty: 'No open tasks — quick-add one below.',
-      quickAddPlaceholder: 'Quick-add a task…',
-      quickAdd: 'Add task',
-    },
-    todaySessions: {
-      title: "Today's schedule",
-      empty: 'No study sessions planned today',
-      emptyCta: 'Schedule a session',
-    },
-    suggestions: {
-      title: 'AI suggestions',
-      streakRisk: "You haven't studied today — one session keeps your {n}-day streak alive.",
-      streakRiskAction: 'Start studying',
-      dueCards: '{n} cards are due — reviewing them now works best.',
-      dueCardsAction: 'Review now',
-      overdue: '{n} tasks are overdue — handle or reschedule them.',
-      overdueAction: 'Open calendar',
-      noSubjects: 'Create your first subject to organize notes, cards and study time.',
-      noSubjectsAction: 'Create a subject',
-      allClear: "You're all caught up. Ask the AI Tutor anytime.",
-      allClearAction: 'Ask the AI Tutor',
     },
   },
   subjects: {

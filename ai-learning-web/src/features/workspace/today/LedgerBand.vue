@@ -1,0 +1,507 @@
+<script setup lang="ts">
+/**
+ * The Ledger — the third band, below the fold and deliberately quiet.
+ *
+ * This is the former Workspace dashboard's context: continue-learning, recent
+ * conversations, recent notes, and the week chart. Nothing here is a
+ * commitment — none of these sources carries a time contract, so none of them
+ * may enter The Plan. They are demoted, not deleted: the day's answer is
+ * above, and this is what the day sits on.
+ *
+ * It is read-only on purpose. Every row navigates to the module that owns it;
+ * the Ledger never mutates, because a second place to act would rebuild the
+ * dashboard Today replaced.
+ *
+ * Solid surfaces throughout — content and data-viz are never glass
+ * (docs/liquid-material-system.md §1).
+ */
+import { computed } from 'vue'
+import { useI18n } from 'vue-i18n'
+import { useRouter } from 'vue-router'
+import { AppButton, AppCard, AppIcon, AppTooltip } from '@/components'
+import type { WorkspaceSummaryDto } from '@/api/modules/workspace'
+import { useDuration } from '@/composables/useDuration'
+import { useSubjectsStore } from '@/stores/subjects'
+import { accentColor, subjectAccentOf, subjectIconOf } from '@/features/subjects/types'
+import { parseIsoDate } from '@/utils/date'
+
+const props = defineProps<{ summary: WorkspaceSummaryDto }>()
+
+const { t, d, locale } = useI18n()
+const router = useRouter()
+const subjectsStore = useSubjectsStore()
+const { formatMinutes } = useDuration()
+
+function subjectAccent(subjectId: string | null): string {
+  const subject = subjectsStore.byId(subjectId)
+  return subject ? accentColor(subjectAccentOf(subject.color)) : 'var(--color-muted)'
+}
+
+// --- Week chart — 7 real days, one hue, tooltip per mark -------------------
+
+const weekBars = computed(() => {
+  const days = props.summary.weekActivity
+  const max = days.reduce((m, day) => Math.max(m, day.minutes), 0)
+  // Direct-label selectively: only the (most recent) busiest day.
+  const lastMaxIndex = days.reduce(
+    (index, day, i) => (max > 0 && day.minutes === max ? i : index),
+    -1,
+  )
+  return days.map((day, i) => ({
+    date: day.date,
+    minutes: day.minutes,
+    heightPercent: max > 0 ? Math.max(4, Math.round((day.minutes / max) * 100)) : 0,
+    showLabel: i === lastMaxIndex,
+  }))
+})
+
+const weekTotalMinutes = computed(() =>
+  props.summary.weekActivity.reduce((sum, day) => sum + day.minutes, 0),
+)
+
+const weekdayFormat = computed(() => new Intl.DateTimeFormat(locale.value, { weekday: 'short' }))
+
+function barTooltip(bar: { date: string; minutes: number }): string {
+  return `${d(parseIsoDate(bar.date), 'short')} · ${formatMinutes(bar.minutes)}`
+}
+</script>
+
+<template>
+  <section class="ledger" :aria-label="t('today.ledger.title')">
+    <h2 class="ledger-heading">{{ t('today.ledger.title') }}</h2>
+
+    <!-- Continue learning -->
+    <section class="section">
+      <div class="section-head">
+        <h3 class="section-title">{{ t('workspace.continueLearning.title') }}</h3>
+        <RouterLink :to="{ name: 'subjects' }" class="section-link">
+          {{ t('common.viewAll') }}
+          <AppIcon name="arrow-right" size="sm" />
+        </RouterLink>
+      </div>
+      <div v-if="summary.continueLearning.length > 0" class="continue-grid">
+        <AppCard
+          v-for="item in summary.continueLearning"
+          :key="item.id"
+          variant="flat"
+          interactive
+          @click="router.push({ name: 'subject-detail', params: { id: item.id } })"
+        >
+          <div class="continue-head">
+            <span
+              class="continue-icon"
+              :style="{ color: accentColor(subjectAccentOf(item.color)) }"
+              aria-hidden="true"
+            >
+              <AppIcon :name="subjectIconOf(item.icon)" />
+            </span>
+            <span class="continue-progress">{{ item.progress }}%</span>
+          </div>
+          <h4 class="continue-name">{{ item.name }}</h4>
+          <span class="continue-meta">
+            {{ t('workspace.continueLearning.lastActive', { time: d(item.lastActivityAt, 'short') }) }}
+          </span>
+          <div class="progress-track">
+            <div
+              class="progress-fill"
+              :style="{
+                width: `${item.progress}%`,
+                backgroundColor: accentColor(subjectAccentOf(item.color)),
+              }"
+            ></div>
+          </div>
+        </AppCard>
+      </div>
+      <AppCard v-else variant="flat">
+        <div class="section-empty">
+          <AppIcon name="book-open" class="section-empty-icon" aria-hidden="true" />
+          <p class="section-empty-text">{{ t('workspace.continueLearning.empty') }}</p>
+          <AppButton size="sm" variant="soft" @click="router.push({ name: 'subjects' })">
+            {{ t('workspace.continueLearning.emptyCta') }}
+          </AppButton>
+        </div>
+      </AppCard>
+    </section>
+
+    <div class="two-col">
+      <!-- Recent AI conversations -->
+      <section class="section">
+        <div class="section-head">
+          <h3 class="section-title">{{ t('workspace.recentChats.title') }}</h3>
+          <RouterLink :to="{ name: 'ai-tutor' }" class="section-link">
+            {{ t('common.viewAll') }}
+            <AppIcon name="arrow-right" size="sm" />
+          </RouterLink>
+        </div>
+        <AppCard variant="flat" :padded="false">
+          <div v-if="summary.recentConversations.length === 0" class="section-empty">
+            <AppIcon name="message-square" class="section-empty-icon" aria-hidden="true" />
+            <p class="section-empty-text">{{ t('workspace.recentChats.empty') }}</p>
+            <AppButton size="sm" variant="soft" @click="router.push({ name: 'ai-tutor' })">
+              {{ t('workspace.recentChats.emptyCta') }}
+            </AppButton>
+          </div>
+          <ul v-else class="row-list">
+            <li
+              v-for="conv in summary.recentConversations"
+              :key="conv.id"
+              class="row row-clickable"
+              @click="router.push({ name: 'ai-tutor', params: { conversationId: conv.id } })"
+            >
+              <span class="row-icon"><AppIcon name="message-square" size="sm" /></span>
+              <span class="row-text">{{ conv.title }}</span>
+              <span class="row-meta">{{ d(conv.updatedAt, 'short') }}</span>
+            </li>
+          </ul>
+        </AppCard>
+      </section>
+
+      <!-- Recent notes -->
+      <section class="section">
+        <div class="section-head">
+          <h3 class="section-title">{{ t('workspace.recentNotes.title') }}</h3>
+          <RouterLink :to="{ name: 'notes' }" class="section-link">
+            {{ t('common.viewAll') }}
+            <AppIcon name="arrow-right" size="sm" />
+          </RouterLink>
+        </div>
+        <AppCard variant="flat" :padded="false">
+          <div v-if="summary.recentNotes.length === 0" class="section-empty">
+            <AppIcon name="notebook-pen" class="section-empty-icon" aria-hidden="true" />
+            <p class="section-empty-text">{{ t('workspace.recentNotes.empty') }}</p>
+            <AppButton size="sm" variant="soft" @click="router.push({ name: 'notes' })">
+              {{ t('workspace.recentNotes.emptyCta') }}
+            </AppButton>
+          </div>
+          <ul v-else class="row-list">
+            <li
+              v-for="note in summary.recentNotes"
+              :key="note.id"
+              class="row row-clickable"
+              @click="router.push({ name: 'notes', query: { note: note.id } })"
+            >
+              <span class="row-dot" :style="{ backgroundColor: subjectAccent(note.subjectId) }"></span>
+              <span class="row-text">{{ note.title }}</span>
+              <span class="row-meta">{{ d(note.updatedAt, 'short') }}</span>
+            </li>
+          </ul>
+        </AppCard>
+      </section>
+    </div>
+
+    <!-- Week chart -->
+    <section class="section">
+      <div class="section-head">
+        <h3 class="section-title">{{ t('workspace.growth.title') }}</h3>
+        <span v-if="weekTotalMinutes > 0" class="section-link">
+          {{ t('workspace.growth.weekTotal', { time: formatMinutes(weekTotalMinutes) }) }}
+        </span>
+      </div>
+      <AppCard variant="flat">
+        <div v-if="weekTotalMinutes > 0" class="growth-chart">
+          <div class="chart-bars">
+            <AppTooltip v-for="bar in weekBars" :key="bar.date" :content="barTooltip(bar)">
+              <div class="bar-slot" tabindex="0" :aria-label="barTooltip(bar)">
+                <span v-if="bar.showLabel" class="bar-label">{{ formatMinutes(bar.minutes) }}</span>
+                <span
+                  class="bar"
+                  :class="{ zero: bar.minutes === 0 }"
+                  :style="bar.minutes > 0 ? { height: `${bar.heightPercent}%` } : undefined"
+                ></span>
+              </div>
+            </AppTooltip>
+          </div>
+          <div class="chart-days">
+            <span v-for="bar in weekBars" :key="bar.date" class="chart-day">
+              {{ weekdayFormat.format(parseIsoDate(bar.date)) }}
+            </span>
+          </div>
+        </div>
+        <div v-else class="section-empty">
+          <AppIcon name="trending-up" class="section-empty-icon" aria-hidden="true" />
+          <p class="section-empty-text">{{ t('workspace.growth.empty') }}</p>
+          <AppButton size="sm" variant="soft" @click="router.push({ name: 'calendar' })">
+            {{ t('workspace.growth.emptyCta') }}
+          </AppButton>
+        </div>
+      </AppCard>
+    </section>
+  </section>
+</template>
+
+<style scoped>
+/*
+ * "Visually quiet" is spent here: a hairline separates the band from the plan,
+ * its heading is a label rather than a title, and everything inside is one
+ * step down the type scale from the bands above. The Ledger must never read
+ * as a second headline — that is how Today becomes a dashboard again.
+ */
+.ledger {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-6);
+  margin-top: var(--space-12);
+  padding-top: var(--space-8);
+  border-top: var(--border-width-sm) solid var(--color-border);
+}
+
+.ledger-heading {
+  margin: 0;
+  font-family: var(--font-label-family);
+  font-size: var(--font-label-size);
+  font-weight: var(--font-label-weight);
+  letter-spacing: var(--font-label-tracking);
+  text-transform: uppercase;
+  color: var(--color-text-tertiary);
+}
+
+.section {
+  min-width: 0;
+}
+
+.section-head {
+  display: flex;
+  align-items: baseline;
+  justify-content: space-between;
+  gap: var(--space-3);
+  margin-bottom: var(--space-4);
+}
+
+.section-title {
+  margin: 0;
+  font-size: var(--text-base);
+  font-weight: 600;
+  letter-spacing: var(--tracking-tight);
+  color: var(--color-text-secondary);
+}
+
+.section-link {
+  display: inline-flex;
+  align-items: center;
+  gap: var(--space-1);
+  font-size: var(--text-xs);
+  color: var(--color-text-tertiary);
+  transition: color var(--duration-fast) var(--ease-out);
+}
+
+a.section-link:hover {
+  color: var(--color-primary);
+}
+
+.section-empty {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: var(--space-2);
+  padding: var(--space-6) var(--space-4);
+  text-align: center;
+}
+
+.section-empty-icon {
+  color: var(--color-text-tertiary);
+}
+
+.section-empty-text {
+  margin: 0;
+  font-size: var(--text-sm);
+  color: var(--color-text-tertiary);
+}
+
+/* Continue learning */
+.continue-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(200px, 1fr));
+  gap: var(--space-4);
+}
+
+.continue-head {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  margin-bottom: var(--space-3);
+}
+
+.continue-icon {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 34px;
+  height: 34px;
+  border-radius: var(--radius-md);
+  background-color: color-mix(in srgb, currentColor 12%, transparent);
+}
+
+.continue-progress {
+  font-size: var(--text-xs);
+  font-weight: 600;
+  font-variant-numeric: tabular-nums;
+  color: var(--color-text-secondary);
+}
+
+.continue-name {
+  margin: 0 0 var(--space-1);
+  font-size: var(--text-base);
+  font-weight: 600;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.continue-meta {
+  display: block;
+  margin-bottom: var(--space-3);
+  font-size: var(--text-xs);
+  color: var(--color-text-tertiary);
+}
+
+.progress-track {
+  height: 4px;
+  border-radius: var(--radius-full);
+  background-color: var(--color-muted-soft);
+  overflow: hidden;
+}
+
+.progress-fill {
+  height: 100%;
+  border-radius: var(--radius-full);
+  transition: width var(--duration-slow) var(--ease-out);
+}
+
+/* Row lists (conversations, notes) */
+.two-col {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: var(--space-6);
+}
+
+.row-list {
+  margin: 0;
+  padding: 0;
+  list-style: none;
+}
+
+.row {
+  display: flex;
+  align-items: center;
+  gap: var(--space-3);
+  padding: var(--space-3) var(--space-4);
+}
+
+.row + .row {
+  border-top: var(--border-width-sm) solid var(--color-border);
+}
+
+.row-clickable {
+  cursor: pointer;
+  transition: background-color var(--duration-fast) var(--ease-out);
+}
+
+.row-clickable:hover {
+  background-color: var(--color-surface-hover);
+}
+
+.row-dot {
+  width: 8px;
+  height: 8px;
+  flex-shrink: 0;
+  border-radius: var(--radius-full);
+}
+
+.row-icon {
+  display: flex;
+  color: var(--color-text-tertiary);
+}
+
+.row-text {
+  flex: 1;
+  min-width: 0;
+  font-size: var(--text-sm);
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.row-meta {
+  flex-shrink: 0;
+  font-size: var(--text-xs);
+  font-variant-numeric: tabular-nums;
+  color: var(--color-text-tertiary);
+}
+
+/* Week chart — thin marks, one hue, recessive baseline */
+.growth-chart {
+  display: flex;
+  flex-direction: column;
+}
+
+.chart-bars {
+  display: flex;
+  align-items: stretch;
+  height: 120px;
+  border-bottom: var(--border-width-sm) solid var(--color-border);
+}
+
+.bar-slot {
+  flex: 1;
+  min-width: 0;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: flex-end;
+  gap: var(--space-1);
+  border-radius: var(--radius-sm);
+  cursor: default;
+}
+
+.bar-slot:focus-visible {
+  outline: var(--border-width-md) solid var(--color-focus-ring);
+  outline-offset: 2px;
+}
+
+.bar {
+  width: min(24px, 60%);
+  border-radius: 4px 4px 0 0;
+  background-color: var(--color-primary);
+  transition:
+    height var(--duration-slow) var(--ease-out),
+    background-color var(--duration-fast) var(--ease-out);
+}
+
+.bar-slot:hover .bar:not(.zero) {
+  background-color: var(--color-primary-hover);
+}
+
+.bar.zero {
+  height: 3px;
+  background-color: var(--color-muted-soft);
+}
+
+.bar-label {
+  font-size: var(--text-xs);
+  font-variant-numeric: tabular-nums;
+  color: var(--color-text-secondary);
+  white-space: nowrap;
+}
+
+.chart-days {
+  display: flex;
+  padding-top: var(--space-2);
+}
+
+.chart-day {
+  flex: 1;
+  min-width: 0;
+  font-size: var(--text-xs);
+  color: var(--color-text-tertiary);
+  text-align: center;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+@media (max-width: 768px) {
+  .two-col {
+    grid-template-columns: 1fr;
+  }
+}
+</style>

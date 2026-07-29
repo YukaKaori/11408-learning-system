@@ -57,3 +57,76 @@ export interface WorkspaceSummaryDto {
 export function getWorkspaceSummary() {
   return api.get<WorkspaceSummaryDto>('/v1/workspace/summary')
 }
+
+// --- Today -----------------------------------------------------------------
+//
+// Mirror of TodayResponse.java. Today is a plan, not a dashboard, and the
+// ordering, the cap and the state are decided *server-side* so that every
+// client agrees. Nothing below re-derives any of them: the client renders
+// `plan` in the order it arrives and renders `state` as given.
+
+/**
+ * The four honest days, straight from the server. They are deliberately not
+ * collapsible: `complete` congratulates real work, `clear` is a resting state
+ * for a user who did nothing, and `empty` is a brand-new account.
+ */
+export type TodayState = 'planned' | 'complete' | 'clear' | 'empty'
+
+/**
+ * Priority bands. Array order is the server's ordering contract — `suggested`
+ * is the Phase 18 seam and is never produced in v1.
+ */
+export type PlanTier = 'overdue' | 'now' | 'scheduled' | 'suggested'
+
+/** Which of the three timed sources a row came from. */
+export type PlanKind = 'review' | 'session' | 'task'
+
+/**
+ * The day's counters. Every field is a fact the client displays; the server
+ * already used them to derive `TodayState`, so the client never re-judges.
+ */
+export interface TodayProgressDto {
+  studiedMinutes: number
+  goalMinutes: number
+  reviewsCompleted: number
+  tasksCompleted: number
+  sessionsCompleted: number
+  streakDays: number
+}
+
+/**
+ * The whole review queue as one row — the single place Today aggregates.
+ * `total` is `ReviewService.dueCount(...)`, so this row, the review session
+ * and the due tile can never disagree.
+ */
+export interface ReviewFocusDto {
+  dueCards: number
+  newCards: number
+  total: number
+}
+
+/** One commitment. Exactly one of `review` / `task` / `session` is non-null. */
+export interface PlanItemDto {
+  id: string
+  kind: PlanKind
+  tier: PlanTier
+  sortAt: number
+  review: ReviewFocusDto | null
+  task: TaskDto | null
+  session: StudySessionDto | null
+}
+
+export interface TodayDto {
+  /** ISO local date in the caller's timezone. */
+  date: string
+  state: TodayState
+  progress: TodayProgressDto
+  /** Server-ordered and capped at 8; may be empty. */
+  plan: PlanItemDto[]
+  /** Actionable items suppressed by the cap. */
+  remainingCount: number
+}
+
+export function getToday() {
+  return api.get<TodayDto>('/v1/workspace/today')
+}

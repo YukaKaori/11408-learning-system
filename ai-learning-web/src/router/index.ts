@@ -41,13 +41,21 @@ const router = createRouter({
       children: [
         {
           path: '',
-          redirect: { name: 'workspace' },
+          redirect: { name: 'today' },
         },
         {
+          // Today is the post-login landing view (Phase 17). The feature folder
+          // stays `workspace/` to match the backend `workspace` façade package.
+          path: 'today',
+          name: 'today',
+          component: () => import('@/features/workspace/TodayView.vue'),
+          meta: { titleKey: 'nav.today' },
+        },
+        {
+          // Existing links, bookmarks and deep links from before Phase 17 must
+          // keep working — the route was renamed, not removed.
           path: 'workspace',
-          name: 'workspace',
-          component: () => import('@/features/workspace/WorkspaceView.vue'),
-          meta: { titleKey: 'nav.workspace' },
+          redirect: { name: 'today' },
         },
         {
           path: 'subjects',

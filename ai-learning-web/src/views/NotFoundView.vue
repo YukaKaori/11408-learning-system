@@ -12,7 +12,7 @@ const router = useRouter()
     <p class="code" aria-hidden="true">404</p>
     <h1 class="title">{{ t('notFound.title') }}</h1>
     <p class="desc">{{ t('notFound.desc') }}</p>
-    <AppButton icon-left="arrow-left" @click="router.push({ name: 'workspace' })">
+    <AppButton icon-left="arrow-left" @click="router.push({ name: 'today' })">
       {{ t('notFound.action') }}
     </AppButton>
   </main>
