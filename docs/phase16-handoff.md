@@ -5,7 +5,7 @@ approved. This document is the record of what shipped, what was deliberately not
 built, and what the next phase inherits.
 
 **Binding context:** `docs/roadmap.md` (Phase 16) · `docs/architecture.md` ·
-`docs/design-system.md` · `.claude/skills/optical-glass-design-system/SKILL.md` ·
+`docs/design-system.md` · `.claude/skills/liquid-material/SKILL.md` ·
 `docs/phase16-plan.md` (the implementation contract this phase was held to).
 
 ---

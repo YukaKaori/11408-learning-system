@@ -7,7 +7,7 @@ expanded; already-made decisions are revisited only if a correctness issue is
 discovered.
 
 **Binding context:** `docs/roadmap.md` (Phase 16), `docs/architecture.md`,
-`docs/design-system.md`, `.claude/skills/optical-glass-design-system/SKILL.md`.
+`docs/design-system.md`, `.claude/skills/liquid-material/SKILL.md`.
 Phase 15 (Memory Engine) is complete and untouched.
 
 ---

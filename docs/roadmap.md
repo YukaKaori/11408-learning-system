@@ -3,8 +3,8 @@
 > **Status:** Planning only. Canonical as of 2026-07-22. Supersedes and replaces
 > `docs/archive/roadmap-v1.md` and `docs/archive/roadmap-phase15-35.md` entirely.
 > **Binding context:** `docs/architecture.md` (engineering constitution),
-> `docs/design-system.md`, and `.claude/skills/optical-glass-design-system/SKILL.md`
-> (the Optical Glass Design System is a core architectural constraint of every
+> `docs/design-system.md`, and `.claude/skills/liquid-material/SKILL.md`
+> (the Liquid Material system is a core architectural constraint of every
 > phase below, equal in rank to the constitution — not UI polish).
 > **Author lens:** product architect of a commercial AI-native learning platform.
 

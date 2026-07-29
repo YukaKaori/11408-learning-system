@@ -6,7 +6,7 @@ redesigned and scope is not to be expanded; decisions are revisited only if a
 correctness issue is discovered.
 
 **Binding context:** `docs/roadmap.md` (Phase 17) · `docs/architecture.md` ·
-`docs/design-system.md` · `.claude/skills/optical-glass-design-system/SKILL.md` ·
+`docs/design-system.md` · `.claude/skills/liquid-material/SKILL.md` ·
 `docs/phase16-handoff.md` (what P17 inherits).
 
 Phase 15 (Memory Engine) and Phase 16 (Notes 2.0) are complete, committed and
@@ -289,12 +289,26 @@ Justification against the skill:
 - The phase therefore composes with existing tokens, `StatTile`, `AppCard`,
   and the view-state pattern. Discipline is the design contribution, exactly as
   it was for P15's review stage.
-- **One net removal:** the current "AI Suggestions" panel is an
-  `AppCard variant="glass"` (the CSS `--glass-*` bridge, not a displacement
-  filter — it never counted against the budget) carrying rule-based nudges
-  behind a sparkles icon. It is decorative glass without function *and* it
-  implies an intelligence that does not exist until P18. Its honest rules move
-  into the plan itself; the panel is deleted.
+- **One net removal:** the "AI Suggestions" panel is deleted. Its honest
+  rule-based nudges move into the plan itself.
+
+  *Rationale corrected 2026-07-29 (`docs/phase17-material-audit.md` §5.2).* When
+  this plan was written the panel was an `AppCard variant="glass"`, and half the
+  justification was that it was decorative glass without function. **That ground
+  is spent:** Phase 17.2 shipped after this plan and removed the `glass` variant
+  entirely — the panel is `AppCard variant="flat"` today, a plain solid surface.
+
+  **The removal is therefore not a glass migration and not a material change of
+  any kind. It is a product-honesty decision.** Before Phase 18 there is no
+  grounded recommendation capability, so a surface badged with a sparkles icon
+  and headed "AI Suggestions" implies an intelligence that does not exist yet —
+  and an *empty* one implies it most strongly of all, since it advertises a
+  faculty that has nothing to say. The rules behind it are honest; the framing
+  is not. The rules survive inside the plan, where they are commitments rather
+  than machine advice; the panel goes.
+
+  Scope is unchanged: this remains one content deletion in Step 5, with no
+  effect on the displacement budget, which was never involved.
 - **Motion:** the `complete` state earns exactly **one** one-shot reveal on
   existing motion tokens — a settle, not a celebration. No confetti, no badge,
   no sound. Zero under `prefers-reduced-motion`.

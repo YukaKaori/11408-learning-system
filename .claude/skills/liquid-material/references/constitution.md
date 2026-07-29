@@ -1,43 +1,41 @@
----
-name: optical-glass-design-system
-description: The project's glass design language — optical rules, motion philosophy, design tokens, architecture constraints, and an implementation checklist. Read BEFORE designing or implementing ANY glass, translucent, frosted, dock, overlay, dialog, palette, or premium-surface UI in this repository.
----
+# The Constitution — the design language
 
-# Optical Glass Design System
+The law of every translucent surface in the AI Learning Platform. Distilled from
+the GlassSurface and FluidGlass specifications, refined through Phases 8–17 and
+consolidated into one material in Phase 17.2.
 
-The design language distilled from the GlassSurface and FluidGlass specifications
-and refined through Phases 8–14. This document is the constitution for every
-translucent surface in the AI Learning Platform. It describes a *material*, not
-a component library. No framework code belongs here.
+This document describes a **material**, not a component library. No framework
+code belongs here. It is the authority: `materials.md`, `components.md`,
+`implementation.md` and `color.md` operationalize it and may never contradict
+it. On conflict, this file wins.
 
 ---
 
 ## 1. Purpose
 
-This skill exists so that every future surface in the product feels cut from
-the same slab of glass.
+This exists so that every future surface in the product feels cut from the same
+slab of glass.
 
-The product's visual identity is built on **heavy optical glass** — not the web's
-default "frosted rectangle" idiom. Ordinary glassmorphism is a white blur with a
-border; it hides content and signals nothing. Our glass is a *physical material*:
-it has thickness, mass, density, an entrance face and an exit face. Light enters
-it, bends, disperses slightly into color at the edges, reflects off internal
+The identity is **heavy optical glass** — not the web's default "frosted
+rectangle" idiom. Ordinary glassmorphism is a white blur with a border; it hides
+content and signals nothing. Our glass is a *physical material*: it has
+thickness, mass, density, an entrance face and an exit face. Light enters it,
+bends, disperses slightly into color at the edges, reflects off internal
 surfaces, and leaves. Content behind the glass is *revealed through* it —
 refracted, clarified, never buried.
 
 The philosophy is realism over spectacle. A real slab of smoked glass on a desk
 is beautiful because of how it behaves under light, not because it moves. So the
-system spends its budget on optics — depth, refraction, edge energy, reflections —
-and is deliberately miserly with motion. When something does move, it is the
+system spends its budget on optics — depth, refraction, edge energy, reflections
+— and is deliberately miserly with motion. When something does move, it is the
 *light* that moves, or the *reveal* of content; the glass itself stays heavy and
 still.
 
 Every future phase (Knowledge Graph, AI Workspace, Command Palette, premium
-surfaces) should be able to read this document and produce UI that is
-indistinguishable in material from the login card built in Phase 9 and the dock
-built in Phase 12.
+surfaces) should be able to read this document and produce UI indistinguishable
+in material from the login card built in Phase 9 and the dock built in Phase 12.
 
-## 2. Core Principles
+## 2. Core principles
 
 1. **Heavy optical glass, not film.** Surfaces read as thick slabs with mass.
    Thickness is expressed through a double edge (bright entrance lip + darker
@@ -98,7 +96,11 @@ built in Phase 12.
     physically plausible static rendering and a more animated one, choose
     plausibility. Our surfaces impress by holding up to a second look.
 
-## 3. Motion Principles
+15. **Color is derived, never invented.** Every color in the product descends
+    from a declared palette through documented, perceptually-uniform math — not
+    from a hex value someone liked. See `color.md`.
+
+## 3. Motion principles
 
 - **Reflections move; objects don't.** The cursor, scroll position, and nearby
   "light sources" steer highlights, sheens, and Fresnel arcs *across* surfaces.
@@ -119,80 +121,95 @@ built in Phase 12.
   properties driving gradients, transforms, and opacity — properties that
   composite without layout or filter recomputation. The refraction chain is
   never animated per frame.
-- **Reduced motion is first-class.** With `prefers-reduced-motion` (and on
-  touch, where there is no pointer to be a light), light-tracking strength
-  stays at zero and ambient loops freeze — by construction (the variables
-  default to 0), not by patch.
+- **Reduced motion is first-class.** With `prefers-reduced-motion` (and on touch,
+  where there is no pointer to be a light), light-tracking strength stays at zero
+  and ambient loops freeze — by construction (the variables default to 0), not by
+  patch.
 
-## 4. Architecture Rules
+## 4. Architecture rules
 
 1. **One glass primitive.** `GlassSurface`
    (`ai-learning-web/src/components/experience/GlassSurface.vue`) is the sole
    refracting primitive. New surfaces compose it; they never re-implement
-   displacement filters, and never fork a second glass component. (FluidGlass
-   was evaluated and rejected — WebGL demo scene, not portable. Its *ideas* —
-   bar mode, transmission, chromatic aberration — were translated into
-   GlassSurface + CSS instead. Keep it that way.)
+   displacement filters, and never fork a second glass component. (FluidGlass was
+   evaluated and rejected — a WebGL demo scene, not portable. Its *ideas* — bar
+   mode, transmission, chromatic aberration — were translated into GlassSurface +
+   CSS instead. Keep it that way. Ein UI was evaluated in Phase 18 and rejected on
+   the same grounds for its material — `rgba` fill plus `backdrop-filter: blur()`
+   is the glassmorphism this constitution forbids. Only its color methodology was
+   adopted; see `color.md`.)
 2. **The material system is CSS.** On-glass control skins live in
    `ai-learning-web/src/styles/glass.css` under `.glass-material`. New on-glass
    controls extend that file; they don't carry private glass styles.
 3. **CSS variables drive appearance.** All optical state (`--glass-depth`,
    `--glass-density`, `--glass-fresnel`, `--glass-light-*`, `--glass-proximity`,
-   `--glass-flow-opacity`, …) is custom-property-gated with inert defaults.
-   A surface that opts into nothing renders as the calm baseline. Stage logic
-   (e.g. `useGlassSpotlight`) writes variables; components never reach into
-   each other.
-4. **No WebGL unless absolutely necessary.** SVG filters + CSS deliver the
+   `--glass-flow-opacity`, …) is custom-property-gated with inert defaults. A
+   surface that opts into nothing renders as the calm baseline. Stage logic (e.g.
+   `useGlassSpotlight`) writes variables; components never reach into each other.
+4. **Named materials, not loose dials.** A surface declares *what it is*
+   (`chrome | hero | floating`) and inherits its whole optical prescription from
+   a preset. Adding a preset is a design-system decision — it needs a rank, an
+   Apple variant (Clear/Regular), and a documented reason no existing preset fits.
+5. **No WebGL unless absolutely necessary.** SVG filters + CSS deliver the
    material. A WebGL dependency requires a written justification that CSS/SVG
    cannot achieve the effect, plus a full non-WebGL fallback.
-5. **Performance budget.** Reactive lighting uses compositor-friendly channels
+6. **Performance budget.** Reactive lighting uses compositor-friendly channels
    only (opacity, transform, gradient positions via variables). Expensive work
-   (displacement-map generation) happens on mount/resize, never per frame.
-   No new per-frame JS loops for decoration.
-6. **Progressive enhancement with real fallbacks.** Browsers that can't apply
-   SVG backdrop filters (Safari, Firefox) get the frosted fallback and must
-   remain fully legible and functional. Feature-detect; never UA-gate features.
-7. **Composition over inheritance.** Build a dock, dialog, or palette by
-   placing content on a GlassSurface and applying `.glass-material` — not by
-   subclassing or copying the surface.
-8. **Scoped, not global.** Glass token remaps apply only inside the material
-   container. The rest of the app keeps its solid-surface skins; base
-   components (AppInput, AppButton) are never modified for glass.
-9. **Accessibility is not traded for optics.** Focus rings, contrast on
-   on-glass text, keyboard reachability, and touch behavior survive every
-   glass treatment.
+   (displacement-map generation) happens on mount/resize, never per frame. No new
+   per-frame JS loops for decoration.
+7. **Progressive enhancement with real fallbacks.** Browsers that can't apply SVG
+   backdrop filters (Safari, Firefox) get the frosted tier and must remain fully
+   legible and functional. The rule is feature detection, not UA sniffing. The
+   current UA gate is *known, load-bearing debt* — WebKit and Firefox parse
+   `backdrop-filter: url()` but render nothing, so a naive feature test
+   false-positives there. Keep the gate contained, don't spread it, and repay it
+   with a render-level probe when practical (`implementation.md` §7).
+8. **Composition over inheritance.** Build a dock, dialog, or palette by placing
+   content on a GlassSurface and applying `.glass-material` — not by subclassing
+   or copying the surface.
+9. **Scoped, not global.** Glass token remaps apply only inside the material
+   container. The rest of the app keeps its solid-surface skins; base components
+   (AppInput, AppButton) are never modified for glass.
+10. **Accessibility is not traded for optics.** Focus rings, contrast on on-glass
+    text, keyboard reachability, and touch behavior survive every glass treatment.
+11. **The material is guarded by tests.** `glassBudget.spec.ts` (instance budget,
+    forked refraction chains, stray `backdrop-filter`, the retired glassmorphism
+    family) and `materialTokens.spec.ts` (preset values pinned to what shipped).
+    The guard is the constitution's enforcement arm; changing it is amending the
+    constitution.
 
-## 5. Design Tokens
+## 5. Design tokens
 
-Conceptual dials of the material. Each maps to existing custom properties or
-props; future work adjusts these dials rather than inventing new mechanisms.
+The conceptual dials of the material. Each maps to real custom properties;
+future work adjusts these dials rather than inventing new mechanisms. The
+canonical `--material-*` tokens live in `styles/tokens.css`; the presets that
+bundle them live in `glass.css`.
 
-- **Glass Density** (`--glass-density`, `--glass-tint`) — how much smoke is in
-  the slab; the legibility dial. High density = dark, ND-filter glass (login
-  card); low density = clear water glass (dock).
+- **Glass Density** (`--material-density-*` → `--glass-density`, `--glass-tint`)
+  — how much smoke is in the slab; the legibility dial. High density = dark,
+  ND-filter glass; low density = clear water glass.
 - **Glass Temperature** — the color bias of tint and edge casts: cool
-  (blue-white, default up-light side) vs. warm (amber, down-shadow side).
-  Both temperatures appear on one surface only as the two sides of dispersion.
-- **Edge Energy** (borderWidth, distortion scale, channel offsets) — how
-  strongly the rim bends and splits light. High at hero surfaces, low at quiet
-  utility panels.
-- **Reflection Strength** (`--glass-inner-glow`, `--glass-edge-glow`,
+  (blue-white, default up-light side) vs. warm (amber, down-shadow side). Both
+  temperatures appear on one surface only as the two sides of dispersion.
+- **Edge Energy** (borderWidth, distortion scale, channel offsets) — how strongly
+  the rim bends and splits light. High at hero surfaces, low at quiet utility
+  panels.
+- **Reflection Strength** (`--material-inner-glow-*`, `--material-edge-glow-*`,
   `--glass-light-strength`) — how much of the scene's light the surface throws
   back. Rises with proximity to a light source, falls at rest.
-- **Optical Depth** (`--glass-depth`) — presence of the thickness cues: front
-  rim, back rim, back-face reflection, internal scatter. The "is this a slab
-  or a film" dial.
+- **Optical Depth** (`--material-depth` → `--glass-depth`) — presence of the
+  thickness cues: front rim, back rim, back-face reflection, internal scatter.
+  The "is this a slab or a film" dial.
 - **Transmission** (backgroundOpacity ≈ 0, saturation) — how much of the
   background passes through. High transmission is the default; frost is a
   fallback state, not a style.
-- **Surface Flow** (`--glass-flow-opacity`, surfaceFlow) — presence of the
-  slow ambient light traversal. The "is this material alive" dial; near zero
-  at idle.
+- **Surface Flow** (`--glass-flow-opacity`, surfaceFlow) — presence of the slow
+  ambient light traversal. The "is this material alive" dial; near zero at idle.
 - **Material Weight** — interaction damping: transition durations slightly
-  heavier than app defaults, sub-pixel press settle, no springs. Heavier glass
-  = slower, calmer responses.
+  heavier than app defaults, sub-pixel press settle, no springs. Heavier glass =
+  slower, calmer responses.
 
-## 6. Allowed Components
+## 6. Allowed surfaces
 
 Surfaces that should be built from this system (existing and future):
 
@@ -203,10 +220,10 @@ Surfaces that should be built from this system (existing and future):
 - Dialogs and modal sheets (confirmations, premium upsells)
 - Cards elevated above content (stats, achievements, sponsor cards)
 - Context menus and dropdown panels
-- Floating toolbars (editor/selection toolbars)
+- Floating toolbars (exists: NoteSelectionToolbar)
 - Widgets (timers, streaks, quick actions)
 - Timeline overlays and scrubbers
-- Knowledge Graph overlays (node inspectors, legends, filters floating over the graph)
+- Knowledge Graph overlays (node inspectors, legends, filters)
 - Search overlays
 - Premium subscription dialogs and plan cards
 - Toast/notification stack (light-touch, low density)
@@ -215,13 +232,18 @@ Not everything is glass: dense reading surfaces (lesson bodies, tables, code
 editors, long forms) stay solid. Glass marks *elevated, transient, or premium*
 layers — the things floating above the work, never the work itself.
 
-## 7. Forbidden Patterns
+Note the gap between this list and the shipped instance budget of **3**. The
+list says what is *eligible*; the budget says what is *mounted*. Eligibility is
+not permission — a new instance is still a budget renegotiation.
+
+## 7. Forbidden patterns
 
 - ❌ **Fake blur** — `background: rgba(255,255,255,.2)` posing as glass with no
   backdrop interaction.
 - ❌ **White frosted rectangles** — the generic glassmorphism card; our glass is
   smoked or water-clear, never milk.
-- ❌ **Constant floating / hover-bobbing** — surfaces have mass; they don't levitate.
+- ❌ **Constant floating / hover-bobbing** — surfaces have mass; they don't
+  levitate.
 - ❌ **Bounce and spring animations** — overshoot contradicts weight.
 - ❌ **Decorative glass without function** — if the layer isn't elevated,
   transient, or premium, it isn't glass.
@@ -233,53 +255,40 @@ layers — the things floating above the work, never the work itself.
   copy-pasted filter chains, no one-off `backdrop-filter` blobs in page CSS.
 - ❌ **Multiple competing light sources** — one implied light per scene.
 - ❌ **Per-frame filter regeneration or layout-thrashing JS** for optical effects.
-- ❌ **Theme-relative text on smoked glass** — on-glass palette is fixed dusk.
+- ❌ **Theme-relative text on smoked glass** — the on-glass palette is fixed dusk.
 - ❌ **Glass that darkens/blurs its own content** — the material sits behind
   content, never on top of it.
+- ❌ **Anonymous glass** — a surface without a declared material preset.
+- ❌ **Invented color** — a hex or rgba literal that isn't derived from the
+  palette (`color.md`).
 
-## 8. Roadmap Integration
+## 8. Roadmap integration
 
-For every Phase 15+ feature (see `docs/roadmap-v1.md`), this skill is read
+For every Phase 15+ feature (see `docs/roadmap.md` — the canonical roadmap; the
+archived `roadmap-v1`/`phase15-35` docs are never to be used), this skill is read
 before UI design. How the language shows up naturally:
 
 - **Knowledge Graph** — the graph canvas is the *scene* (a light source in
   itself); inspectors, legends, and filters float as smoked slabs whose
   reflections respond to the glow of nearby nodes.
 - **AI Workspace / future AI features** — AI presence is expressed as light
-  inside glass: a thinking state is a slow internal sheen, a completed answer
-  a one-shot brightening. AI chrome is glass; AI *content* is solid and legible.
+  inside glass: a thinking state is a slow internal sheen, a completed answer a
+  one-shot brightening, an error is density up and light down. AI chrome is
+  glass; AI *content* is always solid and legible.
 - **Command Palette** — the canonical heavy slab: high Optical Depth, high Edge
   Energy, appears with a one-shot settle (no bounce), results on solid rows
   within the material.
 - **Search** — same slab family as the palette, lower density.
-- **Sidebar** — low density, low motion; a quiet pane of the same material, not
-  a hero surface.
-- **Marketplace & Sponsor page** — sponsor and product cards use card-grade
-  glass with proximity lighting; restraint keeps "premium" from becoming "busy."
-- **Premium pages** — the highest expression of the material (max depth,
-  fresnel, dispersion) since premium *is* the product's optical brand — while
-  pricing/terms stay maximally legible.
-- **Settings / Admin dashboard** — mostly solid; glass only for transient
-  layers (confirm dialogs, pickers). Data tables are never glass.
-- **Community** — user content on solid surfaces; glass reserved for
-  composers, reaction popovers, and profile hover cards.
+- **Sidebar** — low density, low motion; a quiet pane of the same material, not a
+  hero surface.
+- **Marketplace & Sponsor page** — sponsor and product cards use card-grade glass
+  with proximity lighting; restraint keeps "premium" from becoming "busy."
+- **Premium pages** — the highest expression of the material (max depth, fresnel,
+  dispersion) since premium *is* the product's optical brand — while pricing and
+  terms stay maximally legible.
+- **Settings / Admin dashboard** — mostly solid; glass only for transient layers
+  (confirm dialogs, pickers). Data tables are never glass.
+- **Community** — user content on solid surfaces; glass reserved for composers,
+  reaction popovers, and profile hover cards.
 - **Focus Mode** — the strongest reveal-not-hide statement: surrounding chrome
   recedes into dim, low-density glass while the work stays bright and solid.
-
-## 9. Implementation Checklist
-
-Before implementing any future UI surface, verify:
-
-- [ ] Read this skill; the surface is on the Allowed list (or justified as elevated/transient/premium)
-- [ ] Uses the existing `GlassSurface` primitive — no new/duplicate glass implementation
-- [ ] On-glass controls use `.glass-material` (glass.css), extended there if needed
-- [ ] Optical hierarchy preserved — density/depth/edge energy match the surface's rank in the scene
-- [ ] One light source: highlights, Fresnel, and sheens agree in direction with the rest of the view
-- [ ] Legibility: content revealed, not hidden; on-glass text uses the fixed dusk palette; contrast verified
-- [ ] Motion is meaningful: interaction-driven or near-imperceptible ambient; one-shot preferred; no bounce
-- [ ] Performance budget respected: variables/opacity/transform only per frame; no filter regeneration; no new RAF loops
-- [ ] Reduced-motion and touch degrade to zero light-strength by default
-- [ ] Browser fallback verified (Safari/Firefox frosted path is legible and functional)
-- [ ] Accessibility preserved: focus-visible rings, keyboard paths, semantics untouched by the material
-- [ ] Uses the design-token dials (Density, Depth, Edge Energy, …) — no ad-hoc magic values outside glass.css
-- [ ] Consistent with this Optical Glass Design System end to end
