@@ -85,7 +85,12 @@ export default {
       },
       verb: {
         review: '去复习',
+        done: '完成',
         open: '打开',
+      },
+      announce: {
+        taskDone: '已完成「{title}」，已从计划中移除。',
+        reviewed: '已复习 {n} 张卡片，计划已更新。',
       },
     },
     complete: {

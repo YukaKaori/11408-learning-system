@@ -10,8 +10,14 @@
  * rendered, never recomputed. The only thing this component derives is how to
  * *say* a timestamp, which is presentation.
  *
- * Step 3 scope: the verb navigates to the owning module. Acting in place —
- * mounting the review session, completing a task inline — is Step 4.
+ * **One primary verb, and nothing else.** A row carries a single button and no
+ * second control — no inline editor, no overflow menu, no status dropdown.
+ * Anything the verb cannot do belongs to the module that owns the commitment,
+ * which is reachable from the plan's overflow link and the nav. A row that
+ * offers three ways to touch a commitment is a dashboard widget again.
+ *
+ * The row itself performs nothing: it emits `activate` and the view dispatches
+ * to the owning module (Step 4). `busy` is that dispatch still in flight.
  */
 import { computed } from 'vue'
 import { useI18n } from 'vue-i18n'
@@ -19,7 +25,11 @@ import { AppIcon, type IconName } from '@/components'
 import type { PlanItemDto } from '@/api/modules/workspace'
 import { useSubjectsStore } from '@/stores/subjects'
 
-const props = defineProps<{ item: PlanItemDto }>()
+const props = defineProps<{
+  item: PlanItemDto
+  /** The row's action is in flight — the verb is disabled until it settles. */
+  busy?: boolean
+}>()
 
 defineEmits<{ activate: [item: PlanItemDto] }>()
 
@@ -74,12 +84,21 @@ const when = computed(() => {
   return ''
 })
 
+/**
+ * The one verb, chosen by what actually retires the commitment.
+ *
+ * A task is retired by being *done*, so that is its verb — the fast path that
+ * makes the day shrink. A review is retired by grading its cards, so the verb
+ * opens the session. A session is retired by time passing: there is nothing to
+ * complete, so it can only be *opened* in the calendar that owns it. Naming it
+ * "Start" would promise a focus timer this phase does not own (P21).
+ */
 const verb = computed(() => {
   switch (props.item.kind) {
     case 'review':
       return t('today.plan.verb.review')
-    case 'session':
-      return t('today.plan.verb.open')
+    case 'task':
+      return t('today.plan.verb.done')
     default:
       return t('today.plan.verb.open')
   }
@@ -103,9 +122,20 @@ const tierLabel = computed(() =>
       <span v-if="when" class="row-when">{{ when }}</span>
     </span>
 
-    <button type="button" class="row-verb" @click="$emit('activate', item)">
+    <button
+      type="button"
+      class="row-verb"
+      :disabled="busy"
+      :aria-busy="busy || undefined"
+      @click="$emit('activate', item)"
+    >
       {{ verb }}
-      <AppIcon name="arrow-right" size="sm" aria-hidden="true" />
+      <AppIcon
+        :name="busy ? 'loader' : 'arrow-right'"
+        size="sm"
+        :class="{ spin: busy }"
+        aria-hidden="true"
+      />
     </button>
   </li>
 </template>
@@ -197,6 +227,31 @@ const tierLabel = computed(() =>
 .row-verb:focus-visible {
   outline: var(--border-width-md) solid var(--color-focus-ring);
   outline-offset: 2px;
+}
+
+.row-verb:disabled {
+  cursor: progress;
+  color: var(--color-text-tertiary);
+}
+
+/* The app's one spinner idiom (AppButton), local because its keyframes are
+   scoped there. It rests — not freezes — under reduced motion: a still
+   spinner would read as a stuck button, so the disabled state carries the
+   waiting instead. */
+.spin {
+  animation: plan-row-spin 0.8s linear infinite;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .spin {
+    animation: none;
+  }
+}
+
+@keyframes plan-row-spin {
+  to {
+    transform: rotate(360deg);
+  }
 }
 
 .sr-only {

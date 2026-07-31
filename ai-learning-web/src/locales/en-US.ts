@@ -87,7 +87,12 @@ const enUS: typeof zhCN = {
       },
       verb: {
         review: 'Review',
+        done: 'Done',
         open: 'Open',
+      },
+      announce: {
+        taskDone: '{title} completed and removed from the plan.',
+        reviewed: '{n} cards reviewed. The plan has been updated.',
       },
     },
     complete: {

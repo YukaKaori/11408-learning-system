@@ -20,18 +20,26 @@
  * No GlassSurface, no backdrop-filter, no material preset — the displacement
  * budget stays at 3 and `glassBudget.spec.ts` is a gate on this step.
  *
- * Step 3 scope: composition and all six view states. Acting in place (mounting
- * the review session, completing a task inline, reloading so the plan shrinks)
- * is Step 4, and the day-complete settle is Step 5.
+ * **Today dispatches; it never re-implements.** Every verb hands the work to
+ * the module that owns the commitment — the Phase 15 review session, the task
+ * API, the calendar — and Today's only contribution afterwards is to reload
+ * itself so the plan visibly shrinks. There is no second scheduler here, no
+ * second grading path, no local copy of a task's state machine.
+ *
+ * Step 4 scope: the direct actions and the shrink loop. The day-complete
+ * settle and the ledger's demotion are Step 5.
  */
-import { computed, onMounted } from 'vue'
+import { computed, onMounted, ref } from 'vue'
 import { useI18n } from 'vue-i18n'
 import { useRouter } from 'vue-router'
 import { AppButton, AppEmpty, AppIcon, AppSkeleton } from '@/components'
 import { getToday, getWorkspaceSummary, type PlanItemDto } from '@/api/modules/workspace'
+import { updateTask } from '@/api/modules/task'
+import { toApiError } from '@/api/types'
 import { useAsync } from '@/composables/useAsync'
 import { useAuthStore } from '@/stores/auth'
 import { useSubjectsStore } from '@/stores/subjects'
+import ReviewSessionView from '@/features/flashcards/ReviewSessionView.vue'
 import PlanList from './today/PlanList.vue'
 import LedgerBand from './today/LedgerBand.vue'
 
@@ -51,7 +59,7 @@ onMounted(() => {
  * streak) is the accepted cost of keeping the two contracts independent.
  */
 const { data: today, loading, error, reload } = useAsync(getToday)
-const { data: summary } = useAsync(getWorkspaceSummary)
+const { data: summary, reload: reloadSummary } = useAsync(getWorkspaceSummary)
 
 const showSkeleton = computed(() => loading.value && today.value === null)
 
@@ -101,19 +109,83 @@ const goalPercent = computed(() => {
 
 // --- Actions ---------------------------------------------------------------
 
+/** The Phase 15 review stage, mounted here — Today is its second consumer. */
+const reviewOpen = ref(false)
+
+/** The plan item whose action is in flight; exactly one at a time. */
+const pendingId = ref<string | null>(null)
+
+/** The last failed action as an i18n key. Cleared when the next one starts. */
+const actionError = ref<string | null>(null)
+
+/** What just changed, for the `role="status"` region. */
+const announcement = ref('')
+
 /**
- * Step 3 sends every verb to the module that owns the commitment. Step 4
- * replaces this with acting in place — grading the review session here,
- * completing a task inline — each ending in a reload so the plan visibly
- * shrinks. Navigation now keeps every row honest in the meantime; a rendered
- * verb that does nothing would be worse than no verb at all.
+ * The shrink loop. Every completed action ends here: the server recomputes the
+ * plan, the rank, the cap and the state, and the view renders whatever comes
+ * back. Nothing is spliced out of `plan` locally — a client that removed the
+ * row itself would be guessing at a state only the server can decide, and
+ * would get the `planned → complete` flip wrong the moment the last row goes.
+ *
+ * The ledger is refreshed alongside it so the page cannot show a task as both
+ * done and upcoming.
+ */
+async function refresh(): Promise<void> {
+  await Promise.all([reload(), reloadSummary()])
+}
+
+/**
+ * One verb per row, dispatched to its owner:
+ *
+ * - **review** → mount the existing review session; grading, scheduling and
+ *   the FSRS state all stay inside it.
+ * - **task** → the task module's own update endpoint, the same path the
+ *   calendar's checkbox uses. `completedAt` is stamped server-side.
+ * - **session** → the calendar. A session has no completion — it is retired by
+ *   time passing — so Today hands it over rather than inventing an action, and
+ *   owns no timer (that is P21).
  */
 function activate(item: PlanItemDto): void {
-  if (item.kind === 'review') {
-    void router.push({ name: 'flashcards' })
-    return
+  actionError.value = null
+  switch (item.kind) {
+    case 'review':
+      reviewOpen.value = true
+      return
+    case 'task':
+      void completeTask(item)
+      return
+    default:
+      void router.push({ name: 'calendar' })
   }
-  void router.push({ name: 'calendar' })
+}
+
+async function completeTask(item: PlanItemDto): Promise<void> {
+  const task = item.task
+  if (!task || pendingId.value !== null) return
+  pendingId.value = item.id
+  try {
+    await updateTask(task.id, { status: 'done' })
+    announcement.value = t('today.plan.announce.taskDone', { title: task.title })
+    await refresh()
+  } catch (caught) {
+    // The row stays exactly where it was: nothing was removed optimistically,
+    // so the failure needs no rollback and the verb can simply be pressed again.
+    actionError.value = toApiError(caught).messageKey
+  } finally {
+    pendingId.value = null
+  }
+}
+
+/**
+ * The session ended *on Today*, so the plan shrinks in place — the whole point
+ * of mounting the stage here rather than sending the user to Flashcards. It
+ * reloads even when nothing was graded: the queue can have moved on its own.
+ */
+async function onReviewClose(reviewed: number): Promise<void> {
+  reviewOpen.value = false
+  announcement.value = reviewed > 0 ? t('today.plan.announce.reviewed', { n: reviewed }) : ''
+  await refresh()
 }
 </script>
 
@@ -174,12 +246,15 @@ function activate(item: PlanItemDto): void {
 
     <template v-else-if="today">
       <!-- THE PLAN -->
-      <PlanList
-        v-if="today.state === 'planned'"
-        :items="today.plan"
-        :remaining-count="today.remainingCount"
-        @activate="activate"
-      />
+      <template v-if="today.state === 'planned'">
+        <PlanList
+          :items="today.plan"
+          :remaining-count="today.remainingCount"
+          :pending-id="pendingId"
+          @activate="activate"
+        />
+        <p v-if="actionError" class="plan-error" role="alert">{{ t(actionError) }}</p>
+      </template>
 
       <!--
         The three terminal states are kept distinct by the server and must stay
@@ -223,6 +298,20 @@ function activate(item: PlanItemDto): void {
       -->
       <LedgerBand v-if="summary && today.state !== 'empty'" :summary="summary" />
     </template>
+
+    <!--
+      The plan shrinks silently for anyone not watching it, so each completed
+      action is announced. Outside the `v-if` chain on purpose: a live region
+      only announces while it is already mounted.
+    -->
+    <p class="sr-only" role="status">{{ announcement }}</p>
+
+    <!--
+      The review session runs *on Today* (Phase 15's stage, unchanged, second
+      consumer) so the day it belongs to is still underneath it when it ends.
+      No deck id: the plan's review row is the whole due queue.
+    -->
+    <ReviewSessionView v-if="reviewOpen" @close="onReviewClose" />
   </div>
 </template>
 
@@ -322,6 +411,26 @@ function activate(item: PlanItemDto): void {
   display: flex;
   flex-direction: column;
   gap: var(--space-2);
+}
+
+/* A failed verb speaks under the plan rather than replacing it: the other
+   rows are still actionable, and the failed one is still there to retry. */
+.plan-error {
+  margin: var(--space-3) 0 0;
+  font-size: var(--text-sm);
+  color: var(--color-danger);
+}
+
+.sr-only {
+  position: absolute;
+  width: 1px;
+  height: 1px;
+  padding: 0;
+  margin: -1px;
+  overflow: hidden;
+  clip: rect(0, 0, 0, 0);
+  white-space: nowrap;
+  border: 0;
 }
 
 /* --- Terminal states ---------------------------------------------------- */

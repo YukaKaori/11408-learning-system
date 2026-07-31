@@ -21,6 +21,11 @@ import PlanRow from './PlanRow.vue'
 defineProps<{
   items: PlanItemDto[]
   remainingCount: number
+  /**
+   * The id of the row whose action is in flight. One at a time, deliberately:
+   * a plan being acted on in three places at once is a queue, not a plan.
+   */
+  pendingId?: string | null
 }>()
 
 defineEmits<{ activate: [item: PlanItemDto] }>()
@@ -35,6 +40,7 @@ const { t } = useI18n()
         v-for="item in items"
         :key="item.id"
         :item="item"
+        :busy="item.id === pendingId"
         @activate="$emit('activate', $event)"
       />
     </ul>

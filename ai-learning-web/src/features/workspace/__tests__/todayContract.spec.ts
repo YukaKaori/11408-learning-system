@@ -110,3 +110,79 @@ describe('Today — the server owns rank, cap and state', () => {
     }
   })
 })
+
+/**
+ * Today's actions (Phase 17 Step 4).
+ *
+ * Today executes nothing itself. Each verb hands the commitment to the module
+ * that owns it and the view then reloads, so the plan shrinks because the
+ * server says it did. The guards below fail on the three ways that discipline
+ * erodes: a second review implementation, a second task state machine, and the
+ * slow drift of another module's editing UI onto the plan.
+ */
+describe('Today — actions dispatch to the owning module', () => {
+  const VIEW = read(join(WORKSPACE, 'TodayView.vue'))
+
+  /**
+   * Grading, the queue and the FSRS scheduler belong to Phase 15. Today mounts
+   * `ReviewSessionView` — a legitimate second consumer — and touches none of
+   * them; reaching for `gradeCard` here would fork the scheduler.
+   */
+  it('reuses the review session rather than re-implementing it', () => {
+    expect(VIEW, 'TodayView must mount ReviewSessionView').toMatch(/<ReviewSessionView[\s/>]/)
+    for (const file of FILES) {
+      expect(read(file), `${relative(file)} must not grade or fetch cards`).not.toMatch(
+        /\b(gradeCard|fetchReviewQueue|getReviewSummary)\b/,
+      )
+    }
+  })
+
+  /**
+   * Completing a task goes through the task module's own endpoint — the same
+   * path the calendar's checkbox uses — so `completedAt` is stamped in exactly
+   * one place. A raw `api.put` here would be a second write path to a table
+   * Today does not own.
+   */
+  it('completes tasks through the task module API', () => {
+    expect(VIEW, 'TodayView must use the task module').toMatch(
+      /import \{[^}]*\bupdateTask\b[^}]*\} from '@\/api\/modules\/task'/,
+    )
+    for (const file of FILES) {
+      expect(read(file), `${relative(file)} must not write to the API directly`).not.toMatch(
+        /\bapi\s*\.\s*(post|put|patch|delete)\s*\(/,
+      )
+    }
+  })
+
+  /**
+   * One primary verb per row and nothing else. Mounting another module's form
+   * dialog on Today would make the plan a place to *edit* commitments as well
+   * as retire them — modal dashboard behaviour, and the first step back toward
+   * a widget grid. Editing lives in Calendar, which every row can reach.
+   */
+  it('adds no editor to the plan', () => {
+    for (const file of FILES) {
+      expect(read(file), `${relative(file)} must not mount a form dialog`).not.toMatch(
+        /\b(TaskFormDialog|SessionFormDialog)\b/,
+      )
+    }
+  })
+
+  /**
+   * The plan shrinks because the server recomputed it. Splicing the acted-on
+   * row out of `plan` locally would fabricate a state — most visibly the
+   * `planned → complete` flip, which only the server may decide.
+   */
+  it('shrinks the plan by reloading, never by editing it locally', () => {
+    for (const file of FILES) {
+      const source = read(file)
+      const name = relative(file)
+      // Reading the plan to derive a sentence is fine; mutating it is not.
+      expect(source, `${name} must not mutate the plan in place`).not.toMatch(
+        /plan\s*\.\s*(splice|pop|shift|push)\s*\(/,
+      )
+      expect(source, `${name} must not assign to the plan`).not.toMatch(/\.plan\s*=[^=]/)
+    }
+    expect(VIEW, 'TodayView must reload after an action').toMatch(/reload\(\)/)
+  })
+})
