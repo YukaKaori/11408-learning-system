@@ -5,7 +5,7 @@ description: The one material system of this project — Apple-style Liquid Glas
 
 # Liquid Material
 
-The single material system of the AI Learning Platform. One skill, five
+The single material system of the AI Learning Platform. One skill, ten
 references: this file decides *whether and what*, the references say *how*.
 
 The product's visual identity is **heavy optical glass** — not the web's default
@@ -28,6 +28,12 @@ other file is corrected.
 | `references/components.md` | Creating or composing a glass component — the primitive, the skin system, the catalogue, material ranks |
 | `references/implementation.md` | Writing the actual Vue 3 + TypeScript code — variable channel, spotlight loop, map generation, traps, tests |
 | `references/color.md` | Adding or changing **any** color token — OKLCH law, anchor palettes, chroma tapering, what stays frozen |
+| `references/navigation.md` | Designing a dock, header, sidebar, toolbar, bottom bar or command palette — why navigation is chrome, solid vs Clear vs Regular, interaction hierarchy |
+| `references/adaptive-material.md` | The surface sits on a backdrop you don't control — light/dark/busy/plain, density as the response, accessibility as a material state, and why adaptivity is deferred |
+| `references/interaction.md` | Deciding how a surface answers hover, press, focus, selection — settle vs spring, press illumination, edge highlight, and the morph question |
+| `references/scroll-edge.md` | Content scrolls under chrome — the graduated boundary, hard vs soft, the four scroll moments, what reduced motion forbids |
+| `references/vue-patterns.md` | Integrating the material into the app — composable ownership, token-driven styling, SSR safety, testing, performance, and what must never happen |
+| `references/source-review.md` | Evaluating an external Liquid Glass library or demo — standing verdicts on the public ecosystem and the triage rule |
 
 Living sources of truth in the repo: `docs/liquid-material-system.md` (the
 material system), `docs/liquid-glass-analysis.md` (the optical research),

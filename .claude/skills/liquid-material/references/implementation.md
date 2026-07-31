@@ -283,3 +283,76 @@ Full law in `color.md`. The coding rules:
   never a runtime JS color computation.
 - On-glass text stays on the fixed dusk palette; it is not theme-relative and
   not palette-derived (`constitution.md` §2.7).
+
+## 12. Position-driven effects vs. time-driven animation
+
+*Added 2026-07-31. The implementation half of `scroll-edge.md` §6.*
+
+A distinction the motion budget depends on and never spelled out:
+
+- **Position-driven** — every value is a pure function of a measured position
+  (scroll offset, pointer distance, element geometry). At a given position the
+  screen looks a specific way, regardless of how it got there. No duration, no
+  easing, no trigger.
+- **Time-driven** — a value changes because a clock is running: a transition, a
+  keyframe animation, an eased approach toward a goal.
+
+Why it matters in code:
+
+- **Position-driven effects may run under `prefers-reduced-motion`.** The user
+  is the clock. Freezing them would freeze the document under the user's own
+  scrolling, which the preference does not ask for.
+- **Time-driven effects must be gated**, zero-by-construction as everywhere
+  else.
+- The spotlight loop is a **hybrid** and worth naming as the exception: pointer
+  position is the input, but the exponential approach toward the goal is a
+  clock. That is exactly why it is gated on both fine-pointer and reduced-motion
+  rather than on pointer alone.
+
+Rules for writing a position-driven effect:
+
+- Derive from a measured value, never from an event *count* or a velocity
+  threshold. A threshold turns a continuous function into a trigger, and a
+  trigger implies an animation.
+- Keep it **continuous across the whole range**. Stepped output shows a seam as
+  content crosses each step, and is worse for motion-sensitive users than a
+  smooth ramp, not better.
+- Make it **stateless**. The output depends on the current position only, never
+  on scroll history or direction — otherwise the effect disagrees with itself
+  after a jump-to-top or a route change.
+- Write it through the same custom-property channel as everything else (§1),
+  and honour the same rect-caching and dirty-flag discipline (§2). Reading
+  layout on every scroll event is the classic way to make a "cheap" effect the
+  most expensive thing on the page.
+- Never produce it by animating `filter`, `backdrop-filter`, or a blur radius
+  (§9). If a boundary must soften, it is a mask or a gradient whose *position*
+  moves — never a filter whose *strength* is recomputed.
+
+## 13. SSR and hydration safety
+
+*Added 2026-07-31. The app is client-rendered today; every rule below is also a
+live bug class in an SPA, which is why they apply now.*
+
+- **No browser globals at module scope.** Media queries, capability probes, and
+  `document`/`window` access run in `onMounted` or later. A `window` reference
+  evaluated at import time breaks the module everywhere it is imported — most
+  visibly in unit tests, which have no DOM at import time.
+- **Filter IDs must be deterministic across render passes.** Per-instance SVG
+  filter identifiers come from Vue's own ID mechanism (§8), not from a module
+  counter and not from a random value. A counter yields different IDs on server
+  and client; a random value yields a mismatch *and* a silently broken
+  `url(#…)` reference, which fails as an unfiltered surface rather than as an
+  error.
+- **No measurement during render.** All geometry is read after mount, behind the
+  dirty flag.
+- **The inert state is the pre-hydration state.** Because every optical layer is
+  gated by a variable defaulting to zero (§3), a surface with no JavaScript yet
+  renders as the calm baseline: preset tokens applied, no light, fully legible.
+  This is free, and it is the reason to keep it free — any layer that paints
+  something by default breaks it.
+- **Resolve the quality tier once, at boot, onto the document root** (§6) rather
+  than per instance during render. A tier decided inside a component's render is
+  a tier that can differ between passes.
+- **Never gate DOM structure on capability.** Markup is identical in every tier;
+  only appearance differs. Conditional structure makes hydration mismatches
+  unavoidable and turns the fallback into a separate, untested product.

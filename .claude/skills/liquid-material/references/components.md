@@ -177,3 +177,61 @@ budget renegotiation and, probably, a fourth preset.
   hand-typing optical dials at a call site to fake a rank
 - ❌ Color literals in a component's `<style>` block; every color comes from a
   token (`color.md`)
+
+## 7. Concentricity — radii are derived, not chosen
+
+*Added 2026-07-31 from the ecosystem review. Fills the gap recorded in
+`docs/liquid-glass-apple-audit.md` §2.4.*
+
+Apple derives the corner radius of a nested element from the radius of the shape
+containing it, so the two curves stay **optically parallel** — the gap between
+them is constant all the way around the corner. This is why native glass
+surfaces read as machined rather than assembled.
+
+The rule, framework-free: **a nested rounded element's radius equals the
+container's radius minus the inset between them.** Applied consistently, the
+whole stack of shapes shares one curvature family.
+
+Why it matters more for this material than for flat UI:
+
+- The rim is where the material lives. Refraction, dispersion, and the Fresnel
+  arc all follow the corner. Two corners that disagree put two *optical* curves
+  side by side, not just two outlines.
+- Corner-aware refraction maps make the glass read as a *shape* rather than a
+  rectangle (`materials.md` §2). That work is wasted if the content sitting on
+  the slab has an unrelated radius.
+- A constant gap is the cheapest possible cue that a surface was designed. An
+  inconsistent one reads as carelessness even when the viewer cannot say why.
+
+Practical consequences:
+
+- A control inside a slab takes the slab's radius minus its inset, not a
+  radius from the app's general scale.
+- A slab's own radius belongs to its **recipe**, not to its call site — the
+  dock, the login card, and the toolbar each have one correct radius, and it is
+  part of what the recipe is.
+- **Do not derive radii at runtime.** This is authored geometry, resolved once
+  in the token/preset layer, not measured and computed per instance.
+- The intended home for the shared value is the existing glass radius token,
+  which is currently declared and consumed by nobody. Wiring it up is a
+  deliberate change with visual consequences on all three shipped surfaces —
+  a phase decision, not a cleanup.
+
+**Status: documented, not built.** The shipped radii are unrelated constants
+today. Nothing here authorizes changing them.
+
+### Surfaces in proximity are one material, not N
+
+The same review turned up Apple's *container* concept: multiple glass elements
+grouped so they compose as a single material rather than as independent
+surfaces. Our analogue already exists in two rules — one scene, one light
+(`constitution.md` §2.9) and the instance budget — but the underlying insight is
+worth stating directly, because it explains *why* those rules are shaped the way
+they are:
+
+**Glass surfaces near each other must be reasoned about collectively.** Two
+slabs a few pixels apart are perceived as one piece of glass with a seam. They
+must therefore share a light bearing, share a backdrop assumption, and share a
+curvature family — and if they cannot, they should be one surface instead of
+two. This is also the strongest argument against wrapping every card in a grid
+in its own instance: that composition is not N cards, it is one badly-cut sheet.
