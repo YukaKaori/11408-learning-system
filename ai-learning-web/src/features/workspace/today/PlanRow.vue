@@ -187,10 +187,14 @@ const tierLabel = computed(() =>
   white-space: nowrap;
 }
 
+/* Secondary, not tertiary: "overdue 2d" and "14:00–15:30" are the half of a
+   row that says *when*, and the tertiary ramp measures 2.6:1 on light and
+   3.6:1 on dark — below AA for text that carries meaning. Same move Phase 16
+   made on the Notes surfaces (phase16-handoff §4.6). */
 .row-when {
   flex-shrink: 0;
   font-size: var(--text-xs);
-  color: var(--color-text-tertiary);
+  color: var(--color-text-secondary);
   font-variant-numeric: tabular-nums;
 }
 
@@ -224,9 +228,14 @@ const tierLabel = computed(() =>
   color: var(--color-text);
 }
 
+/*
+ * The global ring in base.css supplies width, colour and offset — restating
+ * them here would be a second copy to keep in sync. It also normalises
+ * `border-radius`, which would reshape this button's corners the moment it took
+ * focus, so the radius is the one thing re-declared.
+ */
 .row-verb:focus-visible {
-  outline: var(--border-width-md) solid var(--color-focus-ring);
-  outline-offset: 2px;
+  border-radius: var(--radius-button);
 }
 
 .row-verb:disabled {
@@ -254,16 +263,18 @@ const tierLabel = computed(() =>
   }
 }
 
-.sr-only {
-  position: absolute;
-  width: 1px;
-  height: 1px;
-  padding: 0;
-  margin: -1px;
-  overflow: hidden;
-  clip: rect(0, 0, 0, 0);
-  white-space: nowrap;
-  border: 0;
+/* `.sr-only` is the global utility in base.css — not restated here. */
+
+/*
+ * A finger needs 44px; a mouse does not. Keyed to the pointer rather than to a
+ * width breakpoint, because a small window on a desktop still has a cursor and
+ * a large tablet still has a thumb.
+ */
+@media (pointer: coarse) {
+  .row-verb {
+    min-height: 44px;
+    padding: 0 var(--space-4);
+  }
 }
 
 @media (max-width: 640px) {

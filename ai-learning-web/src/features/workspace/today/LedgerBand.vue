@@ -12,13 +12,19 @@
  * the Ledger never mutates, because a second place to act would rebuild the
  * dashboard Today replaced.
  *
+ * Step 5 refined it against one rule: **it must never compete with the Plan.**
+ * Two things follow. Its links are links rather than buttons — a button is an
+ * action affordance, and actions belong to the plan above; the Ledger only ever
+ * takes you somewhere. And it renders nothing at all when it has nothing to
+ * show, instead of four empty-state cards, which on a `clear` day would make
+ * the loudest thing on the page a report that there is nothing to report.
+ *
  * Solid surfaces throughout — content and data-viz are never glass
  * (docs/liquid-material-system.md §1).
  */
 import { computed } from 'vue'
 import { useI18n } from 'vue-i18n'
-import { useRouter } from 'vue-router'
-import { AppButton, AppCard, AppIcon, AppTooltip } from '@/components'
+import { AppCard, AppIcon, AppTooltip } from '@/components'
 import type { WorkspaceSummaryDto } from '@/api/modules/workspace'
 import { useDuration } from '@/composables/useDuration'
 import { useSubjectsStore } from '@/stores/subjects'
@@ -28,7 +34,6 @@ import { parseIsoDate } from '@/utils/date'
 const props = defineProps<{ summary: WorkspaceSummaryDto }>()
 
 const { t, d, locale } = useI18n()
-const router = useRouter()
 const subjectsStore = useSubjectsStore()
 const { formatMinutes } = useDuration()
 
@@ -64,10 +69,41 @@ const weekdayFormat = computed(() => new Intl.DateTimeFormat(locale.value, { wee
 function barTooltip(bar: { date: string; minutes: number }): string {
   return `${d(parseIsoDate(bar.date), 'short')} · ${formatMinutes(bar.minutes)}`
 }
+
+/**
+ * The chart as one sentence: the week's total, then every day and its minutes.
+ * This is the whole of the chart's data, so a screen-reader user gets what the
+ * bars show rather than a shape they cannot see.
+ */
+const chartLabel = computed(() => {
+  const days = weekBars.value
+    .map((bar) => `${weekdayFormat.value.format(parseIsoDate(bar.date))} ${formatMinutes(bar.minutes)}`)
+    .join(t('today.line.separator'))
+  return t('workspace.growth.chartLabel', {
+    total: formatMinutes(weekTotalMinutes.value),
+    days,
+  })
+})
+
+/**
+ * Whether the Ledger has any context to offer. An account with nothing in it
+ * yet gets no band — the `empty` state already gave that user the one action
+ * that matters, and a wall of "nothing here" cards is noise dressed as content.
+ *
+ * Note this is *not* a state derivation: it asks what the summary contains, and
+ * never what kind of day it is. `state` stays the server's word alone.
+ */
+const hasContext = computed(
+  () =>
+    props.summary.continueLearning.length > 0 ||
+    props.summary.recentConversations.length > 0 ||
+    props.summary.recentNotes.length > 0 ||
+    weekTotalMinutes.value > 0,
+)
 </script>
 
 <template>
-  <section class="ledger" :aria-label="t('today.ledger.title')">
+  <section v-if="hasContext" class="ledger" :aria-label="t('today.ledger.title')">
     <h2 class="ledger-heading">{{ t('today.ledger.title') }}</h2>
 
     <!-- Continue learning -->
@@ -79,46 +115,63 @@ function barTooltip(bar: { date: string; minutes: number }): string {
           <AppIcon name="arrow-right" size="sm" />
         </RouterLink>
       </div>
+      <!--
+        A card that navigates is a link, so it is one. It used to be a `@click`
+        on an `AppCard`, which renders a plain div: reachable with a mouse and
+        with nothing else. Wrapping in `RouterLink` restores tab order, Enter,
+        the middle-click and open-in-new-tab affordances a browser gives every
+        real link for free, and the accessible role — none of which a `tabindex`
+        patch would have brought with it.
+      -->
       <div v-if="summary.continueLearning.length > 0" class="continue-grid">
-        <AppCard
+        <RouterLink
           v-for="item in summary.continueLearning"
           :key="item.id"
-          variant="flat"
-          interactive
-          @click="router.push({ name: 'subject-detail', params: { id: item.id } })"
+          :to="{ name: 'subject-detail', params: { id: item.id } }"
+          class="continue-link"
         >
-          <div class="continue-head">
-            <span
-              class="continue-icon"
-              :style="{ color: accentColor(subjectAccentOf(item.color)) }"
-              aria-hidden="true"
-            >
-              <AppIcon :name="subjectIconOf(item.icon)" />
+          <AppCard variant="flat" interactive>
+            <div class="continue-head">
+              <span
+                class="continue-icon"
+                :style="{ color: accentColor(subjectAccentOf(item.color)) }"
+                aria-hidden="true"
+              >
+                <AppIcon :name="subjectIconOf(item.icon)" />
+              </span>
+              <span class="continue-progress">{{ item.progress }}%</span>
+            </div>
+            <h4 class="continue-name">{{ item.name }}</h4>
+            <span class="continue-meta">
+              {{
+                t('workspace.continueLearning.lastActive', {
+                  time: d(item.lastActivityAt, 'short'),
+                })
+              }}
             </span>
-            <span class="continue-progress">{{ item.progress }}%</span>
-          </div>
-          <h4 class="continue-name">{{ item.name }}</h4>
-          <span class="continue-meta">
-            {{ t('workspace.continueLearning.lastActive', { time: d(item.lastActivityAt, 'short') }) }}
-          </span>
-          <div class="progress-track">
-            <div
-              class="progress-fill"
-              :style="{
-                width: `${item.progress}%`,
-                backgroundColor: accentColor(subjectAccentOf(item.color)),
-              }"
-            ></div>
-          </div>
-        </AppCard>
+            <!--
+              The bar repeats the percentage already printed above it, so it is
+              decorative rather than a second, unlabelled meter.
+            -->
+            <div class="progress-track" aria-hidden="true">
+              <div
+                class="progress-fill"
+                :style="{
+                  width: `${item.progress}%`,
+                  backgroundColor: accentColor(subjectAccentOf(item.color)),
+                }"
+              ></div>
+            </div>
+          </AppCard>
+        </RouterLink>
       </div>
       <AppCard v-else variant="flat">
         <div class="section-empty">
           <AppIcon name="book-open" class="section-empty-icon" aria-hidden="true" />
           <p class="section-empty-text">{{ t('workspace.continueLearning.empty') }}</p>
-          <AppButton size="sm" variant="soft" @click="router.push({ name: 'subjects' })">
+          <RouterLink :to="{ name: 'subjects' }" class="section-empty-link">
             {{ t('workspace.continueLearning.emptyCta') }}
-          </AppButton>
+          </RouterLink>
         </div>
       </AppCard>
     </section>
@@ -137,20 +190,28 @@ function barTooltip(bar: { date: string; minutes: number }): string {
           <div v-if="summary.recentConversations.length === 0" class="section-empty">
             <AppIcon name="message-square" class="section-empty-icon" aria-hidden="true" />
             <p class="section-empty-text">{{ t('workspace.recentChats.empty') }}</p>
-            <AppButton size="sm" variant="soft" @click="router.push({ name: 'ai-tutor' })">
+            <RouterLink :to="{ name: 'ai-tutor' }" class="section-empty-link">
               {{ t('workspace.recentChats.emptyCta') }}
-            </AppButton>
+            </RouterLink>
           </div>
+          <!--
+            A list of links, which is what this always was. The rows were
+            `<li @click>`: no tab stop, no role, no Enter key. The fix is the
+            element that already means "go here", not a tabindex bolted onto a
+            list item.
+          -->
           <ul v-else class="row-list">
-            <li
-              v-for="conv in summary.recentConversations"
-              :key="conv.id"
-              class="row row-clickable"
-              @click="router.push({ name: 'ai-tutor', params: { conversationId: conv.id } })"
-            >
-              <span class="row-icon"><AppIcon name="message-square" size="sm" /></span>
-              <span class="row-text">{{ conv.title }}</span>
-              <span class="row-meta">{{ d(conv.updatedAt, 'short') }}</span>
+            <li v-for="conv in summary.recentConversations" :key="conv.id" class="row">
+              <RouterLink
+                :to="{ name: 'ai-tutor', params: { conversationId: conv.id } }"
+                class="row-link"
+              >
+                <span class="row-icon" aria-hidden="true">
+                  <AppIcon name="message-square" size="sm" />
+                </span>
+                <span class="row-text">{{ conv.title }}</span>
+                <span class="row-meta">{{ d(conv.updatedAt, 'short') }}</span>
+              </RouterLink>
             </li>
           </ul>
         </AppCard>
@@ -169,20 +230,21 @@ function barTooltip(bar: { date: string; minutes: number }): string {
           <div v-if="summary.recentNotes.length === 0" class="section-empty">
             <AppIcon name="notebook-pen" class="section-empty-icon" aria-hidden="true" />
             <p class="section-empty-text">{{ t('workspace.recentNotes.empty') }}</p>
-            <AppButton size="sm" variant="soft" @click="router.push({ name: 'notes' })">
+            <RouterLink :to="{ name: 'notes' }" class="section-empty-link">
               {{ t('workspace.recentNotes.emptyCta') }}
-            </AppButton>
+            </RouterLink>
           </div>
           <ul v-else class="row-list">
-            <li
-              v-for="note in summary.recentNotes"
-              :key="note.id"
-              class="row row-clickable"
-              @click="router.push({ name: 'notes', query: { note: note.id } })"
-            >
-              <span class="row-dot" :style="{ backgroundColor: subjectAccent(note.subjectId) }"></span>
-              <span class="row-text">{{ note.title }}</span>
-              <span class="row-meta">{{ d(note.updatedAt, 'short') }}</span>
+            <li v-for="note in summary.recentNotes" :key="note.id" class="row">
+              <RouterLink :to="{ name: 'notes', query: { note: note.id } }" class="row-link">
+                <span
+                  class="row-dot"
+                  :style="{ backgroundColor: subjectAccent(note.subjectId) }"
+                  aria-hidden="true"
+                ></span>
+                <span class="row-text">{{ note.title }}</span>
+                <span class="row-meta">{{ d(note.updatedAt, 'short') }}</span>
+              </RouterLink>
             </li>
           </ul>
         </AppCard>
@@ -198,31 +260,44 @@ function barTooltip(bar: { date: string; minutes: number }): string {
         </span>
       </div>
       <AppCard variant="flat">
+        <!--
+          The chart is one image with one accessible name, plus the seven
+          readings in text. It previously gave each bar `tabindex="0"` so the
+          pointer tooltip could be reached by keyboard — seven tab stops on
+          non-interactive divs, which is the tabindex abuse this pass removes.
+          Nothing here is actionable, so nothing here takes focus; the data
+          arrives as prose instead, which is also faster to hear than tabbing
+          through a week.
+        -->
         <div v-if="weekTotalMinutes > 0" class="growth-chart">
-          <div class="chart-bars">
-            <AppTooltip v-for="bar in weekBars" :key="bar.date" :content="barTooltip(bar)">
-              <div class="bar-slot" tabindex="0" :aria-label="barTooltip(bar)">
-                <span v-if="bar.showLabel" class="bar-label">{{ formatMinutes(bar.minutes) }}</span>
-                <span
-                  class="bar"
-                  :class="{ zero: bar.minutes === 0 }"
-                  :style="bar.minutes > 0 ? { height: `${bar.heightPercent}%` } : undefined"
-                ></span>
-              </div>
-            </AppTooltip>
-          </div>
-          <div class="chart-days">
-            <span v-for="bar in weekBars" :key="bar.date" class="chart-day">
-              {{ weekdayFormat.format(parseIsoDate(bar.date)) }}
-            </span>
+          <div class="chart-figure" role="img" :aria-label="chartLabel">
+            <div class="chart-bars">
+              <AppTooltip v-for="bar in weekBars" :key="bar.date" :content="barTooltip(bar)">
+                <div class="bar-slot">
+                  <span v-if="bar.showLabel" class="bar-label">
+                    {{ formatMinutes(bar.minutes) }}
+                  </span>
+                  <span
+                    class="bar"
+                    :class="{ zero: bar.minutes === 0 }"
+                    :style="bar.minutes > 0 ? { height: `${bar.heightPercent}%` } : undefined"
+                  ></span>
+                </div>
+              </AppTooltip>
+            </div>
+            <div class="chart-days">
+              <span v-for="bar in weekBars" :key="bar.date" class="chart-day">
+                {{ weekdayFormat.format(parseIsoDate(bar.date)) }}
+              </span>
+            </div>
           </div>
         </div>
         <div v-else class="section-empty">
           <AppIcon name="trending-up" class="section-empty-icon" aria-hidden="true" />
           <p class="section-empty-text">{{ t('workspace.growth.empty') }}</p>
-          <AppButton size="sm" variant="soft" @click="router.push({ name: 'calendar' })">
+          <RouterLink :to="{ name: 'calendar' }" class="section-empty-link">
             {{ t('workspace.growth.emptyCta') }}
-          </AppButton>
+          </RouterLink>
         </div>
       </AppCard>
     </section>
@@ -245,6 +320,12 @@ function barTooltip(bar: { date: string; minutes: number }): string {
   border-top: var(--border-width-sm) solid var(--color-border);
 }
 
+/*
+ * Quiet is carried by the type — label scale, uppercase, tracked out, against
+ * the plan's body-size titles above. It is *not* carried by low contrast: the
+ * tertiary ramp measures 2.6:1 on light and 3.6:1 on dark, and a heading below
+ * AA is not restraint, it is a heading some people cannot read.
+ */
 .ledger-heading {
   margin: 0;
   font-family: var(--font-label-family);
@@ -252,7 +333,7 @@ function barTooltip(bar: { date: string; minutes: number }): string {
   font-weight: var(--font-label-weight);
   letter-spacing: var(--font-label-tracking);
   text-transform: uppercase;
-  color: var(--color-text-tertiary);
+  color: var(--color-text-secondary);
 }
 
 .section {
@@ -280,7 +361,7 @@ function barTooltip(bar: { date: string; minutes: number }): string {
   align-items: center;
   gap: var(--space-1);
   font-size: var(--text-xs);
-  color: var(--color-text-tertiary);
+  color: var(--color-text-secondary);
   transition: color var(--duration-fast) var(--ease-out);
 }
 
@@ -304,7 +385,19 @@ a.section-link:hover {
 .section-empty-text {
   margin: 0;
   font-size: var(--text-sm);
-  color: var(--color-text-tertiary);
+  color: var(--color-text-secondary);
+}
+
+/* A link, not a button. The Ledger points; the Plan acts. The focus ring comes
+   from base.css — a text link has no geometry of its own to preserve. */
+.section-empty-link {
+  font-size: var(--text-sm);
+  color: var(--color-text-secondary);
+  transition: color var(--duration-fast) var(--ease-out);
+}
+
+.section-empty-link:hover {
+  color: var(--color-primary);
 }
 
 /* Continue learning */
@@ -312,6 +405,15 @@ a.section-link:hover {
   display: grid;
   grid-template-columns: repeat(auto-fill, minmax(200px, 1fr));
   gap: var(--space-4);
+}
+
+/* The link is the card's shell: it carries no colour of its own, or the global
+   anchor colour would repaint every label inside it. */
+.continue-link {
+  display: block;
+  min-width: 0;
+  color: inherit;
+  border-radius: var(--radius-card);
 }
 
 .continue-head {
@@ -351,7 +453,7 @@ a.section-link:hover {
   display: block;
   margin-bottom: var(--space-3);
   font-size: var(--text-xs);
-  color: var(--color-text-tertiary);
+  color: var(--color-text-secondary);
 }
 
 .progress-track {
@@ -380,24 +482,35 @@ a.section-link:hover {
   list-style: none;
 }
 
-.row {
-  display: flex;
-  align-items: center;
-  gap: var(--space-3);
-  padding: var(--space-3) var(--space-4);
-}
-
 .row + .row {
   border-top: var(--border-width-sm) solid var(--color-border);
 }
 
-.row-clickable {
-  cursor: pointer;
+/* The link fills the row, so the whole strip is the target — the click area
+   the old `<li @click>` had, now with a tab stop and a role attached to it. */
+.row-link {
+  display: flex;
+  align-items: center;
+  gap: var(--space-3);
+  padding: var(--space-3) var(--space-4);
+  color: inherit;
   transition: background-color var(--duration-fast) var(--ease-out);
 }
 
-.row-clickable:hover {
+.row-link:hover {
   background-color: var(--color-surface-hover);
+}
+
+/* Inset: the list sits flush inside the card's rounded, clipped border, so an
+   outward ring on the first or last row would be cut off. */
+.row-link:focus-visible {
+  outline-offset: -2px;
+}
+
+@media (pointer: coarse) {
+  .row-link {
+    min-height: 44px;
+  }
 }
 
 .row-dot {
@@ -425,7 +538,7 @@ a.section-link:hover {
   flex-shrink: 0;
   font-size: var(--text-xs);
   font-variant-numeric: tabular-nums;
-  color: var(--color-text-tertiary);
+  color: var(--color-text-secondary);
 }
 
 /* Week chart — thin marks, one hue, recessive baseline */
@@ -451,11 +564,6 @@ a.section-link:hover {
   gap: var(--space-1);
   border-radius: var(--radius-sm);
   cursor: default;
-}
-
-.bar-slot:focus-visible {
-  outline: var(--border-width-md) solid var(--color-focus-ring);
-  outline-offset: 2px;
 }
 
 .bar {
@@ -492,7 +600,7 @@ a.section-link:hover {
   flex: 1;
   min-width: 0;
   font-size: var(--text-xs);
-  color: var(--color-text-tertiary);
+  color: var(--color-text-secondary);
   text-align: center;
   overflow: hidden;
   text-overflow: ellipsis;
@@ -502,6 +610,23 @@ a.section-link:hover {
 @media (max-width: 768px) {
   .two-col {
     grid-template-columns: 1fr;
+  }
+}
+
+/*
+ * At the narrowest tier the cards go one-up rather than squeezing two 200px
+ * columns into ~343px of content width, and the section link drops under its
+ * title instead of forcing the heading to ellipsis.
+ */
+@media (max-width: 420px) {
+  .continue-grid {
+    grid-template-columns: 1fr;
+  }
+
+  .section-head {
+    flex-direction: column;
+    align-items: flex-start;
+    gap: var(--space-1);
   }
 }
 </style>

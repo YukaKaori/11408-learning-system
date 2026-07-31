@@ -75,6 +75,8 @@ export default {
       streakLabel: '连续学习天数',
     },
     plan: {
+      // 计划区没有可见标题，因此列表自带无障碍名称（Step 6）。
+      label: '今日计划，共 {n} 项',
       reviewTitle: '{n} 张卡片待复习',
       now: '现在',
       today: '今天',
@@ -136,6 +138,8 @@ export default {
       weekTotal: '本周共 {time}',
       empty: '本周还没有学习记录',
       emptyCta: '安排学习时段',
+      // 图表数据的文字版本，供屏幕阅读器使用（Step 6）。
+      chartLabel: '最近 7 天的学习时长，共 {total}。{days}',
     },
   },
   subjects: {

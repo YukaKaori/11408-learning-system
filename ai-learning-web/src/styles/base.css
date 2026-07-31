@@ -45,6 +45,25 @@ a {
   border-radius: var(--radius-sm);
 }
 
+/*
+ * Available to a screen reader, invisible on screen. A single definition on
+ * purpose: this had been copy-pasted into two components, and a drifting copy
+ * of this rule is how text silently becomes either visible or unreachable.
+ * A component needs its own copy only to change the *geometry* (an inset ring,
+ * say) — never to restate these values.
+ */
+.sr-only {
+  position: absolute;
+  width: 1px;
+  height: 1px;
+  padding: 0;
+  margin: -1px;
+  overflow: hidden;
+  clip: rect(0, 0, 0, 0);
+  white-space: nowrap;
+  border: 0;
+}
+
 /* Subtle scrollbars in the spirit of macOS */
 ::-webkit-scrollbar {
   width: 8px;

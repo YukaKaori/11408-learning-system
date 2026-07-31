@@ -26,10 +26,11 @@
  * itself so the plan visibly shrinks. There is no second scheduler here, no
  * second grading path, no local copy of a task's state machine.
  *
- * Step 4 scope: the direct actions and the shrink loop. The day-complete
- * settle and the ledger's demotion are Step 5.
+ * Step 5 closes the day: `complete` moves into its own component so the one
+ * settle lives with the one state that earns it, and the Ledger is refined to
+ * stay context — quiet, read-only, and silent when it has nothing to say.
  */
-import { computed, onMounted, ref } from 'vue'
+import { computed, onMounted, ref, watch } from 'vue'
 import { useI18n } from 'vue-i18n'
 import { useRouter } from 'vue-router'
 import { AppButton, AppEmpty, AppIcon, AppSkeleton } from '@/components'
@@ -41,6 +42,7 @@ import { useAuthStore } from '@/stores/auth'
 import { useSubjectsStore } from '@/stores/subjects'
 import ReviewSessionView from '@/features/flashcards/ReviewSessionView.vue'
 import PlanList from './today/PlanList.vue'
+import DayComplete from './today/DayComplete.vue'
 import LedgerBand from './today/LedgerBand.vue'
 
 const { t, d } = useI18n()
@@ -122,6 +124,26 @@ const actionError = ref<string | null>(null)
 const announcement = ref('')
 
 /**
+ * The day ending is the one change a sighted user gets for free — the plan is
+ * replaced by a different surface — and a screen-reader user does not, because
+ * the focused element is a button that simply stopped existing. So the flip is
+ * announced.
+ *
+ * Only the *transition* is announced, never the initial state: arriving on an
+ * already-finished day, the heading says so and an interruption on load would
+ * be talking over the user's own reading. It runs after the action
+ * announcements it may overwrite, which is the right order — "day complete" is
+ * the larger piece of news than the row that caused it.
+ */
+watch(
+  () => today.value?.state,
+  (state, previous) => {
+    if (previous === undefined || state === previous) return
+    if (state === 'complete') announcement.value = t('today.complete.title')
+  },
+)
+
+/**
  * The shrink loop. Every completed action ends here: the server recomputes the
  * plan, the rank, the cap and the state, and the view renders whatever comes
  * back. Nothing is spliced out of `plan` locally — a client that removed the
@@ -198,8 +220,14 @@ async function onReviewClose(reviewed: number): Promise<void> {
         <p v-if="dayLine" class="line-day">{{ dayLine }}</p>
       </div>
 
+      <!--
+        Each meter names itself in text rather than through `aria-label` on a
+        plain div, which has no role for the label to attach to and is dropped
+        by most screen readers. The visible number stays the visible number;
+        the word in front of it is simply not painted.
+      -->
       <div v-if="today" class="line-meters">
-        <div class="meter" :aria-label="t('today.line.goalLabel')">
+        <div class="meter">
           <svg class="goal-ring" viewBox="0 0 36 36" aria-hidden="true">
             <circle class="goal-ring-track" cx="18" cy="18" r="15.5" pathLength="100" />
             <circle
@@ -214,6 +242,7 @@ async function onReviewClose(reviewed: number): Promise<void> {
             />
           </svg>
           <span class="meter-value">
+            <span class="sr-only">{{ t('today.line.goalLabel') }}</span>
             {{
               t('today.line.goal', {
                 done: today.progress.studiedMinutes,
@@ -223,22 +252,27 @@ async function onReviewClose(reviewed: number): Promise<void> {
           </span>
         </div>
 
-        <div class="meter" :aria-label="t('today.line.streakLabel')">
+        <div class="meter">
           <AppIcon name="flame" size="sm" class="meter-icon" aria-hidden="true" />
           <span class="meter-value">
+            <span class="sr-only">{{ t('today.line.streakLabel') }}</span>
             {{ t('today.line.streak', { n: today.progress.streakDays }) }}
           </span>
         </div>
       </div>
     </header>
 
-    <!-- Loading — the skeleton takes the plan's shape, not a widget grid's. -->
-    <div v-if="showSkeleton" class="plan-skeleton" aria-hidden="true">
+    <!--
+      Loading — the skeleton takes the plan's shape, not a widget grid's. It is
+      decorative and hidden from assistive tech; `aria-busy` on the region is
+      what actually reports the wait, so nothing tries to read four grey bars.
+    -->
+    <div v-if="showSkeleton" class="plan-skeleton" aria-busy="true" aria-hidden="true">
       <AppSkeleton v-for="n in 4" :key="n" variant="block" height="56px" />
     </div>
 
-    <!-- Error + retry -->
-    <AppEmpty v-else-if="error" icon="alert-circle" :title="t(error.messageKey)">
+    <!-- Error + retry. `alert` because a failed load is unrequested bad news. -->
+    <AppEmpty v-else-if="error" role="alert" icon="alert-circle" :title="t(error.messageKey)">
       <template #action>
         <AppButton size="sm" variant="soft" @click="reload">{{ t('common.retry') }}</AppButton>
       </template>
@@ -258,23 +292,19 @@ async function onReviewClose(reviewed: number): Promise<void> {
 
       <!--
         The three terminal states are kept distinct by the server and must stay
-        distinct here. `complete` earns the congratulation; `clear` explicitly
-        does not, because the user did nothing; `empty` is a new account and
-        gets one honest next action instead of a finished day.
+        distinct here. `complete` earns the congratulation, the success token
+        and the one settle — it has its own component for exactly that reason.
+        `clear` explicitly earns none of them, because the user did nothing;
+        `empty` is a new account and gets one honest next action instead of a
+        finished day. All three share the `.terminal` geometry so the day ends
+        in one visual family rather than three.
       -->
-      <section v-else-if="today.state === 'complete'" class="terminal terminal-complete">
-        <AppIcon name="check-circle" class="terminal-icon" aria-hidden="true" />
-        <h2 class="terminal-title">{{ t('today.complete.title') }}</h2>
-        <p class="terminal-text">
-          {{
-            t('today.complete.text', {
-              reviews: today.progress.reviewsCompleted,
-              tasks: today.progress.tasksCompleted,
-              minutes: today.progress.studiedMinutes,
-            })
-          }}
-        </p>
-      </section>
+      <DayComplete
+        v-else-if="today.state === 'complete'"
+        :reviews="today.progress.reviewsCompleted"
+        :tasks="today.progress.tasksCompleted"
+        :minutes="today.progress.studiedMinutes"
+      />
 
       <section v-else-if="today.state === 'clear'" class="terminal">
         <AppIcon name="sun" class="terminal-icon" aria-hidden="true" />
@@ -282,7 +312,13 @@ async function onReviewClose(reviewed: number): Promise<void> {
         <p class="terminal-text">{{ t('today.clear.text') }}</p>
       </section>
 
-      <section v-else class="terminal">
+      <!--
+        Explicitly keyed rather than a bare `v-else`: an unrecognised state must
+        render nothing, not inherit the new-account copy. Telling an existing
+        user to "start with a subject" would be the same fabrication the four
+        states exist to prevent, arriving through the back door.
+      -->
+      <section v-else-if="today.state === 'empty'" class="terminal">
         <AppIcon name="book-open" class="terminal-icon" aria-hidden="true" />
         <h2 class="terminal-title">{{ t('today.empty.title') }}</h2>
         <p class="terminal-text">{{ t('today.empty.text') }}</p>
@@ -292,9 +328,14 @@ async function onReviewClose(reviewed: number): Promise<void> {
       </section>
 
       <!--
-        THE LEDGER — never shown to a brand-new account: four empty-state cards
-        are noise to someone who has nothing yet, and the `empty` state already
-        gave them the one action that matters.
+        THE LEDGER — last, always, whatever the day turned out to be. It is
+        context, so it follows the answer and never precedes it.
+
+        Withheld from a brand-new account outright: the `empty` state already
+        gave that user the one action that matters, and anything below it would
+        compete with it. On every other day the band decides for itself whether
+        it has anything worth saying (LedgerBand `hasContext`), so a quiet
+        account gets a quiet page rather than a wall of empty cards.
       -->
       <LedgerBand v-if="summary && today.state !== 'empty'" :summary="summary" />
     </template>
@@ -421,19 +462,13 @@ async function onReviewClose(reviewed: number): Promise<void> {
   color: var(--color-danger);
 }
 
-.sr-only {
-  position: absolute;
-  width: 1px;
-  height: 1px;
-  padding: 0;
-  margin: -1px;
-  overflow: hidden;
-  clip: rect(0, 0, 0, 0);
-  white-space: nowrap;
-  border: 0;
-}
+/* `.sr-only` is the global utility in base.css — not restated here. */
 
-/* --- Terminal states ---------------------------------------------------- */
+/* --- Terminal states ----------------------------------------------------
+ * `clear` and `empty` only. `complete` carries the same geometry in
+ * `today/DayComplete.vue`, where it also owns the success token and the
+ * settle — the two things the other two states must never acquire.
+ */
 
 .terminal {
   display: flex;
@@ -449,12 +484,6 @@ async function onReviewClose(reviewed: number): Promise<void> {
 
 .terminal-icon {
   color: var(--color-text-tertiary);
-}
-
-/* `complete` is the only state that earns colour — it is the one the user
-   worked for. `clear` and `empty` stay neutral by design. */
-.terminal-complete .terminal-icon {
-  color: var(--color-success);
 }
 
 .terminal-title {
@@ -478,6 +507,11 @@ async function onReviewClose(reviewed: number): Promise<void> {
 
   .line-meters {
     gap: var(--space-4);
+  }
+
+  /* 64px of vertical padding is a third of a phone screen spent on nothing. */
+  .terminal {
+    padding: var(--space-10) var(--space-4);
   }
 }
 </style>

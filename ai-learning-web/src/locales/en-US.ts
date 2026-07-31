@@ -77,6 +77,9 @@ const enUS: typeof zhCN = {
       streakLabel: 'Learning streak',
     },
     plan: {
+      // The plan band has no visible heading, so the list names itself for
+      // assistive tech (Step 6).
+      label: "Today's plan, {n} items",
       reviewTitle: '{n} cards due',
       now: 'now',
       today: 'today',
@@ -138,6 +141,8 @@ const enUS: typeof zhCN = {
       weekTotal: '{time} this week',
       empty: 'No study activity this week yet',
       emptyCta: 'Schedule a session',
+      // The chart's data as prose, for screen readers (Step 6).
+      chartLabel: 'Study time over the last 7 days, {total} in total. {days}',
     },
   },
   subjects: {

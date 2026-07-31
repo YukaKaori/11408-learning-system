@@ -35,7 +35,14 @@ const { t } = useI18n()
 
 <template>
   <div class="plan">
-    <ul class="plan-list">
+    <!--
+      The plan has no visible heading — the greeting above it is the page's
+      only h1, and a second title would make the band compete with itself. A
+      screen reader still needs to know what this list is, so it is named
+      directly: "Today's plan, N items" is what a sighted user reads from
+      position and context.
+    -->
+    <ul class="plan-list" :aria-label="t('today.plan.label', { n: items.length })">
       <PlanRow
         v-for="item in items"
         :key="item.id"
@@ -82,8 +89,12 @@ const { t } = useI18n()
   color: var(--color-text);
 }
 
+/*
+ * Width and colour come from the global ring (base.css). Only the offset is
+ * re-declared: this strip is flush inside the plan's rounded border, so an
+ * outward ring would be clipped by the container's `overflow: hidden`.
+ */
 .plan-overflow:focus-visible {
-  outline: var(--border-width-md) solid var(--color-focus-ring);
   outline-offset: -2px;
 }
 </style>
