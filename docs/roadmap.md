@@ -235,6 +235,17 @@ editor. The old preview UI is gone.
 
 ## Phase 17 — Today (the daily plan)
 
+> **Status: COMPLETE — 2026-08-01.** Shipped in `4316b16` → `ab27b25` (Steps 1–6)
+> plus the 17.2 Liquid Material consolidation. Release gate green: 118/118
+> backend tests, 184/184 frontend tests, `vue-tsc` + `eslint` + `oxlint` +
+> `vite build` clean, and the four states, both themes, both locales, 375/768/1280,
+> keyboard order, a browser accessibility inspection and reduced motion all
+> verified live. Displacement budget unchanged at **3**.
+> **Handoff:** `docs/phase17-handoff.md` — read §5 before starting Phase 18.
+> One completion criterion is only partially met: a plain sign-in still passes
+> through the Phase 8/9 `/welcome` bridge before reaching Today (handoff §5.1,
+> a one-line change, awaiting a product decision).
+
 **Goal —** Replace the Workspace dashboard's passive statistics with
 **Today**: one prioritized answer to "what should I do right now?" — due
 reviews, scheduled tasks, calendar sessions, and daily-goal progress,
