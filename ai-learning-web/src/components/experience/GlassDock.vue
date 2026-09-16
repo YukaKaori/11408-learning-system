@@ -60,6 +60,7 @@ function focusItem(key: GalleryName) {
   itemEls.get(key)?.focus()
 }
 
+
 defineExpose({ focusItem })
 </script>
 
@@ -70,7 +71,6 @@ defineExpose({ focusItem })
     width="100%"
     height="auto"
     surface-flow
-    :border-radius="30"
     :border-width="0.09"
     :blur="10"
     :opacity="0.97"
@@ -127,6 +127,7 @@ defineExpose({ focusItem })
   padding: var(--space-2) var(--space-4);
 }
 
+
 /*
  * Nav labels — bare text resting on the glass: no borders, no panes, no
  * chrome. The FluidGlass halo (outlineBlur "20%", black at 0.5) becomes a
@@ -143,7 +144,10 @@ defineExpose({ focusItem })
   height: 44px;
   padding-inline: var(--space-3);
   border: none;
-  border-radius: 22px;
+  /* Concentric with the bar: the chrome radius minus the primitive's inset
+     and this row's block padding (`components.md` §7), authored once as a
+     token. Phase B1 corrected this from a 22px pill. */
+  border-radius: var(--material-radius-chrome-control);
   background-color: transparent;
   background-image: radial-gradient(
     circle 110px at var(--glass-light-x, 50%) var(--glass-light-y, 50%),
@@ -154,9 +158,10 @@ defineExpose({ focusItem })
   font-size: var(--text-sm);
   font-weight: 550;
   letter-spacing: 0.02em;
-  /* Halo tokens, overridable from the stage: over the bright Product page
-     the labels flip to dark ink and the dark halo would read as smudge. */
-  text-shadow: 0 1px 10px var(--dock-halo, rgba(0, 0, 0, 0.5));
+  /* Halo tokens (glass.css), overridable from the stage: over the bright
+     Product page the labels flip to dark ink and the dark halo would read
+     as smudge. */
+  text-shadow: 0 1px 10px var(--on-glass-halo);
   cursor: pointer;
   transition:
     color 400ms var(--ease-out),
@@ -166,6 +171,7 @@ defineExpose({ focusItem })
 .dock-item:hover {
   color: var(--on-glass-text);
 }
+
 
 /* Mass settling, never a spring. */
 .dock-item:active {
@@ -177,8 +183,8 @@ defineExpose({ focusItem })
 .dock-item.is-active {
   color: var(--on-glass-text);
   text-shadow:
-    0 1px 10px var(--dock-halo, rgba(0, 0, 0, 0.5)),
-    0 0 18px var(--dock-halo-active, rgba(255, 255, 255, 0.38));
+    0 1px 10px var(--on-glass-halo),
+    0 0 18px var(--on-glass-halo-active);
 }
 
 .dock-item:focus-visible {

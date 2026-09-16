@@ -1,14 +1,26 @@
 <script setup lang="ts">
 import { computed, onBeforeUnmount, onMounted, ref, useId } from 'vue'
 import type { MaterialPreset } from './materials'
+import { createDisplacementMapCache, createSettledMeasure } from './displacementMap'
 
 /**
  * Liquid-glass surface ported from React Bits' <GlassSurface />.
  *
  * A per-instance SVG displacement filter (fed by a generated data-URI map)
  * refracts whatever sits behind the element via `backdrop-filter: url(#…)`.
- * Browsers that can't apply SVG filters as backdrop-filters (Safari, Firefox)
- * fall back to a plain frosted-glass look.
+ *
+ * The material is delivered in three engine tiers (Phase B1, `materials.md`
+ * §8), decided once at boot by `styles/materialTier.ts` and written onto
+ * `<html>` as `data-glass-tier`. This component never probes capability; the
+ * CSS cascade below obeys the root attribute:
+ *
+ *   refract  the full optical path — the SVG chain applied as a backdrop filter
+ *   diffuse  the same slab minus refraction — `blur()` diffusion carries what
+ *            the bent edge used to; every other layer paints unchanged. This is
+ *            also the base (no attribute) so the pre-hydration state is legible.
+ *   dense    no backdrop-filter, or reduced transparency / more contrast — the
+ *            body rises toward opaque from a floor, keeping rank order; rims,
+ *            depth and light layers stay.
  *
  * The surface is a *living* optical object: on top of the refraction it
  * carries three CSS-driven lighting layers (inner glow, edge glow, and a
@@ -38,13 +50,18 @@ import type { MaterialPreset } from './materials'
  *   --glass-light-angle     angle (deg, 0 = light above) aiming the Fresnel
  *                           arc; without it the ring rests as a top highlight
  *   --glass-flow-opacity    presence of the surfaceFlow layer (default .6)
+ *   --glass-radius          the slab's corner radius, set by its preset from
+ *                           `--material-radius-*` (Phase B1); the optional
+ *                           `borderRadius` prop overrides it
  *
  * The optional `surfaceFlow` prop renders a slow travelling highlight and
  * faint internal caustics (20–40s loops, transform/opacity only).
  *
  * All lighting reacts through gradient/opacity only — the SVG displacement
- * chain is never regenerated per frame. With no variables set, the defaults
- * yield a calm, permanently lit surface.
+ * chain is never regenerated per frame. The map is rebuilt only when the
+ * *settled* size changes (`displacementMap.ts`): the first observation lands
+ * immediately, later ones coalesce over a trailing window, and pointer
+ * movement never reaches it.
  *
  * `class`/`style` from the caller fall through to the root element.
  */
@@ -54,15 +71,19 @@ const props = withDefaults(
   defineProps<{
     /**
      * Which named slab this is. REQUIRED — there is no anonymous glass: the
-     * preset carries density, tint, depth, fresnel and the two glow strengths
-     * from `glass.css`, so surfaces never hand-type optical dials. See
-     * `materials.ts` and `docs/liquid-material-system.md`.
+     * preset carries density, tint, depth, fresnel, the two glow strengths and
+     * the radius from `glass.css`, so surfaces never hand-type optical dials.
+     * See `materials.ts` and `docs/liquid-material-system.md`.
      */
     material: MaterialPreset
     /** Width in px (number) or any CSS length (string). */
     width?: number | string
     /** Height in px (number) or any CSS length (string). */
     height?: number | string
+    /**
+     * Corner radius override, px. Omit it: the preset's `--glass-radius`
+     * (from `--material-radius-*`) is the recipe's radius.
+     */
     borderRadius?: number
     /** Border width factor for the displacement map edge. */
     borderWidth?: number
@@ -97,7 +118,7 @@ const props = withDefaults(
   {
     width: 200,
     height: 80,
-    borderRadius: 20,
+    borderRadius: undefined,
     borderWidth: 0.07,
     brightness: 50,
     opacity: 0.93,
@@ -116,80 +137,73 @@ const props = withDefaults(
   },
 )
 
+/** Radius used by the map when neither the prop nor the preset has landed yet. */
+const DEFAULT_RADIUS = 20
+
 const uniqueId = useId().replace(/:/g, '-')
 const filterId = `glass-filter-${uniqueId}`
 const redGradId = `red-grad-${uniqueId}`
 const blueGradId = `blue-grad-${uniqueId}`
 
 const containerRef = ref<HTMLElement | null>(null)
-const svgSupported = ref(false)
-// Rendered size of the surface; the displacement map is regenerated from it.
+// Settled size of the surface; the displacement map is regenerated from it.
 const measured = ref({ width: 400, height: 200 })
+// The preset's radius, read from the cascade once the element exists.
+const presetRadius = ref(DEFAULT_RADIUS)
 
-const displacementMap = computed(() => {
-  const { width: actualWidth, height: actualHeight } = measured.value
-  const edgeSize = Math.min(actualWidth, actualHeight) * (props.borderWidth * 0.5)
+const radiusPx = computed(() => props.borderRadius ?? presetRadius.value)
 
-  const svgContent = `
-    <svg viewBox="0 0 ${actualWidth} ${actualHeight}" xmlns="http://www.w3.org/2000/svg">
-      <defs>
-        <linearGradient id="${redGradId}" x1="100%" y1="0%" x2="0%" y2="0%">
-          <stop offset="0%" stop-color="#0000"/>
-          <stop offset="100%" stop-color="red"/>
-        </linearGradient>
-        <linearGradient id="${blueGradId}" x1="0%" y1="0%" x2="0%" y2="100%">
-          <stop offset="0%" stop-color="#0000"/>
-          <stop offset="100%" stop-color="blue"/>
-        </linearGradient>
-      </defs>
-      <rect x="0" y="0" width="${actualWidth}" height="${actualHeight}" fill="black"></rect>
-      <rect x="0" y="0" width="${actualWidth}" height="${actualHeight}" rx="${props.borderRadius}" fill="url(#${redGradId})" />
-      <rect x="0" y="0" width="${actualWidth}" height="${actualHeight}" rx="${props.borderRadius}" fill="url(#${blueGradId})" style="mix-blend-mode: ${props.mixBlendMode}" />
-      <rect x="${edgeSize}" y="${edgeSize}" width="${actualWidth - edgeSize * 2}" height="${actualHeight - edgeSize * 2}" rx="${props.borderRadius}" fill="hsl(0 0% ${props.brightness}% / ${props.opacity})" style="filter:blur(${props.blur}px)" />
-    </svg>
-  `
+const buildMap = createDisplacementMapCache()
 
-  return `data:image/svg+xml,${encodeURIComponent(svgContent)}`
-})
+const displacementMap = computed(() =>
+  buildMap({
+    width: measured.value.width,
+    height: measured.value.height,
+    borderRadius: radiusPx.value,
+    borderWidth: props.borderWidth,
+    brightness: props.brightness,
+    opacity: props.opacity,
+    blur: props.blur,
+    mixBlendMode: props.mixBlendMode,
+    redGradId,
+    blueGradId,
+  }),
+)
 
 const containerStyle = computed(() => ({
   width: typeof props.width === 'number' ? `${props.width}px` : props.width,
   height: typeof props.height === 'number' ? `${props.height}px` : props.height,
-  borderRadius: `${props.borderRadius}px`,
+  borderRadius:
+    props.borderRadius != null ? `${props.borderRadius}px` : `var(--glass-radius, ${DEFAULT_RADIUS}px)`,
   '--glass-frost': String(props.backgroundOpacity),
   '--glass-saturation': String(props.saturation),
   '--filter-id': `url(#${filterId})`,
 }))
 
-// SVG filters inside backdrop-filter only work in Chromium; WebKit and
-// Firefox parse the value but render nothing, so they get the fallback skin.
-function supportsSVGFilters(): boolean {
-  const isWebkit = /Safari/.test(navigator.userAgent) && !/Chrome/.test(navigator.userAgent)
-  const isFirefox = /Firefox/.test(navigator.userAgent)
-  if (isWebkit || isFirefox) return false
-
-  const div = document.createElement('div')
-  div.style.backdropFilter = `url(#${filterId})`
-  return div.style.backdropFilter !== ''
-}
-
 let resizeObserver: ResizeObserver | null = null
 
-onMounted(() => {
-  svgSupported.value = supportsSVGFilters()
+// Only settled geometry reaches the map. Reading the preset radius here (and
+// not per frame) keeps it a mount/resize-time value like the size itself.
+const settle = createSettledMeasure((size) => {
+  measured.value = size
+  if (props.borderRadius == null && containerRef.value) {
+    const declared = parseFloat(getComputedStyle(containerRef.value).getPropertyValue('--glass-radius'))
+    if (Number.isFinite(declared) && declared > 0) presetRadius.value = declared
+  }
+})
 
+onMounted(() => {
   if (containerRef.value) {
     resizeObserver = new ResizeObserver((entries) => {
       const rect = entries[0]?.contentRect
-      if (rect && rect.width > 0 && rect.height > 0) {
-        measured.value = { width: rect.width, height: rect.height }
-      }
+      if (rect) settle.observe(rect.width, rect.height)
     })
     resizeObserver.observe(containerRef.value)
   }
 })
 
 onBeforeUnmount(() => {
+  settle.cancel()
   resizeObserver?.disconnect()
 })
 
@@ -199,13 +213,7 @@ defineExpose({ element: containerRef })
 </script>
 
 <template>
-  <div
-    ref="containerRef"
-    class="glass-surface"
-    :class="svgSupported ? 'glass-surface--svg' : 'glass-surface--fallback'"
-    :data-material="material"
-    :style="containerStyle"
-  >
+  <div ref="containerRef" class="glass-surface" :data-material="material" :style="containerStyle">
     <svg class="glass-surface__filter" xmlns="http://www.w3.org/2000/svg" aria-hidden="true">
       <defs>
         <filter
@@ -299,13 +307,68 @@ defineExpose({ element: containerRef })
 </template>
 
 <style scoped>
+/*
+ * The slab, tier B `diffuse` by default — the same layers as tier A minus the
+ * refraction chain, so a browser that renders no SVG backdrop filter (and the
+ * pre-hydration state before the root attribute exists) still shows the
+ * material: the frost-free body, the preset's ND density and tint, the double
+ * rim, the back-face reflection, the Fresnel arc and the light layers. The
+ * diffusion carries what the bent edge used to.
+ *
+ * Nearby light thins the frost slightly (background clarity rises); the
+ * factor is deliberately small — felt, not seen — and capped where on-glass
+ * text still clears the brightest petals behind it.
+ */
 .glass-surface {
   position: relative;
   display: flex;
   align-items: center;
   justify-content: center;
   overflow: hidden;
+  background: light-dark(
+    hsl(0 0% 100% / calc(var(--glass-frost, 0) * (1 - var(--glass-proximity, 0) * 0.1))),
+    hsl(0 0% 0% / calc(var(--glass-frost, 0) * (1 - var(--glass-proximity, 0) * 0.1)))
+  );
+  backdrop-filter: blur(var(--material-diffusion)) saturate(var(--glass-saturation, 1));
+  box-shadow:
+    0 0 2px 1px light-dark(color-mix(in oklch, black, transparent 85%), color-mix(in oklch, white, transparent 65%))
+      inset,
+    0 0 10px 4px light-dark(color-mix(in oklch, black, transparent 90%), color-mix(in oklch, white, transparent 85%))
+      inset,
+    0px 4px 16px rgba(17, 17, 26, 0.05),
+    0px 8px 24px rgba(17, 17, 26, 0.05),
+    0px 16px 56px rgba(17, 17, 26, 0.05),
+    0px 4px 16px rgba(17, 17, 26, 0.05) inset,
+    0px 8px 24px rgba(17, 17, 26, 0.05) inset,
+    0px 16px 56px rgba(17, 17, 26, 0.05) inset;
   transition: opacity 0.26s ease-out;
+}
+
+/* Tier A `refract` — the per-instance SVG chain replaces the diffusion. */
+html[data-glass-tier='refract'] .glass-surface {
+  backdrop-filter: var(--filter-id) saturate(var(--glass-saturation, 1));
+}
+
+/*
+ * Tier C `dense` — no backdrop work at all. The body rises toward opaque from
+ * a floor, in rank order (chrome < hero < floating), by smoke rather than by
+ * whitening; every rim, depth and light layer below still paints. Reduced
+ * transparency and increased contrast land here too (`materialTier.ts`).
+ */
+html[data-glass-tier='dense'] .glass-surface {
+  background: color-mix(
+    in srgb,
+    var(--glass-tint, rgb(10 12 18))
+      calc(
+        (
+            var(--material-density-dense-floor) +
+              (1 - var(--material-density-dense-floor)) * var(--glass-density, 0)
+          ) *
+          100%
+      ),
+    transparent
+  );
+  backdrop-filter: none;
 }
 
 /*
@@ -544,92 +607,22 @@ defineExpose({ element: containerRef })
   z-index: -1;
 }
 
+/* The primitive's own inset — `--material-inset` — is part of every nested
+   radius derivation (`components.md` §7). */
 .glass-surface__content {
   width: 100%;
   height: 100%;
   display: flex;
   align-items: center;
   justify-content: center;
-  padding: 0.5rem;
+  padding: var(--material-inset);
   border-radius: inherit;
   position: relative;
   z-index: 1;
 }
 
-/* Nearby light thins the frost slightly (background clarity rises); the
-   factor is deliberately small — felt, not seen — and capped where on-glass
-   text still clears the brightest petals behind it. */
-.glass-surface--svg {
-  background: light-dark(
-    hsl(0 0% 100% / calc(var(--glass-frost, 0) * (1 - var(--glass-proximity, 0) * 0.1))),
-    hsl(0 0% 0% / calc(var(--glass-frost, 0) * (1 - var(--glass-proximity, 0) * 0.1)))
-  );
-  backdrop-filter: var(--filter-id) saturate(var(--glass-saturation, 1));
-  box-shadow:
-    0 0 2px 1px light-dark(color-mix(in oklch, black, transparent 85%), color-mix(in oklch, white, transparent 65%))
-      inset,
-    0 0 10px 4px light-dark(color-mix(in oklch, black, transparent 90%), color-mix(in oklch, white, transparent 85%))
-      inset,
-    0px 4px 16px rgba(17, 17, 26, 0.05),
-    0px 8px 24px rgba(17, 17, 26, 0.05),
-    0px 16px 56px rgba(17, 17, 26, 0.05),
-    0px 4px 16px rgba(17, 17, 26, 0.05) inset,
-    0px 8px 24px rgba(17, 17, 26, 0.05) inset,
-    0px 16px 56px rgba(17, 17, 26, 0.05) inset;
-}
-
-.glass-surface--fallback {
-  background: rgba(255, 255, 255, 0.25);
-  backdrop-filter: blur(12px) saturate(1.8) brightness(1.1);
-  -webkit-backdrop-filter: blur(12px) saturate(1.8) brightness(1.1);
-  border: 1px solid rgba(255, 255, 255, 0.3);
-  box-shadow:
-    0 8px 32px 0 rgba(31, 38, 135, 0.2),
-    0 2px 16px 0 rgba(31, 38, 135, 0.1),
-    inset 0 1px 0 0 rgba(255, 255, 255, 0.4),
-    inset 0 -1px 0 0 rgba(255, 255, 255, 0.2);
-}
-
-/* The app toggles theme with `html.dark` (see tokens.css), so key the dark
-   fallback off that instead of prefers-color-scheme. */
-html.dark .glass-surface--fallback {
-  background: rgba(255, 255, 255, 0.1);
-  backdrop-filter: blur(12px) saturate(1.8) brightness(1.2);
-  -webkit-backdrop-filter: blur(12px) saturate(1.8) brightness(1.2);
-  border: 1px solid rgba(255, 255, 255, 0.2);
-  box-shadow:
-    inset 0 1px 0 0 rgba(255, 255, 255, 0.2),
-    inset 0 -1px 0 0 rgba(255, 255, 255, 0.1);
-}
-
-@supports not (backdrop-filter: blur(10px)) {
-  .glass-surface--fallback {
-    background: rgba(255, 255, 255, 0.4);
-    box-shadow:
-      inset 0 1px 0 0 rgba(255, 255, 255, 0.5),
-      inset 0 -1px 0 0 rgba(255, 255, 255, 0.3);
-  }
-
-  .glass-surface--fallback::before {
-    content: '';
-    position: absolute;
-    inset: 0;
-    background: rgba(255, 255, 255, 0.15);
-    border-radius: inherit;
-    z-index: -1;
-  }
-
-  html.dark .glass-surface--fallback {
-    background: rgba(0, 0, 0, 0.4);
-  }
-
-  html.dark .glass-surface--fallback::before {
-    background: rgba(255, 255, 255, 0.05);
-  }
-}
-
 .glass-surface:focus-visible {
-  outline: 2px solid light-dark(#007aff, #0a84ff);
+  outline: var(--border-width-md) solid var(--color-focus-ring);
   outline-offset: 2px;
 }
 </style>

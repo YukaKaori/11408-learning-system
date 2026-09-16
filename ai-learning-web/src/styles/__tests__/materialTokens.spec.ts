@@ -151,4 +151,69 @@ describe('liquid material tokens', () => {
       expect(declaredDials(read(file)), `${file} must inherit its optics`).toEqual({})
     }
   })
+
+  // ---- Phase B1: the radius family and the tier dials -----------------------
+
+  it('every preset sets --glass-radius from its own --material-radius token', () => {
+    for (const preset of MATERIAL_PRESETS) {
+      const block = presetBlock(glass, preset)
+      expect(block).toContain(`--glass-radius: var(--material-radius-${preset});`)
+    }
+  })
+
+  it('the material radii and the primitive inset are the shipped geometry', () => {
+    const value = (name: string) => resolveToken(tokens, `var(${name})`)
+    expect(value('--material-radius-chrome')).toBe('30px')
+    expect(value('--material-radius-hero')).toBe('28px')
+    expect(value('--material-radius-floating')).toBe('16px')
+    expect(value('--material-inset')).toBe('0.5rem')
+  })
+
+  it('no surface hand-types a border-radius on the primitive — the recipe owns it', () => {
+    for (const file of Object.keys(SURFACES)) {
+      expect(read(file), `${file} must inherit its radius`).not.toMatch(/<GlassSurface[^>]*:border-radius=/s)
+    }
+  })
+
+  it('the primitive pads its content with --material-inset', () => {
+    const primitive = read('components/experience/GlassSurface.vue')
+    expect(primitive).toMatch(/\.glass-surface__content \{[^}]*padding: var\(--material-inset\)/)
+  })
+
+  it('the chrome control radius is authored once as max(radius − inset − row padding, --radius-md) = 14px', () => {
+    const declaration = tokens.match(/--material-radius-chrome-control:\s*([^;]+);/)?.[1].replace(/\s+/g, ' ')
+    expect(declaration).toBe(
+      'max( calc(var(--material-radius-chrome) - var(--material-inset) - var(--space-2)), var(--radius-md) )',
+    )
+    // resolve it by hand: 30px − 8px − 8px = 14px, above the 8px floor
+    const px = (name: string) => {
+      const raw = tokens.match(new RegExp(`${name}:\\s*([^;]+);`))?.[1].trim() ?? ''
+      return raw.endsWith('rem') ? parseFloat(raw) * 16 : parseFloat(raw)
+    }
+    const derived = Math.max(
+      px('--material-radius-chrome') - px('--material-inset') - px('--space-2'),
+      px('--radius-md'),
+    )
+    expect(derived).toBe(14)
+    expect(read('components/experience/GlassDock.vue')).toContain(
+      'border-radius: var(--material-radius-chrome-control);',
+    )
+  })
+
+  it('the non-refracting tiers read their two dials from tokens', () => {
+    const value = (name: string) => resolveToken(tokens, `var(${name})`)
+    expect(value('--material-diffusion')).toBe('10px')
+    expect(parseFloat(value('--material-density-dense-floor'))).toBeGreaterThan(0.5)
+    expect(parseFloat(value('--material-density-dense-floor'))).toBeLessThan(1)
+  })
+
+  it('the targeted material literals moved into tokens', () => {
+    expect(read('components/experience/GlassDock.vue')).not.toMatch(/rgba\(/)
+    expect(read('features/notes/editor/NoteSelectionToolbar.vue')).not.toMatch(/rgba\(/)
+    expect(read('components/experience/GlassSurface.vue')).not.toMatch(/#0(07aff|a84ff)/)
+    expect(read('views/LoginView.vue')).not.toContain('rgba(228, 226, 240, 0.38)')
+    expect(tokens).toContain('--environment-stage-text:')
+    expect(glass).toContain('--on-glass-halo:')
+    expect(glass).toContain('--on-glass-inset-bg:')
+  })
 })

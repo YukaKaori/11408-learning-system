@@ -2195,14 +2195,29 @@ onBeforeUnmount(() => {
   letter-spacing: 0.01em;
   box-shadow: 0 20px 44px -16px color-mix(in srgb, var(--sec-accent) 60%, transparent);
   cursor: pointer;
-  transition:
-    box-shadow 400ms var(--ease-out),
-    filter 400ms var(--ease-out);
+  transition: box-shadow 400ms var(--ease-out);
+}
+
+/* Hover brightens through a light pool on the compositor (opacity only) —
+   `filter` is never transitioned (constitution §3; Phase B1 replaced the
+   `brightness()` transition here). */
+.cta-button::before {
+  content: '';
+  position: absolute;
+  inset: 0;
+  border-radius: inherit;
+  background: color-mix(in srgb, currentColor 8%, transparent);
+  opacity: 0;
+  pointer-events: none;
+  transition: opacity 400ms var(--ease-out);
 }
 
 .cta-button:hover {
-  filter: brightness(1.07);
   box-shadow: 0 24px 52px -16px color-mix(in srgb, var(--sec-accent) 70%, transparent);
+}
+
+.cta-button:hover::before {
+  opacity: 1;
 }
 
 /* Mass settling, never a spring (the house press). */

@@ -279,7 +279,6 @@ const actions = INLINE_AI_ACTIONS
       material="floating"
       width="100%"
       height="auto"
-      :border-radius="16"
       :border-width="0.06"
       :blur="9"
       :opacity="0.94"
@@ -444,8 +443,8 @@ const actions = INLINE_AI_ACTIONS
   overflow-y: auto;
   padding: var(--space-3);
   border-radius: var(--radius-md);
-  background-color: rgba(12, 11, 18, 0.62);
-  box-shadow: inset 0 1px 0 rgba(0, 0, 0, 0.35);
+  background-color: var(--on-glass-inset-bg);
+  box-shadow: inset 0 1px 0 var(--on-glass-inset-lip);
 }
 
 .result-text {

@@ -160,9 +160,8 @@
 /* Vue <Transition name="app-fade"> / "app-scale" / "app-slide-up" / "app-slide-down" */
 .app-fade-enter-active,
 .app-fade-leave-active {
-  transition:
-    opacity var(--duration-base) var(--ease-out),
-    filter var(--duration-base) var(--ease-out);
+  /* opacity only — `filter` is never transitioned (constitution §3) */
+  transition: opacity var(--duration-base) var(--ease-out);
 }
 .app-fade-enter-from,
 .app-fade-leave-to {

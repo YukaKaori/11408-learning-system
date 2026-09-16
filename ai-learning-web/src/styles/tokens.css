@@ -180,6 +180,30 @@
   --material-depth: 1;
   --material-fresnel: 1;
 
+  /* Engine tiers (Phase B1, `materials.md` §8). The tier itself is decided
+     once at boot and written on <html> as data-glass-tier; these are the two
+     dials the non-refracting tiers read.
+       diffuse  — blur radius of the diffusion that stands in for refraction
+       dense    — the floor the body rises from toward opaque: alpha =
+                  floor + (1 − floor) × density, so rank order survives
+                  (chrome .765 · hero .815 · floating .894) */
+  --material-diffusion: 10px;
+  --material-density-dense-floor: 0.72;
+
+  /* Geometry (Phase B1, `components.md` §7). A slab's radius belongs to its
+     recipe; the primitive's own content inset is part of every nested radius
+     derivation. Derived control radii are authored here, once, as
+     max(material radius − total inset, --radius-md) — never computed per
+     instance. The chrome control token is the dock item: 30 − 8 − 8 = 14px. */
+  --material-radius-chrome: 30px;
+  --material-radius-hero: 28px;
+  --material-radius-floating: 16px;
+  --material-inset: 0.5rem;
+  --material-radius-chrome-control: max(
+    calc(var(--material-radius-chrome) - var(--material-inset) - var(--space-2)),
+    var(--radius-md)
+  );
+
   /* Edge + interior reflection strength, per material rank */
   --material-edge-glow-chrome: 0.85;
   --material-edge-glow-hero: 0.68;
@@ -221,6 +245,12 @@
   --scene-chip-border: rgba(255, 255, 255, 0.5);
   --scene-veil-lip: rgba(255, 255, 255, 0.55);
   --scene-brand-lip: rgba(255, 255, 255, 0.55);
+
+  /* Environment — text resting directly on a dark stage (the login colophon).
+     Not on glass, so not `--on-glass-*`; not theme-relative, because the
+     stage is black in both themes. A frozen dusk value (`color.md` §1), moved
+     out of the component in Phase B1. */
+  --environment-stage-text: rgba(228, 226, 240, 0.38);
 
   /* Spacing scale (4px-rooted) */
   --space-0-5: 2px;

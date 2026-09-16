@@ -99,8 +99,6 @@ function closeGallery() {
   }
 }
 
-const CARD_RADIUS = 28
-
 /*
  * Card aperture — the shroud's one permanent opening, shaped like the glass.
  *
@@ -118,9 +116,11 @@ const CARD_HOLE_REACH = 24
 const CARD_HOLE_FEATHER = 20
 
 const stageFrame = shallowRef({ width: 0, height: 0 })
-const cardFrame = shallowRef({ x: 0, y: 0, width: 0, height: 0 })
+const cardFrame = shallowRef({ x: 0, y: 0, width: 0, height: 0, radius: 0 })
 
-// Rounded so sub-pixel jitter never regenerates the mask data-URI.
+// Rounded so sub-pixel jitter never regenerates the mask data-URI. The radius
+// is the slab's own (its `hero` preset resolves `--material-radius-hero`), read
+// from the cascade rather than duplicated here.
 function measureFrames() {
   const stageEl = stageRef.value
   const card = cardEl.value
@@ -133,6 +133,7 @@ function measureFrames() {
     y: Math.round(c.top - s.top),
     width: Math.round(c.width),
     height: Math.round(c.height),
+    radius: Math.round(parseFloat(getComputedStyle(card).borderRadius) || 0),
   }
 }
 
@@ -146,7 +147,7 @@ const cardHoleMask = computed(() => {
   const y = card.y - CARD_HOLE_REACH
   const w = card.width + CARD_HOLE_REACH * 2
   const h = card.height + CARD_HOLE_REACH * 2
-  const rx = CARD_RADIUS + CARD_HOLE_REACH
+  const rx = card.radius + CARD_HOLE_REACH
   const svg = `<svg xmlns="http://www.w3.org/2000/svg" width="${stage.width}" height="${stage.height}"><defs><filter id="f" x="-40%" y="-40%" width="180%" height="180%"><feGaussianBlur stdDeviation="${CARD_HOLE_FEATHER}"/></filter><mask id="m"><rect width="100%" height="100%" fill="#fff"/><rect x="${x}" y="${y}" width="${w}" height="${h}" rx="${rx}" fill="#000" filter="url(#f)"/></mask></defs><rect width="100%" height="100%" fill="#fff" mask="url(#m)"/></svg>`
   return `url("data:image/svg+xml,${encodeURIComponent(svg)}")`
 })
@@ -276,7 +277,6 @@ function toggleLocale() {
       :inert="gallery !== 'login'"
       width="100%"
       height="auto"
-      :border-radius="CARD_RADIUS"
       :border-width="0.12"
       :blur="10"
       :opacity="0.97"
@@ -493,21 +493,23 @@ function toggleLocale() {
 }
 
 /*
- * While another gallery is on stage the sign-in slab recedes: defocused and
- * dark, but still mounted (the page keeps exactly two displacement filters
- * and the card aperture keeps breathing behind the gallery layer). The
- * entrance animation must be cleared here — its fill-mode would otherwise
- * pin opacity at 1 and win over the class. Returning to the login gallery
- * replays the entrance: the camera stepping back to the first room.
+ * While another gallery is on stage the sign-in slab recedes: dark and a
+ * breath further from the camera, but still mounted (the page keeps exactly
+ * two displacement filters and the card aperture keeps breathing behind the
+ * gallery layer). Opacity and transform only — `filter` is never transitioned
+ * (constitution §3; Phase B1 removed the blur here). The entrance animation
+ * must be cleared — its fill-mode would otherwise pin opacity at 1 and win
+ * over the class. Returning to the login gallery replays the entrance: the
+ * camera stepping back to the first room.
  */
 .login-stage .login-card.is-recessed {
   animation: none;
   opacity: 0;
-  filter: blur(10px);
+  transform: scale(0.985);
   pointer-events: none;
   transition:
     opacity 700ms var(--ease-out),
-    filter 700ms var(--ease-out);
+    transform 700ms var(--ease-out);
 }
 
 .card-body {
@@ -629,32 +631,33 @@ function toggleLocale() {
   --on-glass-text: rgba(33, 28, 68, 0.92);
   --on-glass-text-dim: rgba(33, 28, 68, 0.6);
   --on-glass-text-faint: rgba(33, 28, 68, 0.4);
-  --dock-halo: rgba(255, 255, 255, 0.7);
-  --dock-halo-active: rgba(120, 90, 255, 0.4);
+  --on-glass-halo: rgba(255, 255, 255, 0.7);
+  --on-glass-halo-active: rgba(120, 90, 255, 0.4);
 }
 
 /*
  * Gallery transition — the camera enters another room of the same
- * exhibition: pure defocus and darkness, no sliding, no router feel. The
- * stage, the dock and the darkness never change; only what hangs in the
- * room fades in through the blur.
+ * exhibition: darkness giving way and the room settling a breath closer, no
+ * sliding, no router feel. The stage, the dock and the darkness never
+ * change; only what hangs in the room fades in. Opacity and transform only —
+ * `filter` is never transitioned (constitution §3; Phase B1 removed the blur).
  */
 .gallery-enter-active {
   transition:
     opacity 900ms var(--ease-out),
-    filter 900ms var(--ease-out);
+    transform 900ms var(--ease-out);
 }
 
 .gallery-leave-active {
   transition:
     opacity 500ms var(--ease-out),
-    filter 500ms var(--ease-out);
+    transform 500ms var(--ease-out);
 }
 
 .gallery-enter-from,
 .gallery-leave-to {
   opacity: 0;
-  filter: blur(14px);
+  transform: scale(1.012);
 }
 
 /*
@@ -706,7 +709,7 @@ function toggleLocale() {
   position: relative;
   margin: var(--space-3) 0 0;
   font-size: var(--text-xs);
-  color: rgba(228, 226, 240, 0.38);
+  color: var(--environment-stage-text);
   text-align: center;
   animation: app-fade-in 640ms var(--ease-out) 420ms both;
 }

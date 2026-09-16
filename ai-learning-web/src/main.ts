@@ -8,6 +8,12 @@ import App from './App.vue'
 import router from './router'
 import { i18n } from '@/locales'
 import { useAppStore } from '@/stores/app'
+import { applyGlassTier } from '@/styles/materialTier'
+
+// The material tier is one decision, taken once before anything mounts and
+// written on <html> as data-glass-tier; every glass surface obeys it through
+// the cascade (styles/materialTier.ts).
+applyGlassTier()
 
 const app = createApp(App)
 
