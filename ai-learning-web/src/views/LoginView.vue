@@ -633,6 +633,11 @@ function toggleLocale() {
   --on-glass-text-faint: rgba(33, 28, 68, 0.4);
   --on-glass-halo: rgba(255, 255, 255, 0.7);
   --on-glass-halo-active: rgba(120, 90, 255, 0.4);
+  /* The indicator light goes to ink over the bright room, like the rims. */
+  --on-glass-indicator-pool: rgba(33, 28, 68, 0.1);
+  --on-glass-indicator-rim: rgba(33, 28, 68, 0.14);
+  --on-glass-indicator-lip: rgba(255, 255, 255, 0.5);
+  --on-glass-indicator-press: rgba(33, 28, 68, 0.08);
 }
 
 /*

@@ -341,7 +341,28 @@ defineExpose({ element: containerRef })
     0px 4px 16px rgba(17, 17, 26, 0.05) inset,
     0px 8px 24px rgba(17, 17, 26, 0.05) inset,
     0px 16px 56px rgba(17, 17, 26, 0.05) inset;
-  transition: opacity 0.26s ease-out;
+  /* --glass-press / --glass-focus are registered in glass.css so they tween. */
+  --glass-press: 0;
+  --glass-focus: 0;
+  transition:
+    opacity 0.26s ease-out,
+    --glass-press var(--duration-fast) var(--ease-out),
+    --glass-focus var(--duration-base) var(--ease-out);
+}
+
+/*
+ * Press and focus illumination (Phase B2, `interaction.md` §4–5). Pure CSS
+ * state: a press anywhere on the slab brightens its rim (the material
+ * acknowledging contact — it works on touch, it needs no geometry); keyboard
+ * focus lifts the light-facing edge, additive to the focus ring, never
+ * instead of it. Both are opacity-only through the rim layers below.
+ */
+.glass-surface:has(:active) {
+  --glass-press: 1;
+}
+
+.glass-surface:has(:focus-visible) {
+  --glass-focus: 1;
 }
 
 /* Tier A `refract` — the per-instance SVG chain replaces the diffusion. */
@@ -415,7 +436,9 @@ html[data-glass-tier='dense'] .glass-surface {
     inset 0 0 0 1px light-dark(rgba(255, 255, 255, 0.34), rgba(255, 255, 255, 0.2)),
     inset 0 1px 0 light-dark(rgba(255, 255, 255, 0.5), rgba(216, 210, 255, 0.32)),
     inset 0 0 22px -8px light-dark(rgba(255, 255, 255, 0.5), rgba(190, 182, 255, 0.34));
-  opacity: calc(var(--glass-edge-glow, 0.5) + var(--glass-proximity, 0) * 0.4);
+  opacity: calc(
+    var(--glass-edge-glow, 0.5) + var(--glass-proximity, 0) * 0.4 + var(--glass-press, 0) * 0.3
+  );
 }
 
 /* Light-tracking sheen — a whisper of the travelling light glancing across
@@ -535,7 +558,10 @@ html[data-glass-tier='dense'] .glass-surface {
     linear-gradient(#fff 0 0) content-box,
     linear-gradient(#fff 0 0);
   mask-composite: exclude;
-  opacity: calc(var(--glass-fresnel, 0) * (0.55 + var(--glass-proximity, 0) * 0.45));
+  opacity: calc(
+    var(--glass-fresnel, 0) *
+      (0.55 + var(--glass-proximity, 0) * 0.45 + var(--glass-focus, 0) * 0.4 + var(--glass-press, 0) * 0.2)
+  );
 }
 
 /* Without mask-composite the conic would flood the whole face — hide the

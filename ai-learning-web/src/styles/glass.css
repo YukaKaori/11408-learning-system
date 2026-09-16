@@ -32,6 +32,24 @@
  */
 
 /* ------------------------------------------------------------------ */
+/* Interaction state (Phase B2) — registered so the slab's rim can      */
+/* tween into and out of a press or a keyboard focus. Set by CSS state  */
+/* inside GlassSurface; consumed by its rim layers, opacity only.       */
+/* ------------------------------------------------------------------ */
+
+@property --glass-press {
+  syntax: '<number>';
+  inherits: true;
+  initial-value: 0;
+}
+
+@property --glass-focus {
+  syntax: '<number>';
+  inherits: true;
+  initial-value: 0;
+}
+
+/* ------------------------------------------------------------------ */
 /* Material presets — the named slabs (Phase 17.2 Phase B)             */
 /* ------------------------------------------------------------------ */
 
@@ -104,6 +122,13 @@
      bloom the current label holds. A bright stage overrides both. */
   --on-glass-halo: rgba(0, 0, 0, 0.5);
   --on-glass-halo-active: rgba(255, 255, 255, 0.38);
+  /* The navigation indicator (Phase B2) — light gathered under the current
+     item: a faint pool, a thin rim and a top lip; and the pool that answers a
+     press. Light, never a fill: the bar must stay transparent through it. */
+  --on-glass-indicator-pool: rgba(255, 255, 255, 0.14);
+  --on-glass-indicator-rim: rgba(255, 255, 255, 0.16);
+  --on-glass-indicator-lip: rgba(255, 255, 255, 0.24);
+  --on-glass-indicator-press: rgba(255, 255, 255, 0.12);
   /* A solid content inset ON the slab (the toolbar's AI result): AI chrome is
      glass, AI content is solid and legible. */
   --on-glass-inset-bg: rgba(12, 11, 18, 0.62);

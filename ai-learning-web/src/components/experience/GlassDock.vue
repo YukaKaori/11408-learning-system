@@ -4,9 +4,10 @@ export type GalleryName = 'login' | 'product' | 'sponsor'
 </script>
 
 <script setup lang="ts">
-import { computed } from 'vue'
+import { computed, ref } from 'vue'
 import { useI18n } from 'vue-i18n'
 import GlassSurface from './GlassSurface.vue'
+import { useNavIndicator } from '@/composables/useNavIndicator'
 
 /**
  * Fluid glass bar — the persistent navigation slab of the login stage,
@@ -60,6 +61,15 @@ function focusItem(key: GalleryName) {
   itemEls.get(key)?.focus()
 }
 
+// The indicator (Phase B2) — a light the bar paints under the current item
+// from measured geometry: correct on first paint, travels on navigation,
+// re-placed directly when the layout (locale, viewport) changes. It is a state
+// of this bar, not a second material.
+const navRef = ref<HTMLElement | null>(null)
+useNavIndicator(navRef, {
+  target: () => itemEls.get(props.active) ?? null,
+  layoutKey: () => items.value,
+})
 
 defineExpose({ focusItem })
 </script>
@@ -82,7 +92,8 @@ defineExpose({ focusItem })
     :green-offset="5"
     :blue-offset="10"
   >
-    <nav class="dock glass-material" :aria-label="t('landing.dock.label')">
+    <nav ref="navRef" class="dock glass-material" :aria-label="t('landing.dock.label')">
+      <span class="dock-indicator" aria-hidden="true"></span>
       <button
         v-for="item in items"
         :key="item.key"
@@ -119,6 +130,7 @@ defineExpose({ focusItem })
  * tablet 0.24 → mobile 0.2 world units) as a viewport-driven clamp.
  */
 .dock {
+  position: relative;
   display: flex;
   align-items: center;
   justify-content: center;
@@ -127,6 +139,37 @@ defineExpose({ focusItem })
   padding: var(--space-2) var(--space-4);
 }
 
+/*
+ * The indicator — light gathered under the current item, not a slab. Its
+ * geometry is written by useNavIndicator as custom properties on the nav
+ * (measured, never guessed); only x and w travel. It is invisible until the
+ * first measurement lands, so it is never seen in the wrong place. Body: a
+ * faint pool rising from below; rim: a thin light-catching lip — both from
+ * the on-glass light tokens (glass.css), so the bar stays transparent and
+ * the stage keeps showing through. Width changes are the light's extent,
+ * not the bar's geometry.
+ */
+.dock-indicator {
+  position: absolute;
+  top: 0;
+  left: 0;
+  z-index: 0;
+  width: var(--nav-indicator-w, 0px);
+  height: var(--nav-indicator-h, 44px);
+  border-radius: var(--material-radius-chrome-control);
+  transform: translate(var(--nav-indicator-x, 0px), var(--nav-indicator-y, 0px));
+  opacity: var(--nav-indicator-ready, 0);
+  pointer-events: none;
+  background: radial-gradient(
+    120% 90% at 50% 115%,
+    var(--on-glass-indicator-pool),
+    transparent 70%
+  );
+  box-shadow:
+    inset 0 0 0 1px var(--on-glass-indicator-rim),
+    inset 0 1px 0 var(--on-glass-indicator-lip);
+  transition: opacity var(--duration-base) var(--ease-out);
+}
 
 /*
  * Nav labels — bare text resting on the glass: no borders, no panes, no
@@ -138,6 +181,7 @@ defineExpose({ focusItem })
  */
 .dock-item {
   position: relative;
+  z-index: 1;
   display: inline-flex;
   align-items: center;
   justify-content: center;
@@ -172,6 +216,24 @@ defineExpose({ focusItem })
   color: var(--on-glass-text);
 }
 
+/* Press illumination (Phase B2): light gathers at the point of contact — a
+   pool under the pressed label, opacity only, gone when the press ends. The
+   bar's rim answers too, through --glass-press on the surface. */
+.dock-item::before {
+  content: '';
+  position: absolute;
+  inset: 0;
+  z-index: -1;
+  border-radius: inherit;
+  background: radial-gradient(90% 80% at 50% 60%, var(--on-glass-indicator-press), transparent 72%);
+  opacity: 0;
+  pointer-events: none;
+  transition: opacity var(--duration-fast) var(--ease-out);
+}
+
+.dock-item:active::before {
+  opacity: 1;
+}
 
 /* Mass settling, never a spring. */
 .dock-item:active {
