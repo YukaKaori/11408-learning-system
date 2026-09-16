@@ -227,30 +227,65 @@
      component CSS can always list it alongside a base shadow. */
   --shadow-glow-primary: 0 0 0 0 rgba(94, 106, 210, 0);
 
-  /* Scene — the signature authentication/welcome experience (flower wallpaper
-     under a full-screen frosted veil pierced by the pointer spotlight) */
-  --scene-veil-bg: rgba(252, 250, 249, 0.4);
-  --scene-veil-blur: 26px;
-  --scene-scrim: linear-gradient(180deg, rgba(250, 248, 247, 0) 30%, rgba(250, 248, 247, 0.3) 100%);
-  --scene-text: #2b2226;
-  --scene-text-soft: rgba(43, 34, 38, 0.72);
+  /* Scene — the welcome hero (`GlassScene`). Since Phase B3 it is the Login
+     environment's wallpaper under the same atmosphere, not a white frosted
+     veil: its text rides on dusk in both themes, so these are the dusk values
+     the dark theme always had. --scene-aura is the rose glow behind the solid
+     welcome sections below the hero. */
+  --scene-text: #f6f2f3;
+  --scene-text-soft: rgba(246, 242, 243, 0.8);
   --scene-aura: rgba(219, 168, 178, 0.22);
-  --spotlight-radius: 340px;
-  /* Scene surfaces (Phase 17.2) — the hero chip that rides on the veil, the
-     veil's own physical top lip, and the sign-in brand tile's lip. All three
-     borrowed the legacy glassmorphism family until the material consolidation;
-     these values are that family's *resolved* light-mode values, so the scene
-     is unchanged and the --scene-* system is finally self-contained. */
-  --scene-chip-bg: rgba(255, 255, 255, 0.72);
-  --scene-chip-border: rgba(255, 255, 255, 0.5);
-  --scene-veil-lip: rgba(255, 255, 255, 0.55);
+  /* The hero chip riding on the scene, and the sign-in brand tile's lip. */
+  --scene-chip-bg: rgba(18, 16, 26, 0.5);
+  --scene-chip-border: rgba(246, 242, 243, 0.22);
   --scene-brand-lip: rgba(255, 255, 255, 0.55);
 
   /* Environment — text resting directly on a dark stage (the login colophon).
      Not on glass, so not `--on-glass-*`; not theme-relative, because the
-     stage is black in both themes. A frozen dusk value (`color.md` §1), moved
+     stage is dusk in both themes. A frozen dusk value (`color.md` §1), moved
      out of the component in Phase B1. */
   --environment-stage-text: rgba(228, 226, 240, 0.38);
+
+  /* ── Environment (Phase B3, `environment.md`) ─────────────────────────────
+     Everything the material sits in front of on the Login stage and the
+     welcome hero. Environment, not material: none of these reach a slab.
+
+     Anchor (`color.md` §3): the wallpaper itself — the shadowed plaster wall
+     of the rose photograph, ≈ oklch(0.40 0.03 355). Every colour below keeps
+     that hue family and walks lightness: the dusk that dims the room is the
+     wall's own shadow, the ambient pools are the room's own light.
+
+     E1 field       the stage colour behind the wallpaper (visible only while it loads)
+     E2 atmosphere  a neutral-density dusk graded top → bottom, the one light
+                    being above: the room stays bright where no glass sits and
+                    deepens toward the dock, which is what makes Clear glass
+                    legal there. No blur, no white: the wallpaper is always seen.
+     secondary      the luminous lotus drawing — its resting presence (screen blend)
+     E3 ambient     three slow pools of the room's light
+     E4 wake        the awake plate's daylight exposure (screen-applied by the
+                    wake's canvas at plate build — theme-invariant, the daylight
+                    is the same at any hour) and how much of the plate the wake
+                    lets through (per theme) */
+  --environment-field: oklch(0.36 0.03 355);
+  --environment-atmosphere:
+    radial-gradient(
+      ellipse min(40vw, 560px) min(46vh, 440px) at 50% 42%,
+      oklch(0.15 0.02 350 / 0.7),
+      oklch(0.16 0.02 350 / 0) 100%
+    ),
+    linear-gradient(
+      180deg,
+      oklch(0.2 0.025 350 / 0.08) 0%,
+      oklch(0.2 0.025 350 / 0.22) 46%,
+      oklch(0.16 0.02 350 / 0.76) 82%,
+      oklch(0.14 0.02 350 / 0.8) 100%
+    );
+  --environment-secondary-rest: 0.3;
+  --environment-ambient-rose: oklch(0.8 0.09 10 / 0.16);
+  --environment-ambient-violet: oklch(0.72 0.09 300 / 0.12);
+  --environment-ambient-warm: oklch(0.96 0.04 80 / 0.14);
+  --environment-wake-daylight: oklch(0.96 0.035 70 / 0.2);
+  --environment-wake-strength: 0.9;
 
   /* Spacing scale (4px-rooted) */
   --space-0-5: 2px;
@@ -341,20 +376,50 @@ html.dark {
      card — see the :root definition for the "why". */
   --shadow-glow-primary: 0 0 0 1px rgba(124, 134, 234, 0.35), 0 8px 24px rgba(124, 134, 234, 0.22);
 
-  --scene-veil-bg: rgba(14, 12, 14, 0.52);
-  --scene-veil-blur: 26px;
-  --scene-scrim: linear-gradient(180deg, rgba(12, 10, 12, 0.2) 0%, rgba(12, 10, 12, 0.52) 100%);
-  --scene-text: #f6f2f3;
-  --scene-text-soft: rgba(246, 242, 243, 0.75);
   --scene-aura: rgba(219, 168, 178, 0.08);
-  --spotlight-radius: 340px;
-  /* Dark counterparts — the legacy family diverged per theme (violet-cast
-     rather than plain white), so these must too. Copying the light values here
-     was the single most likely regression in this migration. */
-  --scene-chip-bg: rgba(18, 16, 26, 0.64);
-  --scene-chip-border: rgba(150, 140, 235, 0.18);
-  --scene-veil-lip: rgba(180, 172, 255, 0.18);
+  /* The brand tile's lip keeps its violet cast on the dark theme. */
   --scene-brand-lip: rgba(180, 172, 255, 0.18);
 
+  /* Environment — the same room at a later hour: the dusk deepens, the
+     lotus drawing glows a little more, the wake lets less daylight in. */
+  --environment-field: oklch(0.24 0.025 350);
+  --environment-atmosphere:
+    radial-gradient(
+      ellipse min(40vw, 560px) min(46vh, 440px) at 50% 42%,
+      oklch(0.13 0.02 340 / 0.3),
+      oklch(0.13 0.02 340 / 0) 100%
+    ),
+    linear-gradient(
+      180deg,
+      oklch(0.16 0.025 340 / 0.4) 0%,
+      oklch(0.15 0.025 340 / 0.5) 46%,
+      oklch(0.13 0.02 340 / 0.72) 82%,
+      oklch(0.11 0.02 340 / 0.82) 100%
+    );
+  --environment-secondary-rest: 0.42;
+  --environment-ambient-rose: oklch(0.72 0.1 10 / 0.12);
+  --environment-ambient-violet: oklch(0.64 0.11 300 / 0.12);
+  --environment-ambient-warm: oklch(0.92 0.04 80 / 0.08);
+  --environment-wake-strength: 0.72;
+
   color-scheme: dark;
+}
+
+/*
+ * Reduced transparency / increased contrast — the environment's half of tier C
+ * (`environment.md` §4): the material turns dense on its own; the atmosphere
+ * deepens and the secondary drawing recedes so nothing decorative competes with
+ * a label. Declared once, for both themes (same specificity, later wins).
+ */
+@media (prefers-reduced-transparency: reduce), (prefers-contrast: more) {
+  :root,
+  html.dark {
+    --environment-atmosphere: linear-gradient(
+      180deg,
+      oklch(0.15 0.02 345 / 0.62) 0%,
+      oklch(0.14 0.02 345 / 0.72) 50%,
+      oklch(0.12 0.02 345 / 0.86) 100%
+    );
+    --environment-secondary-rest: 0.16;
+  }
 }

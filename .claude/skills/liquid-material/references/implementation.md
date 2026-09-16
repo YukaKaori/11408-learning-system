@@ -297,7 +297,8 @@ transition: all 0.2s ease-in-out;
 - **Budget guard:** `components/experience/__tests__/glassBudget.spec.ts` — any
   new `GlassSurface` instance, any file matching
   `feDisplacementMap|backdrop-filter:\s*url\(` outside the primitive, any stray
-  `backdrop-filter` outside `GlassSurface.vue`/`GlassScene.vue`, or any
+  `backdrop-filter` outside `GlassSurface.vue` (the `GlassScene` veil exception
+  was retired in B3), or any
   reference to the retired glassmorphism family fails CI. Update `ALLOWED` only
   as a deliberate, documented renegotiation.
 - **Token guard:** `styles/__tests__/materialTokens.spec.ts` — each preset is

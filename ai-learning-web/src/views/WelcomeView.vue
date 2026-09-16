@@ -86,7 +86,7 @@ onBeforeUnmount(() => window.removeEventListener('scroll', onScroll))
 
 <template>
   <div ref="pageRef" class="welcome-page">
-    <!-- Hero — full-viewport glass scene with the spotlight reveal -->
+    <!-- Hero — full-viewport scene: the Login environment's room at rest -->
     <GlassScene class="hero">
       <header ref="heroContentRef" class="hero-content">
         <p class="hero-eyebrow">{{ t('welcome.hero.eyebrow') }}</p>
@@ -266,7 +266,7 @@ onBeforeUnmount(() => window.removeEventListener('scroll', onScroll))
   font-size: var(--font-label-size);
   font-weight: var(--font-label-weight);
   letter-spacing: var(--font-label-tracking);
-  color: var(--color-text-secondary);
+  color: var(--scene-text-soft);
   animation: app-slide-down var(--duration-slow) var(--ease-out) both;
 }
 
@@ -322,8 +322,8 @@ onBeforeUnmount(() => window.removeEventListener('scroll', onScroll))
   animation: app-slide-up 600ms var(--ease-out) 500ms both;
 }
 
-/* Outline button rides the scene veil, not an app surface — retint from the
-   scene's own chip tokens. */
+/* Outline button rides the scene's atmosphere, not an app surface — retint
+   from the scene's own chip tokens. */
 .hero-actions :deep(.variant-outline) {
   --color-text: var(--scene-text);
   --color-border-strong: var(--scene-chip-border);

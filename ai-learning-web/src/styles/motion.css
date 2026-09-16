@@ -68,6 +68,20 @@
   }
 }
 
+/*
+ * Opacity-only glow for environment artwork that another layer re-draws
+ * pixel-for-pixel (the Login stage's secondary drawing, re-drawn by the wake):
+ * a scale would misregister the two. Run it long and alternating.
+ */
+@keyframes app-glow {
+  from {
+    opacity: 0.72;
+  }
+  to {
+    opacity: 1;
+  }
+}
+
 /* Soft vertical drift for floating glass cards (pair with staggered delays). */
 @keyframes app-float {
   from {

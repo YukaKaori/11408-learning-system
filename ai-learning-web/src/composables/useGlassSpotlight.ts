@@ -63,7 +63,8 @@ const INTENSITY_RELEASE = 0.022
  * layer opacities). The returned refs update every frame and exist for logic
  * and tests — binding them in templates would re-render Vue at 60fps.
  *
- * Engineering constraints (same contract as useSpotlight):
+ * Engineering constraints (the stage-light contract; the Login wake reads
+ * `smoothedCursor` instead of adding a second pointer listener):
  * - Only CSS variables are written inside the frame loop; element rects are
  *   cached and re-measured at most once per frame, and only when a resize /
  *   scroll / observer callback marked them dirty.

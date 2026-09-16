@@ -65,7 +65,8 @@ Rules:
   wallpaper beneath (the reveal wake). Both read the **same eased cursor**.
   Neither is a second light: the wake opens the atmosphere, it does not emit.
   A stage-scale radial that follows the pointer is neither — it is a
-  spotlight-as-reveal, and it is the pattern retired in B3.
+  spotlight-as-reveal, and it is the pattern retired in B3 (shipped: `RevealField`
+  reads `useGlassSpotlight().smoothedCursor`; `useSpotlight` is deleted).
 
 ## 4. Press — settle plus illumination
 

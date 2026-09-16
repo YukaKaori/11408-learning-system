@@ -1,5 +1,5 @@
 <script setup lang="ts">
-import { computed, nextTick, onBeforeUnmount, onMounted, reactive, ref, shallowRef } from 'vue'
+import { computed, nextTick, onMounted, reactive, ref } from 'vue'
 import { useRoute, useRouter } from 'vue-router'
 import { useI18n } from 'vue-i18n'
 import { ApiError } from '@/api/types'
@@ -12,27 +12,33 @@ import {
   GlassDock,
   GlassSurface,
   ProductPresentation,
+  RevealField,
   SponsorPanel,
 } from '@/components'
 import type { GalleryName, IconName } from '@/components'
+import roseLarge from '@/assets/welcome/flower-2560.jpg'
+import roseSmall from '@/assets/welcome/flower-1280.jpg'
 import lotusUrl from '@/assets/login/pinklotus.png'
 
-// An optical glass installation that happens to contain a login form. A black
-// gallery holds one artwork — the lotus, hero-scaled, at its native aspect
-// ratio — and two slabs of smoked optical glass float in front of it: the
-// sign-in slab, which intersects the bloom (petals continue past its edges,
-// mostly hidden in darkness), and the fluid glass bar locked to the bottom —
-// the installation's persistent navigation, three bare labels floating on
-// one wide slab of clear water glass (FluidGlass bar mode, translated). A darkness shroud hides the artwork everywhere except two apertures:
-// a card-shaped opening under the sign-in glass (permanent — the glass
-// forever reveals its part of the world) and the pointer's travelling reveal
-// (discovery). Nothing on the stage emits light except the dock's
-// underlight, which exists to be refracted. The dock moves the camera
-// between three galleries in the same room: the sign-in slab, the product
-// keynote and the sponsor page — full-screen layers that appear behind the
-// dock while the stage and the glass remain. Every material cue — density,
-// rims, Fresnel, facet reflections — lives in GlassSurface + glass.css;
-// interaction timing lives in useGlassSpotlight; this view owns composition.
+// A room with a sign-in slab in it (Phase B3 — `environment.md`). The stage is
+// composed back to front as environment, then material, then content:
+//
+//   E1 wallpaper    the rose room — a real photograph, full-bleed, present at rest
+//   E2 atmosphere   a dusk graded from above: bright where no glass sits, deeper
+//                   toward the dock; no blur, no white, the room always visible
+//   secondary       the luminous lotus drawing on the shadowed wall, resting faint
+//   E4 wake         RevealField — where the pointer has just travelled the dusk
+//                   lifts and the drawing wakes, then settles (desktop only)
+//   E3 ambient      three slow pools of the room's light
+//   M  glass        the sign-in slab (hero) and the dock (chrome)
+//   C  content      the form
+//
+// Environment layers are not glass and not budget instances. Every material
+// cue lives in GlassSurface + glass.css; the one light lives in
+// useGlassSpotlight (the wake reads its eased cursor); this view owns
+// composition. The dock moves the camera between three galleries — the sign-in
+// slab, the product keynote and the sponsor page — full-screen layers that
+// appear behind the dock while the room and the glass remain.
 
 const { t } = useI18n()
 const route = useRoute()
@@ -59,17 +65,14 @@ const AUTH_ERROR_KEYS: Record<number, string> = {
 }
 
 // Optical lighting: the composable eases the pointer light and writes CSS
-// variables on the stage (shroud mask + travelling reveal), on the card
-// (proximity-reactive glass + Fresnel angle) and on every glass facet — the
-// controls AND the dock — so one light physically travels across the whole
-// installation. Facets are collected under the stage: the card's controls,
-// the dock slab itself (its sheen layer needs dock-local coordinates) and
-// the dock's buttons. Inert on touch / reduced motion. Legibility no longer
-// comes from frost: the card's smoked neutral density carries it.
+// variables on the card (proximity-reactive glass + Fresnel angle) and on
+// every glass facet — the controls AND the dock — so one light travels across
+// the whole installation. Its eased cursor is also the wake's only input: one
+// cursor per stage. Inert on touch / reduced motion.
 const stageRef = ref<HTMLElement | null>(null)
 const cardRef = ref<InstanceType<typeof GlassSurface> | null>(null)
 const cardEl = computed(() => cardRef.value?.element ?? null)
-useGlassSpotlight(stageRef, {
+const spotlight = useGlassSpotlight(stageRef, {
   card: cardEl,
   facets: {
     root: stageRef,
@@ -79,10 +82,10 @@ useGlassSpotlight(stageRef, {
 
 /*
  * Gallery state — which room the camera is in. The dock persists across all
- * three; the sign-in slab recedes (defocused, inert, still mounted so the
- * page keeps exactly two displacement filters) while a full-screen gallery
- * layer appears behind the dock. Closing returns focus to the dock facet
- * that opened the gallery, so keyboard travel never resets.
+ * three; the sign-in slab recedes (inert, still mounted so the page keeps
+ * exactly two displacement filters) while a full-screen gallery layer appears
+ * behind the dock. Closing returns focus to the dock facet that opened the
+ * gallery, so keyboard travel never resets.
  */
 const gallery = ref<GalleryName>('login')
 const dockRef = ref<InstanceType<typeof GlassDock> | null>(null)
@@ -99,104 +102,12 @@ function closeGallery() {
   }
 }
 
-/*
- * Card aperture — the shroud's one permanent opening, shaped like the glass.
- *
- * Measured by a dedicated observer rather than useGlassSpotlight: the
- * spotlight sleeps on touch / reduced-motion, but the lotus must still live
- * inside the glass there. Phase 9 widens the reach and feather slightly: the
- * card now intersects the hero-scaled bloom, and a whisper of petal bleeding
- * past the rim hints that the flower continues beyond the slab — while the
- * petals themselves stay in darkness until the travelling reveal finds them.
- * The displacement filter can sample up to |distortionScale| / 2 px past the
- * edge, so the outermost rim refracts a little feathered darkness — a
- * smoked-glass border, deliberate.
- */
-const CARD_HOLE_REACH = 24
-const CARD_HOLE_FEATHER = 20
-
-const stageFrame = shallowRef({ width: 0, height: 0 })
-const cardFrame = shallowRef({ x: 0, y: 0, width: 0, height: 0, radius: 0 })
-
-// Rounded so sub-pixel jitter never regenerates the mask data-URI. The radius
-// is the slab's own (its `hero` preset resolves `--material-radius-hero`), read
-// from the cascade rather than duplicated here.
-function measureFrames() {
-  const stageEl = stageRef.value
-  const card = cardEl.value
-  if (!stageEl || !card) return
-  const s = stageEl.getBoundingClientRect()
-  const c = card.getBoundingClientRect()
-  stageFrame.value = { width: Math.round(s.width), height: Math.round(s.height) }
-  cardFrame.value = {
-    x: Math.round(c.left - s.left),
-    y: Math.round(c.top - s.top),
-    width: Math.round(c.width),
-    height: Math.round(c.height),
-    radius: Math.round(parseFloat(getComputedStyle(card).borderRadius) || 0),
-  }
-}
-
-let frameObserver: ResizeObserver | null = null
-
-const cardHoleMask = computed(() => {
-  const stage = stageFrame.value
-  const card = cardFrame.value
-  if (!stage.width || !card.width) return null
-  const x = card.x - CARD_HOLE_REACH
-  const y = card.y - CARD_HOLE_REACH
-  const w = card.width + CARD_HOLE_REACH * 2
-  const h = card.height + CARD_HOLE_REACH * 2
-  const rx = card.radius + CARD_HOLE_REACH
-  const svg = `<svg xmlns="http://www.w3.org/2000/svg" width="${stage.width}" height="${stage.height}"><defs><filter id="f" x="-40%" y="-40%" width="180%" height="180%"><feGaussianBlur stdDeviation="${CARD_HOLE_FEATHER}"/></filter><mask id="m"><rect width="100%" height="100%" fill="#fff"/><rect x="${x}" y="${y}" width="${w}" height="${h}" rx="${rx}" fill="#000" filter="url(#f)"/></mask></defs><rect width="100%" height="100%" fill="#fff" mask="url(#m)"/></svg>`
-  return `url("data:image/svg+xml,${encodeURIComponent(svg)}")`
-})
-
-/*
- * Travelling aperture — the beam's reveal, entirely subtractive. Its radius
- * is radius × strength (blooms open from zero, stays shut for touch /
- * reduced-motion) and its centre never fully clears: a floor of darkness
- * keeps every revealed petal dimmer than the glass.
- */
-const revealMask =
-  'radial-gradient(circle calc(var(--glass-light-radius, 360px) * var(--glass-light-strength, 0) * 1.6) at ' +
-  'var(--glass-light-x, 50%) var(--glass-light-y, 50%), ' +
-  'rgba(0, 0, 0, 0.22) 0%, rgba(0, 0, 0, 0.42) 30%, rgba(0, 0, 0, 0.62) 55%, ' +
-  'rgba(0, 0, 0, 0.85) 78%, #000 100%)'
-
-// Both apertures multiply through mask-composite: intersect (transparency
-// from either opens the shroud). Without support, only the card aperture
-// survives — the stage stays asleep but the story still stands.
-const supportsMaskComposite =
-  typeof CSS !== 'undefined' && CSS.supports('mask-composite', 'intersect')
-
-const shroudStyle = computed(() => {
-  const hole = cardHoleMask.value
-  if (!hole) return undefined
-  if (!supportsMaskComposite) {
-    return { maskImage: hole, maskRepeat: 'no-repeat' }
-  }
-  return {
-    maskImage: `${hole}, ${revealMask}`,
-    maskRepeat: 'no-repeat',
-    maskComposite: 'intersect',
-  }
-})
-
-onMounted(() => {
-  measureFrames()
-  frameObserver = new ResizeObserver(measureFrames)
-  if (stageRef.value) frameObserver.observe(stageRef.value)
-  if (cardEl.value) frameObserver.observe(cardEl.value)
-  // The entrance animation translates the card; re-aim the aperture once the
-  // glass settles into place.
-  cardEl.value?.addEventListener('animationend', measureFrames, { once: true })
-})
-
-onBeforeUnmount(() => {
-  frameObserver?.disconnect()
-  frameObserver = null
-})
+// Environment elements the wake reads: the wallpaper and the secondary drawing
+// it re-draws at full light, and the two slabs it mostly stays out of.
+const wallpaperRef = ref<HTMLImageElement | null>(null)
+const secondaryRef = ref<HTMLImageElement | null>(null)
+const dockAnchorRef = ref<HTMLElement | null>(null)
+const wakeShelters = computed(() => [cardEl.value, dockAnchorRef.value])
 
 onMounted(() => {
   const remembered = localStorage.getItem(REMEMBERED_USER_KEY)
@@ -223,13 +134,15 @@ async function submit() {
     } else {
       localStorage.removeItem(REMEMBERED_USER_KEY)
     }
-    // Deep links and expired sessions return the user where they were;
-    // a plain sign-in flows into the welcome experience.
+    // Deep links and expired sessions return the user where they were; a
+    // plain sign-in lands on Today, the post-login home (decision V-A,
+    // `docs/liquid-material-global-reassessment.md` §10.4). /welcome stays a
+    // route, no longer a mandatory step.
     const redirect = route.query.redirect
     if (typeof redirect === 'string' && redirect.startsWith('/')) {
       await router.replace(redirect)
     } else {
-      await router.replace({ name: 'welcome' })
+      await router.replace({ name: 'today' })
     }
   } catch (error) {
     errorKey.value =
@@ -264,10 +177,35 @@ function toggleLocale() {
 
 <template>
   <main ref="stageRef" class="login-stage">
-    <div class="stage-artwork" aria-hidden="true">
-      <img class="stage-lotus" :src="lotusUrl" alt="" decoding="async" fetchpriority="high" />
+    <!-- Environment — decorative, behind everything, never glass. -->
+    <img
+      ref="wallpaperRef"
+      class="stage-wallpaper"
+      :src="roseLarge"
+      :srcset="`${roseSmall} 1280w, ${roseLarge} 2560w`"
+      sizes="100vw"
+      alt=""
+      aria-hidden="true"
+      decoding="async"
+      fetchpriority="high"
+    />
+    <div class="stage-atmosphere" aria-hidden="true"></div>
+    <div class="stage-secondary" aria-hidden="true">
+      <img ref="secondaryRef" class="stage-secondary__art" :src="lotusUrl" alt="" decoding="async" />
     </div>
-    <div class="stage-shroud" :style="shroudStyle" aria-hidden="true"></div>
+    <RevealField
+      :light="spotlight"
+      :stage="stageRef"
+      :wallpaper="wallpaperRef"
+      :secondary="secondaryRef"
+      :shelters="wakeShelters"
+      :active="gallery === 'login'"
+    />
+    <div class="stage-ambient" aria-hidden="true">
+      <i class="ambient-pool ambient-pool--rose"></i>
+      <i class="ambient-pool ambient-pool--violet"></i>
+      <i class="ambient-pool ambient-pool--warm"></i>
+    </div>
 
     <GlassSurface
       ref="cardRef"
@@ -375,14 +313,7 @@ function toggleLocale() {
       <SponsorPanel v-if="gallery === 'sponsor'" @close="closeGallery" />
     </Transition>
 
-    <div class="dock-anchor" :class="{ 'is-on-light': gallery === 'product' }">
-      <!-- Living underlight — soft colored lights that exist only to be
-           refracted by the dock slab floating above them. -->
-      <div class="stage-underlight" aria-hidden="true">
-        <i class="underlight-blob underlight-blob--rose"></i>
-        <i class="underlight-blob underlight-blob--violet"></i>
-        <i class="underlight-blob underlight-blob--warm"></i>
-      </div>
+    <div ref="dockAnchorRef" class="dock-anchor" :class="{ 'is-on-light': gallery === 'product' }">
       <GlassDock
         ref="dockRef"
         class="landing-dock"
@@ -399,12 +330,9 @@ function toggleLocale() {
 
 <style scoped>
 /*
- * The stage — pure black in BOTH themes, edge to edge: no gradients, no
- * texture, no tinted overlays. All the colour on the page belongs to the
- * artwork; theme choice is expressed by the glass surfaces, not the
- * backdrop. The page reads top to bottom as an installation: hero artwork →
- * sign-in slab → showcase slab → colophon. Everything flows in a single
- * column so short viewports scroll instead of clipping.
+ * The stage — a room, not a void. A single column (short viewports scroll
+ * instead of clipping): sign-in slab → dock → colophon. Its own colour is the
+ * environment field, seen only while the wallpaper loads.
  */
 .login-stage {
   position: relative;
@@ -415,70 +343,116 @@ function toggleLocale() {
   min-height: 100dvh;
   padding: var(--space-6);
   /* clip, not hidden: hidden leaves the stage programmatically scrollable
-     (the underlight bleed gives it ~340px of hidden overflow), and Chromium
-     will sometimes scroll it while the Product layer enters — visibly
-     teleporting the dock. clip is not a scroll container: nothing can. */
+     (the ambient bleed gives it hidden overflow), and the engine will
+     sometimes scroll it while the Product layer enters — visibly teleporting
+     the dock. clip is not a scroll container: nothing can. */
   overflow: clip;
-  background: #000;
+  background-color: var(--environment-field);
   isolation: isolate;
 }
 
-/*
- * The artwork — the hero of the stage, composed like product photography:
- * the lotus hangs at its native 3:2 ratio, large enough to command the
- * frame (~52vw, capped) yet still surrounded by black negative space. Its
- * centre sits above the viewport's, so the glass card — biased below —
- * overlaps the flower's lower half and the bloom crown rises free above
- * the sheet. The wrapper owns position and a soft edge feather (the source
- * frame's own black field dissolves into the stage, never reading as a
- * pasted rectangle); the img inside owns the breathing, because app-breathe
- * animates transform and would clobber positional transforms.
- */
-.stage-artwork {
+/* Environment layers share one rule: positioned, decorative, inert. */
+.stage-wallpaper,
+.stage-atmosphere,
+.stage-secondary,
+.stage-ambient {
   position: absolute;
-  top: 32%;
-  left: 50%;
-  width: min(60vw, 900px);
-  transform: translate(-50%, -50%);
   pointer-events: none;
-  mask-image:
-    linear-gradient(to right, transparent, #000 9%, #000 91%, transparent),
-    linear-gradient(to bottom, transparent, #000 9%, #000 91%, transparent);
-  mask-composite: intersect;
 }
 
-/* Native aspect ratio — never stretched, never cropped. */
-.stage-lotus {
+/*
+ * E1 — the wallpaper: a rose on a plaster wall in a raking beam of light.
+ * Cover-fit, the rose head kept in frame at every aspect ratio. It does not
+ * breathe: the wake re-draws it pixel for pixel, and a scaling wallpaper would
+ * ghost against its own awake plate. The ambient pools carry the life.
+ */
+.stage-wallpaper {
+  inset: 0;
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+  object-position: 52% 32%;
+}
+
+/*
+ * E2 — the atmosphere: the dusk that makes Clear glass legal, graded from the
+ * one light above. Light at the top so the room reads bright and spacious,
+ * deepest behind the dock. A token (`--environment-atmosphere`), shared with
+ * the welcome hero; deepened under reduced transparency.
+ */
+.stage-atmosphere {
+  inset: 0;
+  background: var(--environment-atmosphere);
+}
+
+/*
+ * Secondary — the lotus drawing, hung on the shadowed wall to the right of the
+ * rose: a luminous line drawing on a black field, screen-blended so only its
+ * light is added to the room. Faint at rest (the wall carries a trace of it);
+ * the wake brings it to full light where the pointer passes. The glow breathes
+ * on opacity only — the wake re-draws this element's box, so it never scales.
+ */
+.stage-secondary {
+  top: 50%;
+  left: 76%;
+  width: min(58vw, 980px);
+  transform: translate(-50%, -50%);
+  mix-blend-mode: screen;
+  opacity: var(--environment-secondary-rest);
+}
+
+.stage-secondary__art {
   display: block;
   width: 100%;
   height: auto;
-  animation: app-breathe 14s var(--ease-in-out) infinite alternate;
+  animation: app-glow 16s var(--ease-in-out) infinite alternate;
 }
 
 /*
- * Darkness shroud — the stage sleeps nearly black; the lotus is hidden
- * inside it. Its mask (two feathered apertures: the card-shaped opening
- * under the glass and the travelling beam's reveal) is composed inline in
- * the script — the card aperture is an SVG data-URI rebuilt from measured
- * geometry, the reveal a CSS-variable-driven gradient. Every ramp is long
- * and low-contrast: darkness giving way, never a spotlight edge.
+ * E3 — ambient light: three soft pools of the room's own light (rose, violet,
+ * warm white) drifting on 36–58s transform-only loops across the whole stage.
+ * They sit above the wake and below the glass, so the slabs genuinely refract
+ * moving light at their edges.
  */
-.stage-shroud {
-  position: absolute;
-  inset: 0;
-  pointer-events: none;
-  background: rgba(0, 0, 0, 0.95);
+.stage-ambient {
+  inset: -20% -12%;
   transform: translateZ(0);
 }
 
+.ambient-pool {
+  position: absolute;
+  width: 46%;
+  aspect-ratio: 1;
+  border-radius: 50%;
+}
+
+.ambient-pool--rose {
+  left: 2%;
+  top: 4%;
+  background: radial-gradient(circle, var(--environment-ambient-rose), transparent 70%);
+  animation: app-underlight-a 44s var(--ease-in-out) infinite alternate;
+}
+
+.ambient-pool--violet {
+  right: 0;
+  top: 30%;
+  background: radial-gradient(circle, var(--environment-ambient-violet), transparent 70%);
+  animation: app-underlight-b 58s var(--ease-in-out) infinite alternate;
+}
+
+.ambient-pool--warm {
+  left: 26%;
+  bottom: -6%;
+  background: radial-gradient(circle, var(--environment-ambient-warm), transparent 70%);
+  animation: app-underlight-c 36s var(--ease-in-out) infinite alternate;
+}
+
 /*
- * The sign-in slab — thick smoked optical glass intersecting the bloom. The
- * hero-scaled flower is wider than the sheet, so petals continue past both
- * edges (into darkness — the reveal system decides when they are seen). The
- * material is opted in here via GlassSurface's Phase 9 variables: legibility
- * comes from smoked neutral density, never from white frost; the rims,
- * back-face reflection and directional Fresnel make the surface read before
- * the transparency. Entrance: one soft rise, then stillness.
+ * The sign-in slab — thick smoked optical glass standing in the room, the rose
+ * seen bent through it. Legibility comes from smoked neutral density, never
+ * from white frost; the rims, back-face reflection and directional Fresnel
+ * make the surface read before the transparency. Entrance: one soft rise,
+ * then stillness.
  */
 .login-card {
   position: relative;
@@ -487,16 +461,15 @@ function toggleLocale() {
   margin-top: clamp(72px, 12vh, 160px);
   animation: app-slide-up 640ms var(--ease-out) 60ms both;
   /* Optics come from `material="hero"` (styles/glass.css): the Clear variant,
-     stage-tuned denser than the dock because the lotus artwork behind this
-     slab is brighter than the dock's backdrop. `.stage-shroud` is the dimming
+     stage-tuned denser than the dock because the room behind this slab is
+     brighter than the dock's backdrop. `.stage-atmosphere` is the dimming
      layer Clear requires. Nothing optical is declared here. */
 }
 
 /*
  * While another gallery is on stage the sign-in slab recedes: dark and a
  * breath further from the camera, but still mounted (the page keeps exactly
- * two displacement filters and the card aperture keeps breathing behind the
- * gallery layer). Opacity and transform only — `filter` is never transitioned
+ * two displacement filters). Opacity and transform only — `filter` is never transitioned
  * (constitution §3; Phase B1 removed the blur here). The entrance animation
  * must be cleared — its fill-mode would otherwise pin opacity at 1 and win
  * over the class. Returning to the login gallery replays the entrance: the
@@ -600,8 +573,7 @@ function toggleLocale() {
 }
 
 /*
- * Dock anchor — parks the glass bar (and the underlight it refracts) at
- * the bottom of the stage. FluidGlass bar geometry: the anchor owns the
+ * Dock anchor — parks the glass bar at the bottom of the stage. FluidGlass bar geometry: the anchor owns the
  * bar's width — ~90% of the stage, capped — and the slab inside fills it,
  * locked to the bottom edge by margin-top: auto; on short viewports it
  * follows the flow and the page scrolls. The z-index keeps the bar
@@ -665,51 +637,9 @@ function toggleLocale() {
   transform: scale(1.012);
 }
 
-/*
- * Living underlight — three extremely soft colored lights (rose, violet,
- * warm white) drifting on 30–60s transform-only loops behind the dock
- * slab. They sit above the shroud (they are Phase 9's one deliberate light
- * source) but below the glass, so the displacement filter genuinely refracts
- * moving light at the slab's edges: living caustics, zero filter work.
- */
-.stage-underlight {
-  position: absolute;
-  inset: -70% -12%;
-  pointer-events: none;
-  transform: translateZ(0);
-}
-
-.underlight-blob {
-  position: absolute;
-  width: 55%;
-  aspect-ratio: 1;
-  border-radius: 50%;
-}
-
-.underlight-blob--rose {
-  left: -4%;
-  top: 8%;
-  background: radial-gradient(circle, rgba(228, 120, 160, 0.09), transparent 70%);
-  animation: app-underlight-a 44s var(--ease-in-out) infinite alternate;
-}
-
-.underlight-blob--violet {
-  right: -6%;
-  top: -4%;
-  background: radial-gradient(circle, rgba(150, 120, 235, 0.08), transparent 70%);
-  animation: app-underlight-b 58s var(--ease-in-out) infinite alternate;
-}
-
-.underlight-blob--warm {
-  left: 28%;
-  bottom: -10%;
-  background: radial-gradient(circle, rgba(255, 235, 200, 0.05), transparent 70%);
-  animation: app-underlight-c 36s var(--ease-in-out) infinite alternate;
-}
-
 /* Colophon — the last, quietest line on the stage. It sits directly on the
-   black stage (not on glass), so it keeps a fixed dusk tone in both themes:
-   theme-relative text tokens would go dark-on-dark in light mode. */
+   deepest band of the atmosphere (not on glass), so it keeps a fixed dusk
+   tone in both themes. */
 .stage-colophon {
   position: relative;
   margin: var(--space-3) 0 0;
@@ -732,10 +662,13 @@ function toggleLocale() {
     padding: var(--space-4);
   }
 
-  /* Narrow screens: 60vw would shrink the artwork to a thumbnail — let it
-     take most of the width while the composition stays object-in-darkness. */
-  .stage-artwork {
-    top: 30%;
+  /* Narrow screens: the slab covers the rose head, so the drawing moves down
+     to the shadowed wall beside the stem, between the slab and the dock,
+     instead of stacking a second flower on the first. Touch devices have no
+     wake, so this is the whole appearance there. */
+  .stage-secondary {
+    top: 80%;
+    left: 74%;
     width: min(96vw, 520px);
   }
 

@@ -112,9 +112,11 @@ deliberate, documented renegotiation — never a side effect.
    second `backdrop-filter: url(#…)` anywhere.
 2. **The material guard is a test** (`components/experience/__tests__/glassBudget.spec.ts`).
    Since Phase 17.2 it fails on four things: a fourth *file* mounting `GlassSurface`,
-   a forked refraction chain, any `backdrop-filter` outside `GlassSurface.vue` and
-   `GlassScene.vue` (the environmental veil), and any reference to the retired
-   glassmorphism family. `styles/__tests__/materialTokens.spec.ts` additionally pins
+   a forked refraction chain, any `backdrop-filter` outside `GlassSurface.vue`
+   (the `GlassScene` veil exception was retired in B3), and any reference to the
+   retired glassmorphism family. `environment.spec.ts` (B3) guards the
+   environment: no primitive in any environment layer, no second cursor, the
+   576px spotlight and its shroud stay retired. `styles/__tests__/materialTokens.spec.ts` additionally pins
    each preset to the values its surface shipped with.
    **The budget** is counted in **logical material surfaces** — one per
    (recipe, host container) that mounts the primitive, visible or not

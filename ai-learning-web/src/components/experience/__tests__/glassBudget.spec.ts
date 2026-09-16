@@ -18,7 +18,8 @@ import { describe, expect, it } from 'vitest'
  * guards four things:
  *
  *   1. the displacement budget (3 surfaces, unchanged),
- *   2. `backdrop-filter` — only the primitive and the scene veil may carry it,
+ *   2. `backdrop-filter` — only the primitive may carry it (the scene veil,
+ *      its one environmental exception, was retired in Phase B3),
  *   3. the legacy token family — nobody may reference it,
  *   4. the on-glass facet vocabulary — only `glass.css` may author it.
  *
@@ -42,16 +43,18 @@ const ALLOWED = {
 } as const
 
 /**
- * Guard 2 — the only two files that may carry `backdrop-filter`.
+ * Guard 2 — the only file that may carry `backdrop-filter`.
  *
- * `GlassScene` is an explicit *reclassification*, not an oversight: `.scene-veil`
- * is a full-screen environmental scrim with its own `--scene-*` token family —
- * the thing the pointer spotlight cuts a hole into — not a panel material posing
- * as glass. It predates the optical system by four phases and is out of scope.
+ * Until Phase B3 `GlassScene` was listed here too: its `.scene-veil` was a
+ * full-screen white frosted scrim the pointer spotlight cut a hole into, kept as
+ * a reclassified environmental exception. B3 (decision V,
+ * `docs/liquid-material-global-reassessment.md` §10.4) retired it — the welcome
+ * hero is now the Login environment's wallpaper under the shared atmosphere, and
+ * environment layers never carry `backdrop-filter` (`environment.md` §5). This
+ * guard is tightened, never loosened: a second owner is a material regression.
  */
 const BACKDROP_OWNERS = {
-  'components/experience/GlassSurface.vue': 'the refracting primitive + its frosted fallback tier',
-  'components/experience/GlassScene.vue': 'the full-screen environmental veil, not a panel material',
+  'components/experience/GlassSurface.vue': 'the refracting primitive (tiers A and B)',
 } as const
 
 /**
@@ -142,7 +145,7 @@ describe('optical glass budget', () => {
     expect(forks).toEqual([])
   })
 
-  it('backdrop-filter exists only in the primitive and the scene veil', () => {
+  it('backdrop-filter exists only in the primitive', () => {
     const owners = Object.keys(BACKDROP_OWNERS)
     const users = matching(/backdrop-filter:/)
 

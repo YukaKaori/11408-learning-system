@@ -41,15 +41,21 @@ are optional and are what make a stage a *place* rather than a void.
 
 ### E2 — Atmosphere
 
-- A neutral-density dimming layer in a **declared band** (a token, e.g. `--environment-shroud`
-  ≈ .80–.86 over a dark stage), tuned so the wallpaper is *faintly legible* at rest.
+- A neutral-density dimming layer from a **token** (`--environment-atmosphere`), tuned so the
+  wallpaper is *legible* at rest. **Shipped (B3)** as a dusk graded from the one light above —
+  light where no glass stands (~.08–.22 in the light theme), deepest behind the dock (~.8), plus
+  a soft pool under the sign-in slab — rather than the flat .80–.86 band first proposed: the
+  brief is a bright, transparent room, and the dimming Clear glass needs is supplied *where the
+  glass stands*, measured (label contrast, §4).
 - It is what makes Clear glass legal (`navigation.md` §5): the stage supplies the dimming.
 - **Never a page-colour sheet. Never white frost.** A white translucent veil with `blur()`
   is the forbidden glassmorphism idiom applied to the environment; it hides the scene it
-  should be dimming. The `/welcome` veil (`GlassScene.vue`, `--scene-veil-bg` +
-  `blur(26px)`) is the last surviving instance and is retuned under decision V.
-- May carry `mask-image` apertures (the card aperture, the wake). Masks are how the
-  atmosphere opens; blur is not.
+  should be dimming. The `/welcome` veil (`GlassScene.vue`, a white sheet + a 26px backdrop
+  blur) was the last instance; **retired in B3** (decision V-A) — the welcome hero is now the
+  Login wallpaper under the same atmosphere token.
+- May carry `mask-image` apertures. Masks are how the atmosphere opens; blur is not. (B3 shipped
+  none: the room is visible at rest, so the old card aperture had nothing left to open, and the
+  wake is drawn as a reveal layer above the atmosphere — see E4.)
 
 ### E3 — Ambient light
 
@@ -64,18 +70,28 @@ are optional and are what make a stage a *place* rather than a void.
 The pointer does not carry a lamp; it **wakes** the wallpaper. Wake, not spotlight.
 
 ```
-pointer (eased)  →  stamps a small opening every ≥12px of travel
-each opening     →  grows 10 → ~120px × seed over ~600ms, alpha 1 − t², seeded irregular edge
-loop             →  clears, paints openings into a canvas alpha mask, stops when none live
-atmosphere       →  mask-image from the canvas, composited with the permanent card aperture
+pointer (eased)  →  stamps a small opening every ≥12px of travel (travel accumulates through pauses)
+each opening     →  grows 10 → 112px × seed(.55..1) over 760ms, alpha .88 × (1 − t²), seeded irregular edge
+mask             →  openings painted as alpha into a quarter-resolution mask (soft by upscaling, never blur)
+reveal           →  the awake plate — wallpaper without atmosphere at daylight exposure + the secondary
+                    layer at full light, feathered down over the glass slabs — composited inside the
+                    openings' bounding box only; loop stops when none live
 ```
+
+**Shipped (B3)** as `composables/useRevealField.ts` (pure model `createWake`, `createWakePainter`,
+`buildPlate`, lifecycle `useRevealField`) + `components/experience/RevealField.vue`.
+*Deviation from the B0 sketch, and why:* the sketch applied the canvas as a `mask-image` on the
+atmosphere. CSS has no portable way to take a live canvas as a mask (`element()` is one engine
+only; a per-frame data URI is exactly the per-frame artifact regeneration §3 forbids), so the
+canvas is instead a positive reveal layer *above* the atmosphere drawing what the atmosphere
+hides. Visually the same act — the dusk lifts locally — with the cost bounded by the wake.
 
 Contract:
 
 | Rule | Why |
 |---|---|
 | **One cursor.** The wake subscribes to the stage's `useGlassSpotlight.smoothedCursor`; it never adds a pointer listener | one light per scene (`constitution.md` §2.9); the reflections and the reveal agree about where the light is |
-| **Local.** Per-opening radius ≤ ~120 px; there is no stage-scale aperture | the 576 px radial the login shipped is a spotlight by definition |
+| **Local.** Per-opening radius ≤ 112 px (asserted ≤ 576/5); there is no stage-scale aperture | the 576 px radial the login shipped is a spotlight by definition |
 | **Transient.** Every opening decays on its own clock; the stage returns to rest behind the pointer | the reveal is discovery, not illumination |
 | **Organic.** Edge = radius × (0.78 + Σ seeded sines); never a perfect circle; never blur | a circle reads as a gradient demo |
 | **Bounded.** ≤ 64 living openings; DPR capped at 1.5; one canvas per stage | cost ∝ pixels × openings |
@@ -108,16 +124,18 @@ positions from the pointer, decay from a clock — which is exactly why it is ga
 ### The Login stage (unauthenticated installation)
 
 ```
-E1  wallpaper (decision W)            at rest, cover-fit, breathing
-E2  atmosphere: ND shroud ~.80–.86    + the card aperture (permanent, measured)
-E3  underlight promoted stage-wide    slow drifting pools the dock and slab refract
-E4  RevealField (the wake)            desktop fine-pointer only
-E5  dark (login, sponsor) / light (product room)
+E1  wallpaper (decision W: the rose)  at rest, cover-fit, NOT breathing (the wake re-draws it)
+E2  atmosphere: graded dusk + slab pool  --environment-atmosphere, per theme, deeper under reduced transparency
+    secondary: the lotus drawing     screen-blended on the shadowed wall, faint at rest, opacity glow only
+E4  RevealField (the wake)            desktop fine-pointer only, never mounted otherwise
+E3  ambient pools stage-wide          slow drifting light the dock and slab refract
+E5  dark (login, sponsor) / light (product room) — still the private .is-on-light flip until B4
 M   GlassDock (chrome) · sign-in slab (hero)
 ```
 
-**Status: Contract (B3).** Shipped today: lotus *object* on black, `.95` shroud, one 576 px
-radial reveal, underlight behind the dock only, `filter` transitions (forbidden).
+**Status: Shipped (B3, 2026-09-16).** Replaced: the lotus *object* on black, the `.95` shroud,
+the card aperture and the 576 px radial reveal. The welcome hero shares E1 + E2 (no wake: it
+owns no spotlight).
 
 ### The authenticated shell
 
@@ -170,10 +188,10 @@ frame loop; no Vue reactivity for per-frame values (`vue-patterns.md` §8).
 - ❌ A single stage-scale radial gradient that follows the pointer (the spotlight)
 - ❌ A stage that is a void at rest — wallpaper only visible under the pointer
 - ❌ White frost or a page-colour sheet as the atmosphere
-- ❌ `backdrop-filter` on any environment layer (the `GlassScene` veil is a listed legacy
-  exception, retired under decision V)
+- ❌ `backdrop-filter` on any environment layer (the `GlassScene` veil was the last one; retired
+  in B3 and the guard now allows exactly one owner, the primitive)
 - ❌ A second pointer listener or a second eased cursor on a stage that owns a spotlight
-- ❌ Canvas used for the material, or for anything but the wake's mask
+- ❌ Canvas used for the material, or for anything but the wake
 - ❌ Environment layers counted against, or used to argue for, the material budget
 - ❌ Sampling the wallpaper's luminance to set the material — the stage declares (E5)
 - ❌ Device orientation or scroll position as a pseudo-cursor for the wake

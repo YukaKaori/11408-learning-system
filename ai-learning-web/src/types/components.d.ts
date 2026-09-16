@@ -40,6 +40,7 @@ declare module 'vue' {
     GlassScene: typeof import('./../components/experience/GlassScene.vue')['default']
     GlassSurface: typeof import('./../components/experience/GlassSurface.vue')['default']
     ProductPresentation: typeof import('./../components/experience/ProductPresentation.vue')['default']
+    RevealField: typeof import('./../components/experience/RevealField.vue')['default']
     RouterLink: typeof import('vue-router')['RouterLink']
     RouterView: typeof import('vue-router')['RouterView']
     SponsorPanel: typeof import('./../components/experience/SponsorPanel.vue')['default']
