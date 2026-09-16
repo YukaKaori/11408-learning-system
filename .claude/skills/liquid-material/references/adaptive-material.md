@@ -4,10 +4,13 @@ Apple's Liquid Glass is *content-aware*: one material works over a photo, a
 document, a video, and a dark home screen, because it adapts. That adaptivity is
 the reason it can be a single material rather than a family of them.
 
-Ours does not adapt yet, **by decision, not by oversight**. This document
-records what adaptation means, what the inputs are, and why the project chose to
-postpone the mechanism. Governed by `constitution.md`; the current state of the
-system is `docs/liquid-material-system.md` §7 and `docs/liquid-glass-apple-audit.md` §2.1.
+Ours does not adapt yet, **by decision, not by oversight** — and since
+2026-09-16 the mechanism is specified: a **stage-declared backdrop** (Contract
+B4, §6) and a **boot-resolved material tier** (Contract B1, `materials.md` §8).
+This document records what adaptation means, what the inputs are, why the
+project postponed the mechanism, and why it will be declared, never sampled.
+Governed by `constitution.md` §9; the current state of the system is
+`docs/liquid-material-system.md` §7 and `docs/liquid-glass-apple-audit.md` §2.1.
 
 ---
 
@@ -80,10 +83,12 @@ Apple treats Reduce Transparency and Increase Contrast as **first-class material
 states**, not as degradations. So should we:
 
 - `prefers-reduced-transparency` — the user has asked for less translucency.
-  The correct answer is a *quality tier*: density up, transmission down, toward
-  the solid tier described in `materials.md` §8. Currently handled **nowhere**;
-  it is deferred item P2 in `docs/liquid-material-system.md` §7.
-- `prefers-contrast` — labels and edges strengthen; optics recede.
+  The answer is **tier C `dense`** (`materials.md` §8): density up, transmission
+  down, every rim and depth cue kept. **Shipped (B1)** in
+  `styles/materialTier.ts` (was deferred item P2 in
+  `docs/liquid-material-system.md` §7).
+- `prefers-contrast: more` — the same tier C: labels and edges strengthen,
+  optics recede.
 - `prefers-reduced-motion` — already zero-by-construction. The light variables
   default to 0 and the gates never enable them (`SKILL.md` §5).
 - Coarse pointer — not an accessibility preference but the same shape of input:
@@ -123,6 +128,10 @@ The correct response is *not* a lighter, whiter material — that is
 glassmorphism, and it hides content. It is **more smoke plus inverted rim
 polarity**: the body darkens, the edges go to dark ink. The Phase 12 dock flip
 is exactly this behavior, discovered empirically before there was a name for it.
+Under Contract B4 it is the `[data-material-backdrop='light']` remap in
+`glass.css`: density up inside a declared band per rank, rims to dark ink, the
+dock's halo tokenized — and the flip stops being a private override in
+`LoginView`.
 
 ### Dark backdrop
 
@@ -188,16 +197,37 @@ A material that becomes denser on a bright page must make **every** surface on
 that page denser, or the ranking inverts and the user's read of the hierarchy
 inverts with it.
 
-## 6. What is deferred, precisely
+## 6. What is specified, precisely — and by which phase
 
-`docs/liquid-material-system.md` §7 lists this as deferred item **P1**: a
-*stage-declared* backdrop token that remaps density and rim polarity. It is
-**not built**, it is not in this phase's scope, and nothing in this document
-authorizes building it.
+*Rewritten 2026-09-16. Old decision: P1 and P2 "deferred, not authorized".
+New decision: both are contracts with an owning phase; the reasons for the
+original deferral (§7) still hold and are why the order is B1 → B4.*
 
-Also deferred and adjacent: **P2** — `prefers-reduced-transparency` folded into
-one boot-resolved quality tier alongside SVG support, reduced motion, and
-pointer coarseness, exposed once on the document root.
+**The backdrop declaration — Contract (B4).** `data-material-backdrop="dark |
+light"` on the stage element; `glass.css` remaps, under `[data-material-backdrop
+='light']`, exactly two things per rank: density (up, inside a declared band)
+and rim polarity (light rims → dark ink). The token guard pins the remapped
+values. Nothing samples.
+
+Who declares:
+
+| Stage | Source of the declaration |
+|---|---|
+| the authenticated shell (`AppLayout`) | derived from the theme (`isDark`) — the shell's backdrop *is* the theme, which is why P1 was unblocked |
+| the login stage | authored per gallery: `dark` for the black installation in both themes; `light` for the Product room in both |
+| a future stage | whoever owns the stage, at author time |
+
+**Theme ≠ backdrop.** The tint tokens already flip via `light-dark()`
+(`--material-tint-*`), which follows the *theme*; the declaration follows the
+*stage*. A black stage under the light theme declares `dark`.
+
+**The material tier — Contract (B1).** `prefers-reduced-transparency` and
+`prefers-contrast: more` fold into tier C `dense`, decided once at boot with
+engine capability, exposed as `data-glass-tier` on `<html>` (`materials.md`
+§8, `implementation.md` §6–7). Reduced motion and pointer coarseness gate the
+*light*, not the tier.
+
+Nothing here authorizes building either outside its phase.
 
 ## 7. Why the declaration was postponed — and why it will be *declared*, not sampled
 
@@ -259,6 +289,16 @@ The reasons compound:
 The rule to carry forward: **the stage declares its backdrop; the surface
 obeys.** Detection is the fallback of last resort, and it is not needed here.
 
+### Why the shell's backdrop turned out to be knowable
+
+The deferral assumed no authenticated stage had a known backdrop. The shell
+does: it paints `--color-bg` behind every route, and `--color-bg` is a function
+of the theme the app already writes to `<html>`. The declaration therefore costs
+one attribute derived from state that exists, and P1 stopped being a phase and
+became a token block (B4). The *landing* is the opposite case — its backdrop is
+authored per gallery and does not follow the theme — which is why the
+declaration is stage-owned rather than theme-owned.
+
 ## 8. Anti-patterns
 
 - ❌ **Sampling backdrop luminance at runtime** to pick a material appearance.
@@ -267,8 +307,10 @@ obeys.** Detection is the fallback of last resort, and it is not needed here.
   it agrees. Two surfaces in one view disagreeing about the backdrop is two
   light sources by another name.
 - ❌ **Adaptation that reorders rank** (§5).
-- ❌ **Treating reduced transparency as a bug state.** It is a material tier and
-  must be designed, like the frosted fallback (`materials.md` §8).
+- ❌ **Treating reduced transparency as a bug state.** It is tier C, designed
+  (`materials.md` §8).
+- ❌ **Confusing theme with backdrop.** A black stage in the light theme is a
+  dark backdrop; the declaration follows the stage.
 - ❌ **Three independent per-instance capability probes.** One boot-resolved
   decision, reflected once on the root.
 - ❌ **Building any of §6 outside a phase that owns it.** This document is

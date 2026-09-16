@@ -5,8 +5,13 @@ description: The one material system of this project — Apple-style Liquid Glas
 
 # Liquid Material
 
-The single material system of the AI Learning Platform. One skill, ten
+The single material system of the AI Learning Platform. One skill, eleven
 references: this file decides *whether and what*, the references say *how*.
+
+**Status vocabulary used throughout the skill:** a rule marked **Shipped** describes
+the code as it is; a rule marked **Contract (Bn)** is the agreed target that phase Bn
+of `docs/liquid-material-global-reassessment.md` builds. The skill is never wrong
+about the present: where they differ, both are stated.
 
 The product's visual identity is **heavy optical glass** — not the web's default
 frosted rectangle. Ordinary glassmorphism is a white blur with a border; it
@@ -24,9 +29,10 @@ other file is corrected.
 | File | Read when |
 |---|---|
 | `references/constitution.md` | Deciding what the material *is* — principles, tokens, allowed surfaces, forbidden patterns, roadmap fit |
-| `references/materials.md` | Designing how a surface *looks* — layer stack, refraction, dispersion, Fresnel, depth, fallback tiers |
-| `references/components.md` | Creating or composing a glass component — the primitive, the skin system, the catalogue, material ranks |
-| `references/implementation.md` | Writing the actual Vue 3 + TypeScript code — variable channel, spotlight loop, map generation, traps, tests |
+| `references/materials.md` | Designing how a surface *looks* — layer stack, refraction, dispersion, Fresnel, depth, the three material tiers (A refract / B diffuse / C dense) |
+| `references/components.md` | Creating or composing a glass component — the primitive, the skin system, the catalogue, material ranks, **what one budget instance is**, the radius family |
+| `references/implementation.md` | Writing the actual Vue 3 + TypeScript code — variable channel, spotlight loop, map generation, the tier resolver, the indicator composable, the scroll-edge mechanism, traps, tests |
+| `references/environment.md` | Anything **behind** the material — wallpaper, atmosphere/shroud, ambient light, the pointer's reveal wake, the declared backdrop. **Environment is not Material.** |
 | `references/color.md` | Adding or changing **any** color token — OKLCH law, anchor palettes, chroma tapering, what stays frozen |
 | `references/navigation.md` | Designing a dock, header, sidebar, toolbar, bottom bar or command palette — why navigation is chrome, solid vs Clear vs Regular, interaction hierarchy |
 | `references/adaptive-material.md` | The surface sits on a backdrop you don't control — light/dark/busy/plain, density as the response, accessibility as a material state, and why adaptivity is deferred |
@@ -53,6 +59,10 @@ Use it whenever a task involves:
 - Modifying `GlassSurface.vue`, `GlassScene.vue`, `glass.css`,
   `useGlassSpotlight.ts`, `materials.ts`, or the displacement filter chain
 - Deciding whether a new surface should be glass at all (often the answer is no)
+- Any **environment layer** — a wallpaper, a shroud or veil, ambient light, a
+  pointer-reactive reveal, a stage's backdrop declaration (`references/environment.md`)
+- A navigation **indicator** — a light on an existing slab, never a new slab
+  (`references/navigation.md` §4/§6)
 - AI-state UI (thinking, streaming, complete) on a glass surface
 - **Adding any color token anywhere in the app** — see `references/color.md`
 
@@ -101,12 +111,19 @@ deliberate, documented renegotiation — never a side effect.
    is a *composition* of it. Never fork the displacement chain; never write a
    second `backdrop-filter: url(#…)` anywhere.
 2. **The material guard is a test** (`components/experience/__tests__/glassBudget.spec.ts`).
-   Since Phase 17.2 it fails on four things: a fourth `GlassSurface` (budget is
-   **3** — GlassDock, LoginView card, NoteSelectionToolbar), a forked refraction
-   chain, any `backdrop-filter` outside `GlassSurface.vue` and `GlassScene.vue`
-   (the environmental veil), and any reference to the retired glassmorphism
-   family. `styles/__tests__/materialTokens.spec.ts` additionally pins each
-   preset to the values its surface shipped with.
+   Since Phase 17.2 it fails on four things: a fourth *file* mounting `GlassSurface`,
+   a forked refraction chain, any `backdrop-filter` outside `GlassSurface.vue` and
+   `GlassScene.vue` (the environmental veil), and any reference to the retired
+   glassmorphism family. `styles/__tests__/materialTokens.spec.ts` additionally pins
+   each preset to the values its surface shipped with.
+   **The budget** is counted in **logical material surfaces** — one per
+   (recipe, host container) that mounts the primitive, visible or not
+   (`references/components.md` §1 defines the unit). Baseline **3**: the landing
+   dock, the sign-in slab, the note selection toolbar. Proposed **4** with the
+   mobile app dock (Contract B5, decision B). Environment layers, indicators,
+   `.glass-material` skins and adaptive states are **never** instances. Note that
+   the shipped guard counts *files*, not surfaces — a recipe mounted twice is
+   invisible to it — so B5 adds a surface registry the guard reads.
 3. **Every surface declares its material.** `GlassSurface`'s `material` prop is
    **required**: `chrome | hero | floating` (`experience/materials.ts`), each a
    preset in `glass.css`. There is no anonymous glass and no hand-typed dial at
@@ -142,7 +159,16 @@ undriven), plus depth and ND density carrying the material. **Never substitute
 device orientation or scroll position as a pseudo-cursor** — that is a second
 light source and a battery cost for decoration. Touch targets stay ≥44px.
 Always review mobile surfaces with the spotlight disabled; that IS the mobile
-appearance.
+appearance. Over **light content** (the authenticated shell in the light theme)
+legibility is carried by the stage's backdrop declaration
+(`data-material-backdrop="light"` → denser body, dark-ink rims — Contract B4,
+`references/adaptive-material.md` §6), never by whitening the slab.
+
+**Every engine.** The material is delivered in three tiers decided **once at boot
+by capability, never by browser brand** (`references/materials.md` §8): A `refract`
+(Blink), B `diffuse` (WebKit, Gecko — same slab, same dials, minus refraction),
+C `dense` (no `backdrop-filter`, or reduced transparency / increased contrast).
+Edge and Chrome are the same path by construction.
 
 ## 5. Motion budget
 
@@ -155,7 +181,17 @@ appearance.
   near-imperceptible.
 - **Only compositor channels animate:** opacity, transform, gradient positions
   via custom properties. Never animate `filter`, `backdrop-filter`, blur radii,
-  or box-shadow spreads per frame.
+  or box-shadow spreads per frame — and never *transition* them either: no
+  `transition`/`animation` naming `filter` or `backdrop-filter` anywhere on a
+  stage, environment layers included. (Four `filter` transitions on the login
+  stage and one in `motion.css` `.app-fade` were removed in B1; a guard in
+  `materialTier.spec.ts` keeps them out.)
+- **Position-driven beats time-driven.** An effect that is a pure function of a
+  measured position (scroll offset, pointer distance, geometry) has no clock and
+  may run under reduced motion; a clock-driven effect must be gated
+  (`references/implementation.md` §12). Use time-driven animation only where it
+  carries meaning: the wake (discovery), indicator travel (causality), the settle
+  (mass).
 - **Enumerate transitioned properties.** `transition: all` is forbidden.
 - **Damped, never springy.** Slightly heavier than app defaults, no overshoot.
 - **Reduced motion is zero-by-construction:** the light variables default to 0
@@ -164,10 +200,12 @@ appearance.
 
 ## 6. Performance
 
-- **Displacement maps are build-once artifacts.** Generated on mount and on
-  *debounced* resize (~120ms trailing) — never per frame. Each new `feImage`
-  data URI forces a filter re-decode; a regen per resize-observer tick during a
-  window drag is the classic failure.
+- **Displacement maps are build-once artifacts.** Shipped (B1,
+  `components/experience/displacementMap.ts`): the first size observation lands
+  immediately, later ones coalesce over a 120ms trailing window, sub-pixel jitter
+  is rounded away, and maps are memoised by size × radius × profile — never per
+  frame. Each new `feImage` data URI forces a filter re-decode; a regen per
+  resize-observer tick during a window drag was the shipped defect before B1.
 - **No per-frame JS for decoration.** Reactive lighting is one self-settling rAF
   loop that writes CSS variables and stops when values settle. Pointer events
   only move goalposts. Never bind light position to Vue reactive state used in
@@ -177,10 +215,18 @@ appearance.
 - **No WebGL.** SVG filters + CSS deliver the material (proven — even the
   reference "shader" mode is a CPU loop, not GPU). A WebGL request requires
   written justification plus a full non-WebGL fallback.
+- **Canvas 2D is environment-only.** One 2D canvas per stage may paint the
+  reveal wake's *mask* (`references/environment.md` §1 E4) under the
+  spotlight-loop discipline — capped, gated, self-settling. Canvas never paints,
+  blurs or replaces the material.
 - **Maps are procedural SVG data URIs (~1KB, lossless).** Never base64
   JPEG/PNG — JPEG chroma subsampling corrupts the displacement channels.
-- **Fallbacks are mandatory.** Chromium gets refraction; Safari/Firefox get the
-  frosted tier, which must stay fully legible and functional.
+- **Tiers are mandatory and engine-level.** Shipped (B1,
+  `styles/materialTier.ts`): one boot-time resolver decides A/B/C by capability
+  and writes `data-glass-tier` on `<html>`; surfaces read it, they never probe.
+  Tier B is the same slab minus refraction, tier C is the designed dense state;
+  neither is white frost. Zero browser-brand strings outside the resolver
+  (`references/implementation.md` §7), enforced by `materialTier.spec.ts`.
 
 ## 7. Pre-flight checklist
 
@@ -188,18 +234,30 @@ Before shipping any material work:
 
 - [ ] Surface qualifies: elevated, transient, or premium — not a reading surface
       (check the allowed list in `references/constitution.md` §6)
-- [ ] Composes `GlassSurface` with a declared `material` preset; budget test
-      updated only as a deliberate renegotiation
+- [ ] Composes `GlassSurface` with a declared `material` preset; budget
+      renegotiated only deliberately, in **logical surfaces**
+      (`references/components.md` §1) — and if it is an environment layer or an
+      indicator, it is **not** a surface and must not use the primitive
 - [ ] New optical layers gated by custom properties that default to inert
-- [ ] One light direction across the whole view
+- [ ] One light direction across the whole view — and **one eased cursor** per
+      stage: the wake, the spotlight and the facets all read the same one
+- [ ] The stage declares its backdrop (`data-material-backdrop`) if it mounts
+      Clear glass over anything theme-dependent (Contract B4)
 - [ ] Frost ≈ 0; legibility via ND density; on-glass text uses the fixed dusk
       palette
 - [ ] Optical hierarchy respected — dials match the surface's rank; never two
       heroes in one view
-- [ ] Only opacity/transform/gradient-positions animate; map regen debounced
-- [ ] No geometry deformation on hover/press; press is a sub-pixel settle
+- [ ] Only opacity/transform/gradient-positions animate; **no `transition` or
+      `animation` names `filter`/`backdrop-filter`** anywhere on the stage
+- [ ] No geometry deformation on hover/press; press is a sub-pixel settle; a
+      navigation indicator is a light whose width may interpolate — the bar's
+      geometry never changes
 - [ ] Reduced-motion + coarse-pointer paths verified with the spotlight disabled
-- [ ] Safari/Firefox fallback tier checked, legible, and fully functional
+      **and the wake unmounted** — the environment must still read as a place
+- [ ] Tiers B and C checked (Gecko/WebKit, `prefers-reduced-transparency`):
+      hierarchy survives, every control works, nothing whitens
+- [ ] Concentricity: the slab's radius is its recipe's token; nested controls use
+      `max(radius − inset, --radius-md)` (`references/components.md` §7)
 - [ ] Focus rings, contrast, keyboard paths, 44px touch targets intact
 - [ ] Every color obeys `references/color.md` — no new hex/rgba literals
 - [ ] Verified at the real surface with the `verify` skill, both themes

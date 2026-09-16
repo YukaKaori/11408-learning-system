@@ -1,7 +1,9 @@
 # Source Review — what the ecosystem offers and what we take
 
 A standing verdict on the public Liquid Glass ecosystem, indexed by
-`liquidglassresources.com`. Reviewed 2026-07-31.
+`liquidglassresources.com`. Reviewed 2026-07-31; index re-read and three
+entries added or upgraded 2026-09-16 (Apple HIG, MiMo Code landing, NavBar at
+source level).
 
 **The rule this document enforces:** we import *ideas*, never architecture.
 Nothing here becomes a dependency, a component API, or a code path. When a
@@ -43,6 +45,45 @@ No verdict authorizes code. **ACCEPT means "documented," not "adopted."**
 
 ## 2. Deep reviews
 
+### Apple — Human Interface Guidelines *Materials* / *Liquid Glass* overview — ACCEPT (the reference the constitution is measured against) **[deep, 2026-09-16]**
+
+The pages are JS-rendered and could not be fetched directly this session; the
+positions below are corroborated through WWDC25 session 219 ("Meet Liquid
+Glass"), the SwiftUI cheatsheet review below, and secondary write-ups. No rule
+in this skill depends on a sentence that could not be read.
+
+- **Accepted (already law):** the material is *"best reserved for the
+  navigation layer that floats above the content"*; two variants, Regular
+  legible by default and Clear needing a dimming layer; avoid glass on glass;
+  nested rounded elements are concentric; content passes under chrome with a
+  scroll edge effect that keeps controls legible.
+- **Accepted as material states, adapted as tiers:** Reduce Transparency,
+  Increase Contrast and Reduce Motion are first-class — ours are tier C and the
+  zero-by-construction light (`materials.md` §8).
+- **Adapted:** adaptivity to the backdrop — Apple's material reads its
+  surroundings; ours is *declared* by the stage (`adaptive-material.md` §7).
+- **Not adopted:** fluid morphing between glass states (constitution amendment
+  P3 stays open); tinting as a feature.
+
+### MiMo Code landing (`mimo.xiaomi.com/zh/mimocode`) — PARTIAL **[deep, source, 2026-09-14]**
+
+A painting as `background-image`, a 2D `<canvas>` mask (`pointer-events:
+none`, hidden on touch), and on `(hover: hover)` only: `mousemove` stamps
+"ink dots" every 12px along the path; each grows 8 → 128 × (0.55..1) px over
+520ms (`easeOutCubic`), alpha `1 − t²`, edge radius × (0.78 + Σ three seeded
+sine wobbles); ≤160 living dots; the loop stops when none live; dots are
+`destination-out` from a mask painted in the page colour.
+
+- **Accepted (the principle behind `environment.md` §1 E4):** *the reveal is
+  a wake, not a spotlight* — locality from a small per-dot radius, life from
+  independent decay, an organic edge from a seeded wobble rather than blur,
+  touch gets the wallpaper rather than a dead mask, and the loop settles.
+- **Adapted:** our mask opens a neutral-density atmosphere, not a page-colour
+  sheet; the wake subscribes to the stage's one eased cursor instead of raw
+  `mousemove`; radius, life and count are retuned and capped.
+- **Rejected:** its navigation (`blur(12px) saturate(180%)` + a translucent
+  fill — glassmorphism); the ink-brush metaphor as *style*; the painting asset.
+
 ### `rdev/liquid-glass-react` — PARTIAL **[deep, prior]**
 
 Reviewed in Phase 17 (`docs/liquid-glass-analysis.md`), verdict unchanged and
@@ -74,29 +115,40 @@ Reviewed in Phase 18, verdict unchanged.
 - **The lesson worth keeping:** a well-built knowledge base can be right about
   one domain and wrong about another. Judge per-claim, not per-source.
 
-### `ZyadWKhedr/LiquidGlass-NavBar` (Flutter) — PARTIAL **[deep]**
+### `ZyadWKhedr/LiquidGlass-NavBar` (Flutter) — PARTIAL **[deep, source, upgraded 2026-09-16]**
 
 The navigation reference. Flutter, Riverpod, and a third-party glass renderer —
 none of which is portable. Its *navigation* thinking is, and it is the primary
-source behind `navigation.md` §4.
+source behind `navigation.md` §4. Read at source level this session
+(`lib/widgets/navbar_draggable_indicator.dart`, `lib/providers/navbar_providers.dart`):
 
 - **Accepted:** the bar adapts to item count without changing its own shape.
   Spacing and label truncation absorb the variation; the bar's geometry stays
   stable so muscle memory survives.
-- **Accepted:** the selection indicator scales with item count **down to a
-  floor**. Below that floor an indicator stops reading as a location cue.
-- **Accepted:** the two-stage placement discipline — place approximately, then
-  correct from real measurements — restated as a *design* requirement rather
-  than a technique: **the indicator must be correct on first paint.** An
-  indicator that lands wrong and then slides to the right place reads as a bug,
-  not as motion design.
+- **Accepted:** two-stage placement — `initPositions` divides the container
+  evenly, then `initMeasuredPositions` reads each item's `RenderBox` centre
+  (`localToGlobal(...).dx + size.width / 2`). Restated as a *design*
+  requirement: **the indicator must be correct on first paint**, and our
+  pre-measure state is *no indicator*, not an approximate one.
+- **Accepted:** width follows the marked item with a floor —
+  `adaptiveWidth = baseSize × (3.5 / itemCount).clamp(1, 1.2)` in source (the
+  README-level summary reports `(3 / itemCount).clamp(0.7, 1.0)`; the source
+  wins). We take the idea (width with a floor, clamped inside the bar), not
+  the formula.
 - **Accepted:** labels ellipsize rather than letting the bar reflow.
-- **Rejected:** the drag-linked indicator that tracks a horizontal page swipe
-  continuously. That is continuous geometry following a gesture — the same
-  family as elasticity, and out of budget.
-- **Rejected:** everything structural. Flutter widget composition, a state
-  management library, and a renderer package have no analogue here, and its
-  glass is a frosted blur rather than refraction.
+- **Reclassified — Adapt, deferred (decision I):** the drag-linked indicator
+  (`onHorizontalDragUpdate` offsets continuously, `onHorizontalDragEnd` snaps
+  to the nearest measured centre). Previously rejected as "continuous geometry
+  following a gesture". Corrected: the constraint governs the *material*; the
+  indicator is a *light* on the material (`navigation.md` §6), so a clamped,
+  snap-on-release drag of the light is permissible in principle. Not scheduled.
+- **Rejected by name:** `LiquidStretch(stretch: .7, interactionScale: 1.05)`
+  (hover-follow deformation and scale on interaction), `GlassGlow`,
+  `LiquidGlassLayer(lightIntensity 1.5, thickness 20, blur 1)` (a blur
+  renderer), and `LiquidRoundedSuperellipse` as a shape (our maps are
+  rounded-rect; a superellipse is a map rewrite, not a style).
+- **Rejected:** everything structural — Flutter widget composition, Riverpod,
+  the renderer package.
 
 ### `GonzaloFuentes28/LiquidGlassCheatsheet` (SwiftUI) — PARTIAL **[deep]**
 
@@ -169,7 +221,7 @@ verdict applies to the family; individual projects were not audited.
 | **GPU / shader implementations** | Prismal (OpenGL) | **REJECT** | Directly contrary to `constitution.md` §4.5. Also the least portable class of work in the index. Its existence is useful only as a bound: what a shader buys over CSS+SVG is smoothness, not correctness. |
 | **iOS / SwiftUI native** | Glasskit, CrystalKit, FabBar, Liquid Glass Swift | **REJECT** as code; **useful as evidence** | Native libraries mirror Apple's own semantics — two variants, chrome-layer usage, container grouping. That evidence is already captured in §2 via the cheatsheet. |
 | **Figma / Framer / Webflow kits** | iOS 26 Liquid Glass, Liquid Glass Edge Refraction, Liquid Glass Pro Plugin, AppleLiquidButton, Glass Navbar Effect, and the rest of the design category | **PARTIAL** (one entry), **REJECT** (rest) | Design kits reproduce the *look* without the optics; a Figma glass style is a blur with a gradient by necessity. The one recurring exception is edge-refraction studies, which visualize how much of the material's identity lives in the rim — a point the constitution already makes and these corroborate. |
-| **The index itself** (`liquidglassresources.com`) | — | **ACCEPT** as a map | Valuable as a survey of what the ecosystem is doing, and the survey's own result is the finding in §4. |
+| **The index itself** (`liquidglassresources.com`) | — | **ACCEPT** as a map | A curated **directory**, not a specification (re-read 2026-09-16: mobile / web / design categories, no entries on backdrop adaptivity or cross-browser SVG technique). Valuable as a survey of what the ecosystem is doing, and the survey's own result is the finding in §4. |
 
 ## 4. What the survey actually proved
 
@@ -210,3 +262,8 @@ the shape of the distribution:
   outside Apple's own documentation.
 - Record the verdict here when a resource is reviewed, including REJECT, so the
   same repository is not re-litigated next phase.
+- **Distinguish the layer a technique targets.** A behaviour rejected for the
+  material (geometry following a gesture) may be acceptable for an environment
+  layer or an indicator light. Classify per layer, not per source.
+- **Read the source, not the README, before quoting a number.** The NavBar
+  width formula differs between the two.

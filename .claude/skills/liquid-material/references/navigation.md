@@ -92,29 +92,94 @@ Two consequences the codebase already enforces:
 
 Each entry is a **recipe**, in the sense of `components.md` §3: a composition of
 the one primitive at a declared rank, never a new implementation. Mounting any
-of them is still a budget renegotiation — the budget is **3** and the shipped
-three are GlassDock, the LoginView card, and NoteSelectionToolbar.
+of them is still a budget renegotiation, counted in **logical surfaces**
+(`components.md` §1): **3** shipped (landing dock, sign-in slab, note toolbar),
+**4** proposed with the app dock.
 
-### Dock / bottom navigation
+### Landing dock (shipped: `GlassDock` on `/login`)
 
-- **Role:** persistent primary navigation. Shipped as `GlassDock`.
+- **Role:** persistent primary navigation of the unauthenticated stage.
 - **Material:** `chrome` (Clear). The lowest optical drama in the system —
   permanent surfaces earn the least, because they are on screen while the user
   is trying to do something else.
-- **Why Clear:** it is a strip over a stage the app controls, and the whole
-  point is that content shows through it. Clear over an *uncontrolled* backdrop
-  would be unreadable; see §5.
+- **Why Clear:** it is a strip over a stage the app controls (the atmosphere
+  dims for it — `environment.md` §1 E2), and the whole point is that the scene
+  shows through it. Clear over an *uncontrolled* backdrop would be unreadable;
+  see §5.
 - **Layout:** wide bar, text labels solid and high-contrast, touch targets
   ≥44px. Width adapts to item count rather than letting items overflow; labels
   ellipsize before the bar reflows. A bar that changes *shape* as items are
   added is a bar the user cannot build muscle memory against.
-- **Motion:** the **selection indicator is the only thing that moves.** It
-  travels between items with a damped settle and no overshoot. It must be
-  correct on first paint — an indicator that appears in the wrong place and then
-  slides to the right one is a bug the user reads as sloppiness, not as motion
-  design. Measure first, place once.
-- **Indicator sizing:** the indicator scales with the item it marks, with a
-  floor. Below that floor it stops being a location cue and becomes a dot.
+- **Bright rooms:** over the Product gallery the labels flip to dark ink. Today
+  a private override; Contract (B4): the stage declares
+  `data-material-backdrop="light"` for that gallery and the remap does it.
+
+### App dock — Contract (B5), the one new surface
+
+- **Role:** the authenticated shell's chrome on mobile (≤768px). The same
+  `GlassDock` recipe with items as data, mounted **once** in `AppLayout`,
+  `position: fixed`, inset from the bottom and sides, content passing under it.
+- **Why it qualifies:** passes all four tests of §1 — not the work; operated
+  not authored; occludes the tail of whatever the user is doing; a fixed
+  bounded region. It restores identity on every mobile screen with the *same
+  object* as the landing.
+- **Material:** `chrome` (Clear) under the stage's backdrop declaration: dark
+  theme → the Clear band by construction; light theme → the remapped denser
+  body with dark-ink rims. If measured label contrast in the light theme
+  cannot reach AA: deepen the remap → `floating` (Regular) for the light
+  backdrop only → solid. **Never whiten.**
+- **Items:** five destinations (Today, Subjects, Notes, Flashcards, Tutor) +
+  **More**, which opens the existing drawer (Calendar, Analytics, Settings,
+  Profile, theme, locale, logout). The drawer stays **solid** — two glass
+  surfaces a summon apart are one badly-cut sheet (`components.md` §7).
+- **Obligations on the host:** the scroll edge (`scroll-edge.md` §7) and
+  `scroll-padding-bottom` on the scroll container; the mobile header loses the
+  brand name (branding belongs to content) and keeps the menu control.
+- **No travelling light** in the shell: no `useGlassSpotlight` under
+  `layouts/`; the dock stands statically (that is its mobile appearance anyway).
+- **Desktop:** the docked rail stays solid; the P19 palette is the desktop
+  summons. A desktop dock replacing the rail is a later product decision, not
+  a material one.
+
+### The indicator — a light, not a slab
+
+*The contract for "you are here", 2026-09-16. **Shipped (B2)** on the landing
+dock: `composables/useNavIndicator.ts` + the `.dock-indicator` light layer in
+`GlassDock.vue`. The same composable is what the app dock (B5) will bind; the
+desktop rail's active row was **not** converted in B2 (it stays the solid
+brand-soft fill) and is re-decided with the desktop chrome (decision D).*
+
+- **What it is:** a pool of light rising from below plus a thin rim and top
+  lip under the current item, painted by the bar's **own** light layer from
+  custom properties the composable writes on the nav container — the
+  travelling pair `--nav-indicator-x` / `--nav-indicator-w`, the marked item's
+  static `--nav-indicator-y` / `--nav-indicator-h`, and `--nav-indicator-ready`
+  (0 until measured). Colours are the `--on-glass-indicator-*` tokens
+  (`glass.css`), all under 0.3 alpha: the stage keeps showing through. Never a
+  second `GlassSurface`, never nested material, never a budget instance.
+- **Measure, then place.** Item rects are read in `onMounted` (before the
+  first paint), on container resize, window resize, a layout key change (the
+  item list / locale, after the DOM settles) and once fonts are ready — never
+  per frame. The first paint shows the indicator under the right item; the
+  pre-measure state is *no indicator* (opacity 0), never a wrong one that
+  corrects itself. Layout changes are placed **directly**; only a change of
+  the marked item travels.
+- **Travel:** one damped exponential approach (k ≈ 0.16 per frame, snap
+  under 0.4 px) of `translateX` **and width** on the light layer; heavier than
+  app defaults; no overshoot; self-settling; a direct placement under reduced
+  motion. Width interpolation is permitted *because the indicator is light* —
+  the bar's geometry never changes, and this is not the morph question
+  (`interaction.md` §9).
+- **Rank discipline:** current (indicator + weight + `aria-current`) >
+  selection > focus (ring + lifted edge) > hover (pooled light) > press (settle
+  + rim). Fully present with the spotlight off.
+- **Floor:** the indicator scales with the item it marks down to ~44px; below
+  that it stops reading as a location and becomes a dot. Labels ellipsize
+  before the bar reflows.
+- **Drag:** permissible in principle for the *light* (clamped inside the bar,
+  snap to the nearest measured centre on release) — deferred, decision I; not
+  in B2. Drag never deforms the bar.
+- **Mechanism:** `implementation.md` §15.
 
 ### Header / top bar
 
@@ -231,6 +296,11 @@ Three rules that fall out of the ranking:
   ranks 4–5 may depend on light.
 - **One rank per element at a time**, resolved downward: an item that is
   current, focused, and hovered shows *current* as its dominant reading.
+- **Navigation-indicator physics ≠ material physics.** "Reflections move,
+  objects don't" governs the slab. The indicator is a *light on* the slab:
+  it may travel and change width, because nothing with mass moves. The
+  moment an indicator is built from a second slab, it inherits the slab's
+  rules and is forbidden.
 
 ## 7. Navigation anti-patterns
 
@@ -250,3 +320,9 @@ Three rules that fall out of the ranking:
   declares; the bar obeys (`adaptive-material.md` §7).
 - ❌ **A bar whose geometry changes with item count at runtime.** Adapt spacing
   and label truncation; keep the bar's shape stable.
+- ❌ **A drawer and a dock both glass.** A summoned panel next to a persistent
+  glass bar is one badly-cut sheet; the summoned one stays solid.
+- ❌ **The indicator as a slab** — a nested `GlassSurface`, a second material,
+  or a "glass pill" that stretches (`LiquidStretch`, `interactionScale` in the
+  NavBar reference) toward the pointer.
+- ❌ **A glass rail that displaces content.** Nothing to transmit; solid.

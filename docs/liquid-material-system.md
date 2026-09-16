@@ -85,10 +85,12 @@ declares `color-scheme` in both `:root` and `html.dark`.
 
 | Token | Value | Meaning |
 |---|---|---|
-| `--material-light-radius` | `360px` | Base radius of the travelling light |
+| `--glass-light-radius` | `360px` | Base radius of the travelling light — the one member of the runtime contract with a configurable base |
 
-`--glass-light-radius` is now an alias of it, so the spotlight composable and
-its one stage override keep working untouched.
+*Correction 2026-09-16:* an earlier revision of this table documented a
+`--material-light-radius` token with `--glass-light-radius` as its alias. That
+token was never defined in `tokens.css`; the runtime name is the only one.
+See `docs/liquid-material-global-reassessment.md` (N4).
 
 ## 4. Clear and Regular — Apple's two variants
 
@@ -168,6 +170,11 @@ per-frame state.
 - Put two hero slabs in one view.
 
 ## 9. Roadmap
+
+> **2026-09-16:** P1, P2 and the map-regeneration item below now have owning
+> phases (B4, B1, B1) in `docs/liquid-material-global-reassessment.md` §20;
+> the skill records each as *Contract (Bn)*. The table is kept as the
+> historical record of the deferral.
 
 Phase 17.2 delivers material *coherence*. What it deliberately does not do:
 

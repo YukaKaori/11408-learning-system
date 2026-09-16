@@ -367,6 +367,12 @@ density glass status strip (variable-driven, compositor-only); answer
 arrival is a one-shot brightening. Citations are solid chips — sources are
 content, and content is never glass. Filter budget: unchanged (3) — the
 sheen is CSS on an existing surface, not a new displacement filter.
+> *Correction (2026-09-16, `docs/phase18-plan.md` §14 and
+> `docs/liquid-material-global-reassessment.md` §11):* the tutor has **no
+> existing glass surface**, so a glass status strip would be a fourth
+> instance, not "CSS on an existing surface". P18 therefore keeps the tutor's
+> thinking state **solid** and lands the AI light vocabulary on the one glass
+> AI surface that exists, `NoteSelectionToolbar`. Budget stays 3.
 
 **Risks —** Highest-risk phase of the plan. Retrieval quality (curated
 golden-set queries in tests from day one); embedding cost (batch, dedup,

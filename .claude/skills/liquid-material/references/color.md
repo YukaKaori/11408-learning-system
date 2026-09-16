@@ -19,6 +19,7 @@ what already ships.
 | Adding a new color token | OKLCH, derived from a declared anchor (§3) |
 | Adding a new theme, brand skin, or subject/category color | OKLCH ladder (§3–4) |
 | Touching an existing `--color-*` / `--accent-*` / `--scene-*` token | Stays in its current hex/rgba form; change the value, not the format |
+| Adding an environment token (`--environment-*`: atmosphere band, ambient pool colours, wake mask) or a material stage/recipe token (`--material-backdrop`, `--material-radius-*`, `--material-inset`) | New tokens → OKLCH-derived where they are colours; non-colour tokens are plain numbers/lengths. B1 moved the four material literals into tokens: `--on-glass-halo`/`-active` and `--on-glass-inset-bg`/`-lip` (frozen dusk, `glass.css`), `--environment-stage-text` (frozen dusk, `tokens.css`), and the primitive's focus ring now uses `--color-focus-ring` |
 | Wholesale migration of `tokens.css` to OKLCH | **Not authorized.** It is a pixel-moving change and needs its own phase with equivalence verification |
 
 `styles/tokens.css` currently holds ~52 hex and ~42 rgba literals across two

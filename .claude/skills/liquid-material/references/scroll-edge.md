@@ -182,16 +182,34 @@ Two further requirements:
   navigation target stays hittable, focusable, and ≥44px, in every state and
   every tier.
 
-## 7. Where this stands in the project
+## 7. Where this stands in the project — the recipe, Contract (B5)
 
 `GlassDock` is a fixed bottom bar with content passing behind it and **no scroll
 edge treatment at all** — recorded as a gap in `docs/liquid-glass-apple-audit.md`
-§2.6. It is not built, this document does not authorize building it, and the
-work belongs to a phase that owns it.
+§2.6. **Shipped:** nothing. **Contract (B5):** every floating chrome surface
+obligates its scroll container to the treatment below; the first two owners
+are `.content` in `AppLayout` (under the app dock) and the landing's Product
+room (under the landing dock).
 
-When it is built, the constraints are: soft edge, content-side, position-driven,
-continuous, symmetric on arrival and departure, and no change to the material's
-declared preset.
+**Responsibility:** the *scroll container* owns the edge, never the bar. The
+bar declares nothing about it; the container knows the bar's height and inset.
+
+**Recipe** (mechanism in `implementation.md` §14):
+
+- A `mask-image` gradient band on the container's bottom edge, ~48px tall,
+  just above the bar's inset.
+- The band's strength is a pure function of
+  `scrollHeight − scrollTop − clientHeight` (how much content continues under
+  the bar), written as **one** custom property from **one** passive scroll
+  listener with cached rects.
+- At the bottom of the document the band is fully open — there is nothing left
+  to dissolve, and the last row must be readable. `scroll-padding-bottom`
+  keeps the last row reachable above the bar.
+- Continuous across the whole range, symmetric on arrival and departure,
+  stateless, no threshold, no duration — and therefore allowed under reduced
+  motion.
+- Never a shadow under the bar, never a hairline, never a change to the bar's
+  declared preset, never a `filter`.
 
 ## 8. Anti-patterns
 

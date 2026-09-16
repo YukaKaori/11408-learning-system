@@ -99,6 +99,27 @@ Ring layers use the mask idiom, always with its guard:
 Use `light-dark()` for theme-aware light colors; use explicit `color-mix()`
 alphas instead of `mix-blend-mode` (blend results depend on unknown backdrops).
 
+### Press and focus illumination — Shipped (B2)
+
+Two more gated variables, written by CSS state (no JS), consumed by the rim
+layers, opacity-only. They are **registered** (`@property` in `glass.css`,
+`<number>`, inherits, initial 0) so the slab can tween them:
+
+```css
+/* glass.css */
+@property --glass-press { syntax: '<number>'; inherits: true; initial-value: 0; }
+/* GlassSurface.vue */
+.glass-surface { --glass-press: 0; --glass-focus: 0;
+  transition: opacity .26s, --glass-press var(--duration-fast), --glass-focus var(--duration-base); }
+.glass-surface:has(:active)         { --glass-press: 1; }   /* rim brightens: edge glow +.3, Fresnel +.2 */
+.glass-surface:has(:focus-visible)  { --glass-focus: 1; }   /* the light-facing arc lifts: Fresnel +.4; the ring stays */
+```
+
+The ring (`:focus-visible` outline) is never replaced. Works on touch because
+it is state, not pointer. Engines without `@property` snap instead of tween —
+the same states, no animation. Local contact light (a pool under the pressed
+dock label) is the recipe's own `::before` at opacity 0 → 1.
+
 ## 4. Displacement map generation
 
 The map is a procedural SVG string → `data:image/svg+xml,${encodeURIComponent(...)}`
@@ -107,7 +128,13 @@ The map is a procedural SVG string → `data:image/svg+xml,${encodeURIComponent(
 - Regenerate on mount and on **debounced** resize (~120ms trailing on the
   `ResizeObserver`-fed size ref). Each new data URI forces a filter re-decode —
   per-tick regeneration during a window drag is the canonical perf bug.
-- Memoise by parameters if maps repeat:
+  **Shipped (B1)** as `components/experience/displacementMap.ts`:
+  `createSettledMeasure` commits the first observation immediately and
+  trailing-debounces the rest (rounded, so jitter is not a change);
+  `createDisplacementMapCache` memoises per parameter set. Measured at the real
+  surface: a 30-frame width burst produced 2 rebuilds (Chrome, Edge) instead of
+  30.
+- Memoise by parameters — always, not only "if maps repeat":
 
 ```ts
 const mapCache = new Map<string, string>()  // key: `${w}x${h}r${radius}…`
@@ -159,54 +186,76 @@ export const glassVars = (v: GlassVars): Record<string, string> =>
 
 Zero runtime cost, full autocomplete, makes the stage contract discoverable.
 
-## 6. Pinia: quality tier only, never optical state
+## 6. The material tier: one decision, on the root — Shipped (B1)
 
-Pinia holds exactly one glass concern — the **global material quality tier**:
+The only global material concern is the **tier** (`materials.md` §8). It is
+resolved once at boot and reflected on `<html>`; a Pinia store is optional (a
+plain module is fine) and, if used, holds nothing else:
 
 ```ts
-// stores/material.ts
-export type GlassTier = 'full' | 'reduced' | 'flat'
-
-export const useMaterialStore = defineStore('material', () => {
-  const tier = ref<GlassTier>('full')
-  // resolve ONCE at boot from: SVG-backdrop support, prefers-reduced-motion,
-  // prefers-reduced-transparency, pointer coarseness, saveData/deviceMemory
-  const refracts = computed(() => tier.value === 'full')
-  return { tier, refracts }
-})
+// styles/materialTier.ts (or stores/material.ts)
+export type GlassTier = 'refract' | 'diffuse' | 'dense'   // A / B / C
+// resolved ONCE in main.ts before mount, re-evaluated on media-query change:
+//   refract  ← SVG-in-backdrop renders AND engine is Blink
+//   diffuse  ← backdrop-filter: blur() available
+//   dense    ← no backdrop-filter, or prefers-reduced-transparency, or prefers-contrast: more
+document.documentElement.dataset.glassTier = resolveGlassTier()
 ```
 
-Rationale: the tier must be one decision applied everywhere (today each surface
-probes independently). Reflect it as `data-glass-tier` on `<html>` so
-`glass.css` can respond without components knowing.
+`glass.css` responds with `[data-glass-tier='diffuse'] .glass-surface { … }`;
+`GlassSurface.vue` stops probing per instance and reads the attribute (or
+simply lets the CSS cascade decide). Reduced motion and pointer coarseness are
+**not** tier inputs — they gate the *light*, not the material.
+
+*(Renamed 2026-09-16 from the never-built `'full' | 'reduced' | 'flat'`.)*
 
 **Never** put light positions, proximity, or per-surface dials in a store —
 that's reactive 60fps state with extra steps (§1).
 
-## 7. Feature detection & fallback tiers
+## 7. Capability resolution — engine, never brand — Shipped (B1)
+
+The shipped resolver is `styles/materialTier.ts` (`resolveGlassTier` is pure
+and takes an injectable environment; `applyGlassTier` writes the root attribute
+from `main.ts` and re-runs on the two accessibility media queries). The sketch
+below is its shape.
 
 ```ts
-// Current, load-bearing: WebKit/Firefox PARSE backdrop-filter: url() but
-// render nothing — a pure feature-test false-positives there.
-function supportsSVGFilters(): boolean {
-  const isWebkit = /Safari/.test(navigator.userAgent) && !/Chrome/.test(navigator.userAgent)
-  const isFirefox = /Firefox/.test(navigator.userAgent)
-  if (isWebkit || isFirefox) return false
-  const div = document.createElement('div')
-  div.style.backdropFilter = 'url(#probe)'
-  return div.style.backdropFilter !== ''
+// The ONE place a brand-ish string may exist. A test asserts no other file
+// under src/ contains Safari|Firefox|Chrome|Edg|Gecko|WebKit.
+export function resolveGlassTier(): GlassTier {
+  if (
+    matchMedia('(prefers-reduced-transparency: reduce)').matches ||
+    matchMedia('(prefers-contrast: more)').matches ||
+    !CSS.supports('backdrop-filter', 'blur(1px)')
+  ) return 'dense'
+  // 1. necessary, not sufficient — every engine parses url() in backdrop-filter
+  const parses = CSS.supports('backdrop-filter', 'url(#p)')
+  // 2. sufficient — every Blink browser (Chrome, Edge, Brave, Arc, Opera, Vivaldi)
+  //    reports a literal "Chromium" brand; WebKit and Gecko lack the API entirely
+  const brands = (navigator as { userAgentData?: { brands: { brand: string }[] } }).userAgentData?.brands
+  const blink = brands ? brands.some((b) => b.brand === 'Chromium') : legacyUaIsBlink()
+  return parses && blink ? 'refract' : 'diffuse'
 }
+// 3. the single named debt exception: consulted only when userAgentData is absent
+// every Blink build — Chrome, Edge, Opera, Brave, Arc — carries "Chrome/" in its UA string
+function legacyUaIsBlink(): boolean { return /Chrome\//.test(navigator.userAgent) }
 ```
 
-This UA gate is documented technical debt (analysis §6.5): keep it, don't
-spread it, and replace it with a render-level probe (ideally in the boot-time
-tier resolution, §6) when practical. CSS-side fallbacks:
+Why not a pure feature test: WebKit and Gecko *parse* `backdrop-filter: url()`
+but render nothing (recorded finding, `docs/liquid-glass-analysis.md` §6.5, to
+be re-verified on real Gecko/WebKit in B1). Why not brands: Edge must be Chrome
+by construction, and the only way to prove that is to make the code unable to
+tell them apart.
 
-- `.glass-surface--fallback` — frosted tier, keyed to `html.dark` (the app
-  toggles theme by class, **not** `prefers-color-scheme`).
-- `@supports not (backdrop-filter: blur(10px))` — solid-ish tier.
+Before B1, `GlassSurface.vue` ran a per-instance `/Safari/ && !/Chrome/` and
+`/Firefox/` regex and toggled `.glass-surface--fallback`. Both are gone; the
+brand guard in `materialTier.spec.ts` fails on any browser name outside the
+resolver.
 
-Every interactive element must work in every tier.
+CSS side: tier styles hang off `html[data-glass-tier='…']` in the primitive's
+scoped block — the base rule is tier B, `refract` adds the SVG chain, `dense`
+replaces the body and drops the backdrop work; markup is identical in every
+tier; every interactive element must work in every tier.
 
 ## 8. Vue-specific traps
 
@@ -307,7 +356,11 @@ Why it matters in code:
 - The spotlight loop is a **hybrid** and worth naming as the exception: pointer
   position is the input, but the exponential approach toward the goal is a
   clock. That is exactly why it is gated on both fine-pointer and reduced-motion
-  rather than on pointer alone.
+  rather than on pointer alone. The **reveal wake** (`environment.md` §1 E4) is
+  the same class — positions from the eased cursor, decay from a clock — and
+  carries the same double gate; the **navigation indicator's travel** is
+  time-driven (gated → jumps under reduced motion) while its *placement* is
+  position-driven (always correct).
 
 Rules for writing a position-driven effect:
 
@@ -356,3 +409,51 @@ live bug class in an SPA, which is why they apply now.*
 - **Never gate DOM structure on capability.** Markup is identical in every tier;
   only appearance differs. Conditional structure makes hydration mismatches
   unavoidable and turns the fallback into a separate, untested product.
+- **The tier is an attribute on the root, written once before mount** (§6). It
+  is the only capability the CSS ever sees.
+- **The indicator's pre-measure state is "no indicator", never a wrong one.**
+  Until item rects are read after mount, the light layer is at opacity 0; it
+  never renders at a guessed position and slides.
+- **The wake is not mounted on the server or on any non-qualifying client.** Its
+  gate is `v-if` on a mounted-time media-query result, so there is no canvas to
+  hydrate.
+
+## 14. The scroll-edge mechanism — Contract (B5)
+
+The recipe for `scroll-edge.md` §7. Content-side, position-driven, continuous,
+symmetric, stateless:
+
+```
+owner        the scroll container that has floating chrome over it (.content in AppLayout; the Product room)
+input        remaining = scrollHeight − scrollTop − clientHeight   (one passive scroll listener, rects cached)
+output       one custom property, e.g. --scroll-edge: clamp(0, remaining / BAND, 1)   (BAND ≈ 48px)
+paint        mask-image: linear-gradient(to bottom, #000 calc(100% − BAND − BAR), rgba(0,0,0, 1 − var(--scroll-edge)) calc(100% − BAR))
+             — the band dissolves in proportion to how much content continues under the bar
+rest         remaining = 0 → band fully open (nothing left to dissolve); the page's last row is readable
+reachability scroll-padding-bottom: BAR + gap so the last row is reachable above the bar
+```
+
+No threshold, no duration, allowed under reduced motion, never a shadow under
+the bar, never a change to the bar's material. Writing `--scroll-edge` through
+the variable channel keeps Vue out of it.
+
+## 15. The indicator composable — Shipped (B2)
+
+`useNavIndicator(container, { target, layoutKey })` in
+`composables/useNavIndicator.ts`, the same shape as the spotlight:
+
+```
+onMounted                 →  measure (container rect, target rect) → place directly → --nav-indicator-ready: 1
+container / window resize →  one rAF-coalesced re-measure → place directly
+layoutKey change          →  (items, locale) flush: 'post' → re-measure → place directly
+target change             →  measure → travel (or place, under reduced motion / before the first placement)
+rAF tick                  →  x += (goalX − x) × .16; w += (goalW − w) × .16; y, h applied at once; write
+                             --nav-indicator-x/y/w/h on the container; snap + stop under 0.4 px
+```
+
+`createIndicatorMotion` is the pure model (injectable frame scheduler, unit
+tested); `relativeGeometry` is the one measurement. The frame loop reads no
+layout. Visibility is `opacity: var(--nav-indicator-ready, 0)` on the light
+layer; the layer uses `translate()` + `width` only. Never a second
+`GlassSurface`, never a template binding of the per-frame values. Bound by the
+landing dock today; the app dock (B5) binds the same composable.

@@ -59,6 +59,13 @@ Rules:
 - **Proximity precedes contact.** The material may respond *before* the pointer
   is on it, falling off with distance. This is the most convincing single
   behavior the material has, and it costs nothing at rest.
+- **The spotlight is the light; the wake is the reveal.** On a stage with an
+  environment (`environment.md`), the pointer does two things at once: it
+  steers reflections across the material (the spotlight) and it wakes the
+  wallpaper beneath (the reveal wake). Both read the **same eased cursor**.
+  Neither is a second light: the wake opens the atmosphere, it does not emit.
+  A stage-scale radial that follows the pointer is neither — it is a
+  spotlight-as-reveal, and it is the pattern retired in B3.
 
 ## 4. Press — settle plus illumination
 
@@ -81,8 +88,12 @@ touch — the material acknowledges contact optically rather than kinetically.
 This is the correct direction for this system because it is entirely light: it
 works identically on touch and pointer, it needs no geometry, it composes with
 the existing hierarchy, and it is the cheapest real gain in tactile quality
-available. It is deferred item **P2**, not built, and building it belongs to a
-phase that owns it.
+available. **Shipped (B2)**, mechanism in `implementation.md` §3: a
+registered `--glass-press` property set by `.glass-surface:has(:active)`,
+tweened over the fast duration, consumed opacity-only by the edge glow (+0.3)
+and the Fresnel arc (+0.2); on the dock a pool of light also gathers under the
+pressed label (`.dock-item:active::before`, opacity only). The 0.5 px settle
+stays as the kinetic half.
 
 **Press must be perceivable without light.** On the frosted and solid tiers, and
 under reduced motion, the settle and the state change carry the feedback alone.
@@ -101,7 +112,12 @@ Focus is the keyboard user's cursor. It ranks above hover, always.
 - **Focus is persistent; hover is momentary.** The expressions should differ in
   character accordingly — focus holds steady, hover breathes.
 
-Focus illumination shares the deferred status of press illumination (§4).
+Focus illumination is **Shipped (B2)** alongside press illumination (§4): a
+registered `--glass-focus` property set by `.glass-surface:has(:focus-visible)`
+(keyboard focus, not every click into an input), tweened over the base
+duration, lifting the light-facing Fresnel arc (+0.4) — additive to the focus
+ring, which every item and the slab keep as `outline: var(--border-width-md)
+solid var(--color-focus-ring)`.
 
 ## 6. Selection — state, not feedback
 
@@ -120,6 +136,10 @@ expressed.
 - **A moving selection indicator moves once, and lands correctly.** It travels
   between items with a damped settle; it never overshoots, and it never appears
   in the wrong place first and corrects itself. Measure, then place.
+- **The indicator is a light, not a slab**, and its width may interpolate with
+  the item it marks — the full contract is `navigation.md` §4 ("The indicator")
+  and the mechanism `implementation.md` §15. **Shipped (B2)** on the landing
+  dock; the desktop rail still marks its row with the solid brand-soft fill.
 - **Selection outranks hover and press.** An item that is selected *and* hovered
   reads as selected.
 
@@ -185,6 +205,11 @@ phase may introduce by building it first. Until such an amendment exists, the
 constitution's text governs and morphing does not ship. This section exists so
 the distinction is recorded and the decision, when it is taken, is taken
 deliberately.
+
+**What is *not* a morph:** the navigation indicator changing width as it
+travels between items of different size (`navigation.md` §4). The indicator
+is a light on the slab; the slab keeps its shape. Morph is about the *object*
+changing form; a light changing extent is the ordinary behaviour of light.
 
 ## 10. Reduced motion
 

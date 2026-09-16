@@ -52,6 +52,13 @@ A material composable owns a **scene**, not a component.
   the existing observer, never given their own.
 - **Composables never touch siblings.** Light flows down from a stage; a
   component never writes a variable onto another component.
+- **Environment composables obey the same rules, and one more.** A reveal
+  wake (`useRevealField`) or a navigation indicator (`useNavIndicator`) owns
+  its lifecycle, writes variables (or a canvas mask), gates at the top, and
+  keeps one observer — exactly like the spotlight. The extra rule: an
+  environment composable **subscribes to the stage's spotlight for its cursor**
+  (`smoothedCursor`) and never registers its own pointer listener. One eased
+  cursor per stage (`environment.md` §3).
 
 ## 3. Token-driven styling
 
@@ -141,8 +148,12 @@ because every one of these is a real bug class even in an SPA.
 - **No layout measurement during render.** Measurement happens after mount,
   behind the dirty-flag discipline.
 - **Capability tiers resolve once at boot and are reflected on the document
-  root**, so styles can respond without any component knowing. A tier decided
-  during render is a tier that differs between server and client.
+  root** as `data-glass-tier="refract | diffuse | dense"`, so styles can respond
+  without any component knowing. A tier decided during render is a tier that
+  differs between server and client (shipped B1: `styles/materialTier.ts`,
+  called from `main.ts` before mount).
+- **Pre-measurement state is the inert state.** The indicator is invisible
+  until measured; the wake is not mounted until its gate resolves after mount.
 - **Never gate structure on capability.** The DOM is the same in every tier;
   only appearance differs. Conditional markup makes hydration mismatches
   unavoidable and makes the fallback a separate untested product.
@@ -152,10 +163,19 @@ because every one of these is a real bug class even in an SPA.
 The material is guarded by tests, and the guards are the constitution's
 enforcement arm. Changing a guard is amending the constitution.
 
-- **The budget guard** fails on a new instance beyond the budget of 3, on a
-  forked refraction chain, on a stray backdrop filter outside the two files
-  permitted to have one, and on any reference to the retired glassmorphism
-  family.
+- **The budget guard** fails on a new *file* mounting the primitive beyond the
+  three allowed, on a forked refraction chain, on a stray backdrop filter
+  outside the two files permitted to have one, and on any reference to the
+  retired glassmorphism family. Note what it counts: files, i.e. the **fork
+  count** — a recipe mounted a second time is invisible to it. The **budget**
+  proper is counted in logical surfaces (`components.md` §1) and gets its own
+  registry in the guard when the fourth surface lands (B5).
+- **The guards added by the B phases** (each a constitution amendment, named in
+  its commit): brand guard (no browser-brand strings outside the resolver),
+  tier guard (tier B declares no white fill / uniform border / halo and consumes
+  `--glass-density`), no-filter-transition guard, no-light guard (no
+  `useGlassSpotlight` under `layouts/`), environment guard (`RevealField` only
+  inside a stage that owns a spotlight).
 - **The token guard** pins each preset to the values its surface shipped with,
   so an accidental retune surfaces immediately rather than as a slow drift.
 - **Test composable logic through its returned refs** — that is what they are
@@ -223,3 +243,7 @@ never enter Vue's reactivity graph.**
 - ❌ **Editing a guard test to make a change pass.** The guard is the
   constitution's enforcement arm; a failing guard means the change needs a
   decision, not a smaller test.
+- ❌ **A second pointer listener on a stage that owns a light.** The wake, the
+  facets and the spotlight share one eased cursor.
+- ❌ **Building an environment layer or an indicator from the primitive.**
+- ❌ **A `transition` or `animation` that names `filter` or `backdrop-filter`.**

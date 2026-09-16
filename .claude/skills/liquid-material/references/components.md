@@ -23,12 +23,39 @@ of the displacement filter chain. It provides:
 - Never fork it, never write a second `feDisplacementMap` or
   `backdrop-filter: url(#…)` anywhere else. A test enforces this
   (`glassBudget.spec.ts`, "nobody re-implements the refraction chain").
-- Never mount it casually. The instance budget (currently **3**: GlassDock,
-  LoginView card, NoteSelectionToolbar) is enforced by the same test. A new
-  instance = a deliberate budget renegotiation: justify the surface as
-  elevated/transient/premium, update `ALLOWED`, note it in the phase plan.
+- Never mount it casually. A new instance = a deliberate budget renegotiation:
+  justify the surface as elevated/transient/premium, register it, note it in
+  the phase plan.
 - Extend it with **props that default to today's behavior** (additive, inert
   defaults) — never with breaking changes to the filter chain.
+
+### What one budget instance is
+
+*Defined 2026-09-16; previously the budget was a number with no unit.*
+
+**One budget instance = one logical material surface: a distinct role,
+identified by (recipe, host container), that mounts the refracting primitive —
+whether or not it is currently visible.**
+
+| Counts as an instance | Never counts |
+|---|---|
+| each (recipe, host) pair — the landing dock and the app dock are **two** instances of one recipe | environment layers: wallpaper, shroud/veil, ambient light, the reveal wake (`environment.md`) |
+| a shared material container composing several controls on **one** slab — one | the navigation indicator — a light on an existing slab (`navigation.md` §4) |
+| a surface mounted only while a state holds (toolbar, palette) — still one | `.glass-material` control skins on an existing slab |
+| | adaptive states, tier variants, backdrop remaps, per-theme values, `v-if`/`v-show` re-renders |
+
+Three numbers travel together:
+
+| Number | Today | Measured by |
+|---|---|---|
+| **Budget** (logical surfaces) | **3** — landing dock (chrome), sign-in slab (hero), note toolbar (floating); **4** proposed with the app dock (Contract B5, decision B) | a surface registry in the guard (B5) |
+| **Fork count** (files containing `<GlassSurface`) | 3 | `glassBudget.spec.ts` "only the allow-listed surfaces instantiate GlassSurface" — **this is what the shipped test counts**; it is a fork guard, not a surface budget, and a recipe mounted twice is invisible to it |
+| **Concurrency ceiling** (primitives mounted at once on any screen) | 2 | the `verify` skill at the real surface |
+
+The fork count must always be ≤ the budget and every entry must be a recipe or
+a sanctioned inline surface. A phase may not raise the budget because it
+contains the word "glass"; it raises it by naming a surface that passes
+`navigation.md` §1/§5 and registering it.
 
 ## 2. The skin system: `.glass-material` in `glass.css`
 
@@ -79,15 +106,17 @@ never a new refraction implementation. Optical dials refer to `materials.md` §7
 - **Interaction:** hover pools light (variables up), press settles ≤1px with a
   slightly heavy duration. No `scale()`, no spring, no elastic stretch.
 
-### `GlassSidebar.vue` (future recipe)
+### `GlassSidebar.vue` (recipe on file — **default answer: solid**)
 
 - **Role:** collapsible navigation pane.
-- **Recipe:** low density, low depth, near-zero motion — a quiet pane of the
-  same material, not a hero surface. Fresnel off or barely-on; flow off.
-- **Rules:** navigation labels/icons solid and high-contrast; active-item
-  indicator may be a light cue (edge glow on the active row) driven by
-  variables. Collapse/expand is a one-shot damped transition (width +
-  opacity), never bouncy.
+- **Decision (2026-09-16):** a *docked* rail displaces content, transmits
+  nothing, and stays **solid** — the shipped `AppSidebar` is correct as it is
+  (`navigation.md` §4). Only a *summoned* drawer over the workspace could earn
+  this recipe, and the product chose the app dock instead (below). Kept on file
+  so the reasoning is not re-litigated.
+- **Recipe, if ever earned:** low density, low depth, near-zero motion; Fresnel
+  off or barely-on; flow off; labels solid; active row = the indicator light on
+  solid tokens; collapse/expand one-shot damped, never bouncy.
 
 ### `GlassToolbar.vue` (exists as `NoteSelectionToolbar.vue` — the pattern)
 
@@ -98,15 +127,23 @@ never a new refraction implementation. Optical dials refer to `materials.md` §7
   chrome. Higher edge energy than a sidebar (it floats over work), but small
   and light-handed.
 
-### `GlassNavigation.vue` (exists as `GlassDock.vue` — the pattern)
+### `GlassNavigation.vue` (exists as `GlassDock.vue` — the pattern, one recipe, two hosts)
 
-- **Role:** persistent primary navigation (dock/bar).
-- **Recipe:** clear water glass — density near 0, high transmission, text
-  labels solid; wide-bar geometry.
+- **Role:** persistent primary navigation (dock/bar). Shipped on the landing
+  (three galleries). **Contract (B5):** the same component, items as data,
+  mounted once in `AppLayout` as the floating bottom **app dock** on mobile —
+  two budget instances of one recipe.
+- **Recipe:** clear water glass (`chrome`) — density near 0, high transmission,
+  labels solid; wide-bar geometry; fixed and inset when floating over content.
+- **Indicator:** the current item is marked by the **indicator light**
+  (`navigation.md` §4) — two variables the dock's own layers consume; never a
+  nested slab.
 - **Rules:** as permanent chrome it earns the *lowest* optical drama: the
-  scene shows through it, it never competes with content. On bright scenes it
-  may flip to a dark-ink variant (the Phase 12 dock flip) — driven by a
-  stage-level declaration, not per-frame sampling.
+  scene shows through it, it never competes with content. On bright backdrops
+  it flips to the dark-ink remap — driven by the stage's
+  `data-material-backdrop` declaration (Contract B4), not per-frame sampling
+  and not a private override. When it floats over scrolling content the
+  container owes it a scroll edge (`scroll-edge.md` §7).
 
 ### Other sanctioned surfaces (same rules apply)
 
@@ -177,6 +214,9 @@ budget renegotiation and, probably, a fourth preset.
   hand-typing optical dials at a call site to fake a rank
 - ❌ Color literals in a component's `<style>` block; every color comes from a
   token (`color.md`)
+- ❌ An environment layer built from the primitive — a wallpaper, veil, shroud
+  or reveal is not a composition of `GlassSurface` (`environment.md`)
+- ❌ A navigation indicator built from the primitive — it is a light on the bar
 
 ## 7. Concentricity — radii are derived, not chosen
 
@@ -212,13 +252,40 @@ Practical consequences:
   part of what the recipe is.
 - **Do not derive radii at runtime.** This is authored geometry, resolved once
   in the token/preset layer, not measured and computed per instance.
-- The intended home for the shared value is the existing glass radius token,
-  which is currently declared and consumed by nobody. Wiring it up is a
-  deliberate change with visual consequences on all three shipped surfaces —
-  a phase decision, not a cleanup.
 
-**Status: documented, not built.** The shipped radii are unrelated constants
-today. Nothing here authorizes changing them.
+### The radius family — Shipped (B1)
+
+*Replaces the 2026-07-31 pointer to "the existing glass radius token": that
+token (`--radius-glass`) was deleted in Phase 17.2 and never had a consumer.*
+
+```
+structural radii    --radius-sm/md/lg/xl                      the app scale — unchanged
+material radii      --material-radius-chrome | -hero | -floating   the slab's own radius, one per recipe (30 / 28 / 16 today, typed as props)
+primitive inset     --material-inset                          GlassSurface's content padding (0.5rem today), the hidden contributor
+control radius      max(material radius − total inset, --radius-md)   derived; the floor keeps tiny controls from going square
+indicator radius    control radius − indicator inset          derived
+```
+
+Token ownership: material radii and the inset live in `tokens.css`; a recipe
+declares its radius once; a call site never types one. The derivation is
+applied by the author at token time, never computed per instance.
+
+Where the shipped surfaces stand (inset = primitive padding + the recipe's own
+block padding):
+
+| Surface | outer | inset | derived | shipped | verdict |
+|---|---|---|---|---|---|
+| dock | 30 | 8 + 8 = 16 | **14** | 22 | not concentric — the one pixel change (decision R) |
+| toolbar | 16 | 8 + 8 = 16 | 0 → floor 8 | 8 | correct by the floor rule |
+| sign-in card | 28 | 8 + 32 = 40 | < 0 → floor 8 | 8 | correct by the floor rule |
+
+B1 shipped exactly that: `--material-radius-*` and `--material-inset` in
+`tokens.css`, each preset sets `--glass-radius`, the primitive reads it (the
+`borderRadius` prop is now an override, and no shipped surface passes one),
+and `--material-radius-chrome-control` — authored once as
+`max(calc(30px − 0.5rem − var(--space-2)), var(--radius-md))` = 14px — is the
+dock item's radius. The login's card aperture reads the slab's computed radius
+instead of duplicating the number.
 
 ### Surfaces in proximity are one material, not N
 

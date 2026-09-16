@@ -50,7 +50,7 @@ Consequences you must design with:
 - **The map IS the optical prescription.** Author refraction as an image; the
   filter merely applies it.
 - Applied via `backdrop-filter: url(#filter-id)` on a dedicated warp layer —
-  Chromium-only in practice; see fallbacks (§8).
+  renders in Blink only (tier A); the other tiers keep every other layer (§8).
 
 ### Edge-only refraction — the defining rule
 
@@ -75,7 +75,10 @@ centre passes through nearly straight. Therefore:
   outer pixels produce a hard tearing ring.
 - If computing values, floor the normaliser (`maxScale = max(maxScale, 1)`) so
   a near-flat map isn't amplified into noise.
-- Regenerate only on mount and debounced resize. Never per frame.
+- Regenerate only on mount and settled (debounced) resize, memoised by size ×
+  radius × profile. Never per frame. **Shipped (B1)** in
+  `components/experience/displacementMap.ts`; before B1 the map was rebuilt on
+  every `ResizeObserver` tick.
 
 ## 3. Distortion character
 
@@ -194,19 +197,63 @@ Surface Flow, Material Weight. Adjust dials; don't invent parallel mechanisms.
 `--glass-light-radius` is the one member with a configurable base in
 `tokens.css` — stages may override it, and the spotlight reads it once then
 swells it slightly near a surface. The rest of the `--glass-light-*` family is
-per-frame state and must stay undriven at author time.
+per-frame state and must stay undriven at author time. (There is no
+`--material-light-radius`; an earlier document described one that was never
+defined.)
 
-## 8. Fallback material
+### Stage and recipe tokens — Contract
 
-Browsers that can't render SVG backdrop filters get **one** graceful step down
-per capability lost:
+Three token families the presets do not yet carry. Each is a **stage** or
+**recipe** declaration, never a per-surface dial:
 
-1. **Full** (Chromium): refraction + all light layers.
-2. **Frosted** (Safari/Firefox): `blur(12px) saturate(1.8)` + border + inset
-   highlights — a dignified frosted material, fully legible, keyed to
-   `html.dark` for theme.
-3. **Solid-ish** (`@supports not (backdrop-filter)`): raised background alpha,
-   no filter at all.
+| Token | Phase | Meaning |
+|---|---|---|
+| `data-material-backdrop="dark \| light"` on the stage; `[data-material-backdrop='light']` remaps density (up, inside a declared band) and rim polarity (light rims → dark ink) per rank | B4 (contract) | the environmental contract (`environment.md` §1 E5, `adaptive-material.md` §6) |
+| `--material-radius-chrome` / `-hero` / `-floating` (30 / 28 / 16px) → each preset's `--glass-radius`, read by the primitive for its map and its corners | **shipped B1** | a slab's radius belongs to its recipe (`components.md` §7); the `borderRadius` prop is now an override, not the source |
+| `--material-inset` (the primitive's content padding, `0.5rem`) | **shipped B1** | the contributor to every nested inset; concentricity is derived from it |
+| `--material-diffusion` (10px) · `--material-density-dense-floor` (.72) | **shipped B1** | the two dials of tiers B and C (§8) |
 
-The fallback is a *material tier*, not a bug state — design it, test it, keep
-every control functional in it.
+Press and focus illumination variables (`interaction.md` §4–5) are Contract B2
+and are listed in `implementation.md` §3.
+
+## 8. The three material tiers
+
+*Rewritten 2026-09-16. Old decision: "Frosted (Safari/Firefox): `blur(12px)
+saturate(1.8)` + border + inset highlights". That tier is the forbidden
+glassmorphism idiom and it made the product a different material in two
+engines. New decision: one material, three tiers by capability, decided once.*
+
+```
+capability probes → one tier, at boot, on <html> (data-glass-tier) → the material implementation
+```
+
+| Tier | `data-glass-tier` | Condition | What it is |
+|---|---|---|---|
+| **A** | `refract` | SVG-in-`backdrop-filter` renders (Blink) | refraction + all five other layers — unchanged |
+| **B** | `diffuse` | `backdrop-filter: blur()` available (WebKit, Gecko) | **the same slab, same preset dials, minus layer 1.** ND body, double rim, back-face, Fresnel arc and edge glow survive verbatim; diffusion carries what the bent edge used to. A rim-masked diffusion band may stand in for edge-weighted bend — only in tier B, only if measured on real Gecko/WebKit |
+| **C** | `dense` | no `backdrop-filter`, **or** `prefers-reduced-transparency`, **or** `prefers-contrast: more` | transmission down, density up toward opaque; every rim and depth cue kept. A designed state (Apple treats Reduce Transparency as a material state, not a degradation) |
+
+Rules:
+
+- Tier B is authored by **deleting** — the white fill, the uniform 1px white
+  border and the blue halo go, and `--glass-density`/`--glass-tint` reach the
+  fallback so `chrome`/`hero`/`floating` stay three visibly different slabs.
+  Acceptance is perceptual: at equal size the three ranks must differ in tier B.
+- Tiers are **engine-level**, never brand-level, and resolved once
+  (`implementation.md` §7). Edge and Chrome cannot differ.
+- Markup is identical in every tier; only appearance differs.
+- Every control works in every tier; the focus ring survives every tier.
+- No tier whitens. Legibility is bought by density in every tier.
+
+**Status: Shipped (B1).** `styles/materialTier.ts` resolves the tier once in
+`main.ts`; `GlassSurface.vue` styles the base rule as tier B (so the
+attribute-less pre-hydration state is the legible diffuse slab), adds the SVG
+chain under `html[data-glass-tier='refract']`, and under
+`html[data-glass-tier='dense']` paints the body as
+`tint × (floor + (1 − floor) × density)` with no backdrop work — chrome .765,
+hero .815, floating .894. The retired fallback (`rgba(255,255,255,.25)` +
+`blur(12px) saturate(1.8)` + a uniform white border + a `0 8px 32px` halo) is
+gone; `materialTier.spec.ts` keeps it out. Verified at the real surface in
+Chrome, Edge and bundled Chromium (all `refract`; `diffuse`/`dense` forced via
+the root attribute and via emulated reduced transparency). Gecko and WebKit
+were **not** executed — that row belongs to the release gate (decision F).

@@ -6,8 +6,11 @@ consolidated into one material in Phase 17.2.
 
 This document describes a **material**, not a component library. No framework
 code belongs here. It is the authority: `materials.md`, `components.md`,
-`implementation.md` and `color.md` operationalize it and may never contradict
-it. On conflict, this file wins.
+`implementation.md`, `color.md`, `environment.md` and the other references
+operationalize it and may never contradict it. On conflict, this file wins.
+Rules marked **Contract (Bn)** are agreed targets built by phase Bn of
+`docs/liquid-material-global-reassessment.md`; rules marked **Shipped** describe
+the present code.
 
 ---
 
@@ -121,6 +124,15 @@ in material from the login card built in Phase 9 and the dock built in Phase 12.
   properties driving gradients, transforms, and opacity — properties that
   composite without layout or filter recomputation. The refraction chain is
   never animated per frame.
+- **`filter` and `backdrop-filter` are never animated or transitioned** —
+  not on the material, not on content entering a scene, not on an environment
+  layer. A defocus is expressed with opacity and a mask whose *position* moves,
+  never with a blur radius that changes over time. (Restated explicitly
+  2026-09-16: the login had transitioned `filter` since Phase 12 unchallenged.)
+- **The material moves light; the environment may move the reveal.** A
+  pointer-driven reveal of the wallpaper (the wake, `environment.md` §1 E4) is
+  environment motion — local, transient, decaying — and does not contradict
+  "objects don't move" because nothing with mass moves.
 - **Reduced motion is first-class.** With `prefers-reduced-motion` (and on touch,
   where there is no pointer to be a light), light-tracking strength stays at zero
   and ambient loops freeze — by construction (the variables default to 0), not by
@@ -152,18 +164,33 @@ in material from the login card built in Phase 9 and the dock built in Phase 12.
    Apple variant (Clear/Regular), and a documented reason no existing preset fits.
 5. **No WebGL unless absolutely necessary.** SVG filters + CSS deliver the
    material. A WebGL dependency requires a written justification that CSS/SVG
-   cannot achieve the effect, plus a full non-WebGL fallback.
+   cannot achieve the effect, plus a full non-WebGL fallback. **Canvas 2D is
+   permitted for exactly one thing:** the environment's reveal wake, as a mask
+   painted under the spotlight-loop discipline (one canvas per stage, capped,
+   gated, self-settling — `environment.md` §1 E4). Canvas never renders the
+   material.
 6. **Performance budget.** Reactive lighting uses compositor-friendly channels
    only (opacity, transform, gradient positions via variables). Expensive work
    (displacement-map generation) happens on mount/resize, never per frame. No new
    per-frame JS loops for decoration.
-7. **Progressive enhancement with real fallbacks.** Browsers that can't apply SVG
-   backdrop filters (Safari, Firefox) get the frosted tier and must remain fully
-   legible and functional. The rule is feature detection, not UA sniffing. The
-   current UA gate is *known, load-bearing debt* — WebKit and Firefox parse
-   `backdrop-filter: url()` but render nothing, so a naive feature test
-   false-positives there. Keep the gate contained, don't spread it, and repay it
-   with a render-level probe when practical (`implementation.md` §7).
+7. **One material, three engine tiers — never browser brands.** Capability is
+   resolved **once at boot** into a tier on the document root
+   (`data-glass-tier="refract | diffuse | dense"`, `materials.md` §8) and every
+   surface obeys it. Tier B is *the same slab minus refraction*, tier C is the
+   designed dense state for no `backdrop-filter` or reduced transparency; both
+   preserve the rank hierarchy and keep every control functional. **Zero
+   browser-brand names exist outside the resolver.** Edge and Chrome (and
+   Brave, Arc, Opera, Vivaldi) share one Blink path by construction — a test
+   asserts it. The resolver's UA-string fallback, used only when
+   `navigator.userAgentData` is absent, is the single named technical-debt
+   exception. (Old decision, superseded: "Safari/Firefox get the frosted tier"
+   — that tier was `rgba` white + `blur()` + a uniform border, i.e. the
+   forbidden material, sanctioned by this very section. Reason for the change:
+   the product must be *one* material in every engine, and a fallback is a
+   tier, not a different product. Rejected alternative: per-browser CSS
+   branches.) **Shipped (B1):** `styles/materialTier.ts` is the resolver; the
+   per-instance UA regex and the white-frost fallback are gone from
+   `GlassSurface.vue`.
 8. **Composition over inheritance.** Build a dock, dialog, or palette by placing
    content on a GlassSurface and applying `.glass-material` — not by subclassing
    or copying the surface.
@@ -213,9 +240,13 @@ bundle them live in `glass.css`.
 
 Surfaces that should be built from this system (existing and future):
 
-- Dock / navigation bar (exists: GlassDock — clear water-glass bar)
+- Dock / navigation bar (exists: GlassDock — clear water-glass bar on the landing)
+- **App dock** — the same recipe, mounted once in the authenticated shell as a
+  floating bottom bar on mobile; content passes under it (Contract B5,
+  `navigation.md` §4)
 - Auth and smoked-glass cards (exists: login card)
-- Sidebar (future collapsible navigation)
+- Sidebar — a *summoned* drawer over the workspace may qualify; a docked rail
+  that displaces content does not and stays solid (`navigation.md` §4)
 - Command Palette (the flagship candidate: a floating slab over the workspace)
 - Dialogs and modal sheets (confirmations, premium upsells)
 - Cards elevated above content (stats, achievements, sponsor cards)
@@ -232,9 +263,16 @@ Not everything is glass: dense reading surfaces (lesson bodies, tables, code
 editors, long forms) stay solid. Glass marks *elevated, transient, or premium*
 layers — the things floating above the work, never the work itself.
 
-Note the gap between this list and the shipped instance budget of **3**. The
-list says what is *eligible*; the budget says what is *mounted*. Eligibility is
-not permission — a new instance is still a budget renegotiation.
+Note the gap between this list and the material budget — **3 logical surfaces**
+shipped (landing dock, sign-in slab, note toolbar), **4** proposed with the app
+dock. The list says what is *eligible*; the budget says what is *mounted*.
+Eligibility is not permission — a new instance is still a budget renegotiation,
+counted in the unit `components.md` §1 defines.
+
+**Not surfaces at all**, and therefore neither eligible nor budgeted: environment
+layers (wallpaper, shroud, veil, ambient light, the reveal wake) and navigation
+indicators. They are governed by `environment.md` and `navigation.md` §4 and
+never touch the primitive.
 
 ## 7. Forbidden patterns
 
@@ -261,6 +299,15 @@ not permission — a new instance is still a budget renegotiation.
 - ❌ **Anonymous glass** — a surface without a declared material preset.
 - ❌ **Invented color** — a hex or rgba literal that isn't derived from the
   palette (`color.md`).
+- ❌ **Animating or transitioning `filter` / `backdrop-filter`** — on anything.
+- ❌ **A second eased cursor** on a stage that owns a light — the wake, the
+  spotlight and the facets read one cursor.
+- ❌ **Environment dressed as glass** — a veil or shroud with `backdrop-filter`,
+  a white translucent sheet, a stage-scale radial "reveal" that is a spotlight.
+- ❌ **Browser-brand branches** — any `Safari|Firefox|Chrome|Edg|WebKit|Gecko`
+  string outside the one tier resolver.
+- ❌ **A glass indicator** — a second `GlassSurface` or nested material used to
+  mark the current navigation item. The indicator is a light.
 
 ## 8. Roadmap integration
 
@@ -292,3 +339,31 @@ before UI design. How the language shows up naturally:
   reaction popovers, and profile hover cards.
 - **Focus Mode** — the strongest reveal-not-hide statement: surrounding chrome
   recedes into dim, low-density glass while the work stays bright and solid.
+
+## 9. Environment is not Material
+
+*Added 2026-09-16.*
+
+The material is a slab. Everything it sits in front of and answers to is the
+**environment**: wallpaper, atmosphere (the neutral-density shroud that makes
+Clear glass legal), ambient light, the pointer's reveal, and the stage's
+declared backdrop. `environment.md` is the reference.
+
+Five consequences, each enforced somewhere:
+
+1. **Environment layers never carry the primitive**, never count against the
+   budget, and never use `backdrop-filter: url()`. They are what there is to
+   transmit; they are not the thing that transmits.
+2. **The environment is present at rest.** A stage that is a void until the
+   pointer arrives has no environment, only a flashlight. The wallpaper is
+   visible — faintly, through the atmosphere — with nobody touching anything.
+3. **The pointer wakes the wallpaper; it does not illuminate the page.** The
+   reveal is local, transient and decaying (a *wake*), never a stage-scale
+   spotlight. It reads the stage's one eased cursor, never a second listener.
+4. **The stage declares its backdrop** (`data-material-backdrop`) and the
+   material obeys. Declaration, never sampling. In the authenticated shell the
+   declaration's source is the theme; on the landing it is authored per gallery.
+   Theme and backdrop are different things.
+5. **Mobile gets the environment without the wake.** Wallpaper + atmosphere +
+   ambient light must read as a place with all motion and all pointer input
+   removed.
