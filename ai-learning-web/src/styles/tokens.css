@@ -180,6 +180,14 @@
   --material-depth: 1;
   --material-fresnel: 1;
 
+  /* Declared backdrop (Phase B4, `environment.md` E5) — `dark | light`, the
+     colour scheme every `light-dark()` pair in the slab (tint, rims, glows)
+     resolves against: GlassSurface sets `color-scheme` from it. A stage sets it
+     with `data-material-backdrop` (glass.css); this root value is only the
+     fallback for a stage that declares nothing, and it follows the theme —
+     which is exactly how the material resolved before B4. */
+  --material-backdrop: light;
+
   /* Engine tiers (Phase B1, `materials.md` §8). The tier itself is decided
      once at boot and written on <html> as data-glass-tier; these are the two
      dials the non-refracting tiers read.
@@ -375,6 +383,9 @@ html.dark {
   /* Reserved for the primary CTA / active nav item / focused interactive
      card — see the :root definition for the "why". */
   --shadow-glow-primary: 0 0 0 1px rgba(124, 134, 234, 0.35), 0 8px 24px rgba(124, 134, 234, 0.22);
+
+  /* The undeclared backdrop follows the theme (see :root). */
+  --material-backdrop: dark;
 
   --scene-aura: rgba(219, 168, 178, 0.08);
   /* The brand tile's lip keeps its violet cast on the dark theme. */

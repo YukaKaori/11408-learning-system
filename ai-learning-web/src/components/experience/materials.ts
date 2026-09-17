@@ -22,3 +22,19 @@
 export const MATERIAL_PRESETS = ['chrome', 'hero', 'floating'] as const
 
 export type MaterialPreset = (typeof MATERIAL_PRESETS)[number]
+
+/**
+ * The declared backdrop (Phase B4, `environment.md` E5) — how bright the scene
+ * behind the glass is, stated by the stage that owns it as
+ * `data-material-backdrop` and never sampled.
+ *
+ * Theme ≠ backdrop. The theme styles the app and the environment; the
+ * declaration styles the material. The Login stage is `dark` in both themes
+ * (its dusk dims where the glass stands) except the Product room, which is
+ * `light` in both; the authenticated shell derives it from the theme because
+ * there the content is the backdrop. A stage that declares nothing falls back
+ * to the theme (`tokens.css`).
+ */
+export const MATERIAL_BACKDROPS = ['dark', 'light'] as const
+
+export type MaterialBackdrop = (typeof MATERIAL_BACKDROPS)[number]

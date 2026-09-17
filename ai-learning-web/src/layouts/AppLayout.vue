@@ -1,16 +1,22 @@
 <script setup lang="ts">
-import { ref } from 'vue'
+import { computed, ref } from 'vue'
 import AppHeader from './AppHeader.vue'
 import AppSidebar from './AppSidebar.vue'
 import AppDrawer from '@/components/AppDrawer.vue'
+import type { MaterialBackdrop } from '@/components/experience/materials'
 import { useAppStore } from '@/stores/app'
 
 const mobileNavOpen = ref(false)
 const appStore = useAppStore()
+
+// The shell's declared backdrop (Phase B4, `environment.md` E5): here the
+// content is the backdrop and the content follows the theme, so the theme is
+// this stage's source. Any glass mounted in the shell reads this declaration.
+const backdrop = computed<MaterialBackdrop>(() => (appStore.isDark ? 'dark' : 'light'))
 </script>
 
 <template>
-  <div class="layout">
+  <div class="layout" :data-material-backdrop="backdrop">
     <AppHeader @toggle-nav="mobileNavOpen = true" />
 
     <div class="body">

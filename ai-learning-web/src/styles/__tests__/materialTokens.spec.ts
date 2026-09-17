@@ -1,7 +1,7 @@
-import { readFileSync } from 'node:fs'
+import { readdirSync, readFileSync, statSync } from 'node:fs'
 import { fileURLToPath } from 'node:url'
 import { describe, expect, it } from 'vitest'
-import { MATERIAL_PRESETS } from '../../components/experience/materials'
+import { MATERIAL_BACKDROPS, MATERIAL_PRESETS } from '../../components/experience/materials'
 
 /**
  * Liquid Material token contract (Phase 17.2 Phase B/C).
@@ -215,5 +215,98 @@ describe('liquid material tokens', () => {
     expect(tokens).toContain('--environment-stage-text:')
     expect(glass).toContain('--on-glass-halo:')
     expect(glass).toContain('--on-glass-inset-bg:')
+  })
+
+  // ---- Phase B4: the declared backdrop (theme ≠ backdrop) -------------------
+
+  /** Every .vue/.css/.ts file under src/, relative, tests excluded. */
+  function sourceFiles(dir = SRC, prefix = ''): string[] {
+    return readdirSync(dir).flatMap((name) => {
+      const path = `${dir}/${name}`
+      const rel = prefix ? `${prefix}/${name}` : name
+      if (statSync(path).isDirectory()) return name === '__tests__' ? [] : sourceFiles(path, rel)
+      return /\.(vue|css|ts)$/.test(name) ? [rel] : []
+    })
+  }
+
+  /** The stages that host glass, and where their declaration comes from. */
+  const STAGES = {
+    'views/LoginView.vue': 'authored per gallery',
+    'layouts/AppLayout.vue': 'derived from the theme',
+  } as const
+
+  /** The Product-room ink flip, moved byte-for-byte out of LoginView. */
+  const LIGHT_INK = {
+    '--on-glass-text': 'rgba(33, 28, 68, 0.92)',
+    '--on-glass-text-dim': 'rgba(33, 28, 68, 0.6)',
+    '--on-glass-text-faint': 'rgba(33, 28, 68, 0.4)',
+    '--on-glass-halo': 'rgba(255, 255, 255, 0.7)',
+    '--on-glass-halo-active': 'rgba(120, 90, 255, 0.4)',
+    '--on-glass-indicator-pool': 'rgba(33, 28, 68, 0.1)',
+    '--on-glass-indicator-rim': 'rgba(33, 28, 68, 0.14)',
+    '--on-glass-indicator-lip': 'rgba(255, 255, 255, 0.5)',
+    '--on-glass-indicator-press': 'rgba(33, 28, 68, 0.08)',
+  }
+
+  const block = (source: string, selector: string) => {
+    const escaped = selector.replace(/[[\]().*+?^$|\\]/g, '\\$&')
+    const match = source.match(new RegExp(`(?:^|\\n)${escaped}\\s*\\{([^}]*)\\}`))
+    if (!match) throw new Error(`no ${selector} rule`)
+    return match[1]
+  }
+
+  it('the undeclared backdrop follows the theme', () => {
+    const root = tokens.slice(tokens.indexOf(':root {'), tokens.indexOf('html.dark {'))
+    const dark = tokens.slice(tokens.indexOf('html.dark {'), tokens.indexOf('@media (prefers-reduced-transparency'))
+    expect(root).toMatch(/--material-backdrop:\s*light;/)
+    expect(dark).toMatch(/--material-backdrop:\s*dark;/)
+  })
+
+  it('each declared backdrop sets the token, and glass.css declares exactly the typed values', () => {
+    for (const backdrop of MATERIAL_BACKDROPS) {
+      expect(block(glass, `[data-material-backdrop='${backdrop}']`).trim()).toBe(
+        `--material-backdrop: ${backdrop};`,
+      )
+    }
+    const declared = [...glass.matchAll(/\[data-material-backdrop='([\w-]+)'\]/g)].map((m) => m[1])
+    expect([...new Set(declared)].sort()).toEqual([...MATERIAL_BACKDROPS].sort())
+  })
+
+  it('the primitive resolves its light-dark() pairs against the backdrop, not the theme', () => {
+    expect(read('components/experience/GlassSurface.vue')).toMatch(
+      /\.glass-surface \{[^}]*color-scheme: var\(--material-backdrop\);/,
+    )
+  })
+
+  it('nothing else sets color-scheme — the theme and the primitive are its only owners', () => {
+    const owners = sourceFiles().filter((file) => /(^|[\s;{])color-scheme\s*:/.test(read(file)))
+    expect(owners.sort()).toEqual(['components/experience/GlassSurface.vue', 'styles/tokens.css'])
+  })
+
+  it('every stage that hosts glass declares its backdrop', () => {
+    for (const file of Object.keys(STAGES)) {
+      expect(read(file), file).toMatch(/:data-material-backdrop="/)
+    }
+    // the Login stage: dark everywhere except the bright Product room, in both themes
+    expect(read('views/LoginView.vue')).toContain(`gallery.value === 'product' ? 'light' : 'dark'`)
+    // the shell: its content is its backdrop, and its content follows the theme
+    expect(read('layouts/AppLayout.vue')).toContain(`appStore.isDark ? 'dark' : 'light'`)
+  })
+
+  it('L-A: the light backdrop only moves the shipped ink flip — values unchanged, chrome rank only', () => {
+    const ink = block(glass, `[data-material-backdrop='light'] [data-material='chrome'] .glass-material`)
+    const declared = Object.fromEntries(
+      [...ink.matchAll(/(--[\w-]+):\s*([^;]+);/g)].map((m) => [m[1], m[2]!.trim()]),
+    )
+    expect(declared).toEqual(LIGHT_INK)
+    // no optical dial rides on the declaration in B4 (density/rims are B5's measurement)
+    expect(glass).not.toMatch(/\[data-material-backdrop='light'\][^{]*\{[^}]*--(glass-|material-(?!backdrop:))/)
+  })
+
+  it('the private bright-room override is gone from LoginView', () => {
+    const login = read('views/LoginView.vue')
+    expect(login).not.toContain('is-on-light')
+    expect(login).not.toMatch(/--on-glass-[\w-]+:/)
+    expect(login).not.toMatch(/rgba\(33, 28, 68/)
   })
 })

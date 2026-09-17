@@ -175,6 +175,12 @@ per-frame state.
 > phases (B4, B1, B1) in `docs/liquid-material-global-reassessment.md` §20;
 > the skill records each as *Contract (Bn)*. The table is kept as the
 > historical record of the deferral.
+>
+> **2026-09-17:** P1's declaration shipped in B4. `data-material-backdrop` on
+> the stage feeds `--material-backdrop`, which becomes the primitive's
+> `color-scheme`. The Login stage declares per gallery and `AppLayout` declares
+> from the theme. The density/rim remap for light backdrops was moved to B5
+> (decision L-A).
 
 Phase 17.2 delivers material *coherence*. What it deliberately does not do:
 

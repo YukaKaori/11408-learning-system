@@ -16,6 +16,7 @@ import {
   SponsorPanel,
 } from '@/components'
 import type { GalleryName, IconName } from '@/components'
+import type { MaterialBackdrop } from '@/components/experience/materials'
 import roseLarge from '@/assets/welcome/flower-2560.jpg'
 import roseSmall from '@/assets/welcome/flower-1280.jpg'
 import lotusUrl from '@/assets/login/pinklotus.png'
@@ -93,6 +94,14 @@ const dockRef = ref<InstanceType<typeof GlassDock> | null>(null)
 function onDockNavigate(target: GalleryName) {
   gallery.value = target
 }
+
+// The stage's declared backdrop (Phase B4, `environment.md` E5), authored per
+// gallery and the same in both themes: the room is dusk wherever its glass
+// stands, the sponsor room is black, and only the Product room is bright. The
+// material reads this, never the theme.
+const stageBackdrop = computed<MaterialBackdrop>(() =>
+  gallery.value === 'product' ? 'light' : 'dark',
+)
 
 function closeGallery() {
   const from = gallery.value
@@ -176,7 +185,7 @@ function toggleLocale() {
 </script>
 
 <template>
-  <main ref="stageRef" class="login-stage">
+  <main ref="stageRef" class="login-stage" :data-material-backdrop="stageBackdrop">
     <!-- Environment — decorative, behind everything, never glass. -->
     <img
       ref="wallpaperRef"
@@ -313,7 +322,7 @@ function toggleLocale() {
       <SponsorPanel v-if="gallery === 'sponsor'" @close="closeGallery" />
     </Transition>
 
-    <div ref="dockAnchorRef" class="dock-anchor" :class="{ 'is-on-light': gallery === 'product' }">
+    <div ref="dockAnchorRef" class="dock-anchor">
       <GlassDock
         ref="dockRef"
         class="landing-dock"
@@ -593,24 +602,11 @@ function toggleLocale() {
 }
 
 /*
- * While the Product page (Phase 12's bright room) is on stage, the dock's
- * fixed dusk labels would vanish into the light. ONLY the text tokens flip
- * to dark ink — the glass geometry, material and motion stay untouched.
- * `.glass-material` declares these variables on itself, so the override
- * must land on that element, not on an ancestor.
+ * While the Product page (Phase 12's bright room) is on stage the stage
+ * declares a light backdrop, and the dock's labels flip to dark ink from
+ * glass.css (`[data-material-backdrop='light']`, Phase B4) — no private
+ * override lives here any more.
  */
-.dock-anchor.is-on-light :deep(.glass-material) {
-  --on-glass-text: rgba(33, 28, 68, 0.92);
-  --on-glass-text-dim: rgba(33, 28, 68, 0.6);
-  --on-glass-text-faint: rgba(33, 28, 68, 0.4);
-  --on-glass-halo: rgba(255, 255, 255, 0.7);
-  --on-glass-halo-active: rgba(120, 90, 255, 0.4);
-  /* The indicator light goes to ink over the bright room, like the rims. */
-  --on-glass-indicator-pool: rgba(33, 28, 68, 0.1);
-  --on-glass-indicator-rim: rgba(33, 28, 68, 0.14);
-  --on-glass-indicator-lip: rgba(255, 255, 255, 0.5);
-  --on-glass-indicator-press: rgba(33, 28, 68, 0.08);
-}
 
 /*
  * Gallery transition — the camera enters another room of the same

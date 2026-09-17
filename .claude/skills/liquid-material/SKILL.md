@@ -163,8 +163,11 @@ light source and a battery cost for decoration. Touch targets stay ≥44px.
 Always review mobile surfaces with the spotlight disabled; that IS the mobile
 appearance. Over **light content** (the authenticated shell in the light theme)
 legibility is carried by the stage's backdrop declaration
-(`data-material-backdrop="light"` → denser body, dark-ink rims — Contract B4,
-`references/adaptive-material.md` §6), never by whitening the slab.
+(`data-material-backdrop`, `references/adaptive-material.md` §6), never by
+whitening the slab. **Shipped (B4):** the declaration and its routing — the slab's
+`color-scheme` follows the backdrop, not the theme, and the chrome dock's labels
+flip to dark ink under `light`. **Contract (B5):** the light-backdrop optics
+(denser body, dark-ink rims), tuned against the real shell content.
 
 **Every engine.** The material is delivered in three tiers decided **once at boot
 by capability, never by browser brand** (`references/materials.md` §8): A `refract`
@@ -243,8 +246,10 @@ Before shipping any material work:
 - [ ] New optical layers gated by custom properties that default to inert
 - [ ] One light direction across the whole view — and **one eased cursor** per
       stage: the wake, the spotlight and the facets all read the same one
-- [ ] The stage declares its backdrop (`data-material-backdrop`) if it mounts
-      Clear glass over anything theme-dependent (Contract B4)
+- [ ] The stage that hosts glass declares its backdrop
+      (`data-material-backdrop="dark|light"`, shipped B4) — from what is
+      behind the glass, not from the theme; `materialTokens.spec.ts` lists the
+      declaring stages
 - [ ] Frost ≈ 0; legibility via ND density; on-glass text uses the fixed dusk
       palette
 - [ ] Optical hierarchy respected — dials match the surface's rank; never two

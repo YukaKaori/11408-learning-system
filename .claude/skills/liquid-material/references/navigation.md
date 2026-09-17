@@ -110,9 +110,10 @@ of them is still a budget renegotiation, counted in **logical surfaces**
   ≥44px. Width adapts to item count rather than letting items overflow; labels
   ellipsize before the bar reflows. A bar that changes *shape* as items are
   added is a bar the user cannot build muscle memory against.
-- **Bright rooms:** over the Product gallery the labels flip to dark ink. Today
-  a private override; Contract (B4): the stage declares
-  `data-material-backdrop="light"` for that gallery and the remap does it.
+- **Bright rooms:** over the Product gallery the labels flip to dark ink.
+  Shipped (B4): the stage declares `data-material-backdrop="light"` for that
+  gallery and `glass.css` flips the chrome rank's on-glass tokens; the private
+  override in `LoginView` is gone.
 
 ### App dock — Contract (B5), the one new surface
 

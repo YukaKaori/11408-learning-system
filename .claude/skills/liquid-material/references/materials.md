@@ -208,7 +208,8 @@ Three token families the presets do not yet carry. Each is a **stage** or
 
 | Token | Phase | Meaning |
 |---|---|---|
-| `data-material-backdrop="dark \| light"` on the stage; `[data-material-backdrop='light']` remaps density (up, inside a declared band) and rim polarity (light rims → dark ink) per rank | B4 (contract) | the environmental contract (`environment.md` §1 E5, `adaptive-material.md` §6) |
+| `data-material-backdrop="dark \| light"` on the stage → `--material-backdrop` → the primitive's `color-scheme` (its `light-dark()` pairs follow the backdrop, not the theme); `light` flips the chrome rank's on-glass labels/indicator to ink | **shipped B4** | the environmental contract (`environment.md` §1 E5, `adaptive-material.md` §6) |
+| `[data-material-backdrop='light']` remaps density (up, inside a declared band) and rim polarity (light rims → dark ink) per rank | B5 (contract, decision L-A) | the light-backdrop optics, tuned against the shell content the app dock crosses |
 | `--material-radius-chrome` / `-hero` / `-floating` (30 / 28 / 16px) → each preset's `--glass-radius`, read by the primitive for its map and its corners | **shipped B1** | a slab's radius belongs to its recipe (`components.md` §7); the `borderRadius` prop is now an override, not the source |
 | `--material-inset` (the primitive's content padding, `0.5rem`) | **shipped B1** | the contributor to every nested inset; concentricity is derived from it |
 | `--material-diffusion` (10px) · `--material-density-dense-floor` (.72) | **shipped B1** | the two dials of tiers B and C (§8) |

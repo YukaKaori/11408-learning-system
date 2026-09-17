@@ -140,9 +140,10 @@ never a new refraction implementation. Optical dials refer to `materials.md` §7
   nested slab.
 - **Rules:** as permanent chrome it earns the *lowest* optical drama: the
   scene shows through it, it never competes with content. On bright backdrops
-  it flips to the dark-ink remap — driven by the stage's
-  `data-material-backdrop` declaration (Contract B4), not per-frame sampling
-  and not a private override. When it floats over scrolling content the
+  it flips to dark-ink labels — driven by the stage's
+  `data-material-backdrop` declaration (shipped B4), not per-frame sampling
+  and not a private override; its light-backdrop density and rims are
+  Contract B5. When it floats over scrolling content the
   container owes it a scroll edge (`scroll-edge.md` §7).
 
 ### Other sanctioned surfaces (same rules apply)

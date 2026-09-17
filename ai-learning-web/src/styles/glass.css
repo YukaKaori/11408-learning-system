@@ -113,6 +113,29 @@
   --glass-radius: var(--material-radius-floating);
 }
 
+/* ------------------------------------------------------------------ */
+/* Declared backdrop (Phase B4) — the stage says how bright it is       */
+/* ------------------------------------------------------------------ */
+
+/*
+ * `data-material-backdrop="dark|light"` on the stage element (`environment.md`
+ * E5). The stage declares once and every surface on it agrees; nothing samples.
+ * The declaration becomes `--material-backdrop`, which GlassSurface turns into
+ * its `color-scheme`, so the slab's `light-dark()` pairs follow the backdrop
+ * rather than the theme. Theme ≠ backdrop: the Login room is dusk behind its
+ * glass in both themes and declares `dark` in both.
+ *
+ * Decision L-A: B4 only routes the declaration. It adds no density band, rim
+ * polarity or preset value — the light-backdrop optics are measured in B5.
+ */
+[data-material-backdrop='dark'] {
+  --material-backdrop: dark;
+}
+
+[data-material-backdrop='light'] {
+  --material-backdrop: light;
+}
+
 .glass-material {
   /* Fixed dusk on-glass palette */
   --on-glass-text: rgba(240, 238, 250, 0.94);
@@ -157,6 +180,29 @@
   --color-danger: #f87171;
 
   color: var(--on-glass-text);
+}
+
+/*
+ * The bright-room ink flip, moved unchanged from LoginView's private
+ * `.dock-anchor.is-on-light` override. Over a light backdrop the dock's fixed
+ * dusk labels would vanish, so ONLY its on-glass text, halo and indicator
+ * tokens flip to dark ink; geometry, material and motion stay. Scoped to the
+ * `chrome` rank because that is the surface it was authored and verified for:
+ * the Regular toolbar carries dusk labels on its own dense body whatever the
+ * backdrop. `.glass-material` declares these variables on itself, so the
+ * override lands on that element.
+ */
+[data-material-backdrop='light'] [data-material='chrome'] .glass-material {
+  --on-glass-text: rgba(33, 28, 68, 0.92);
+  --on-glass-text-dim: rgba(33, 28, 68, 0.6);
+  --on-glass-text-faint: rgba(33, 28, 68, 0.4);
+  --on-glass-halo: rgba(255, 255, 255, 0.7);
+  --on-glass-halo-active: rgba(120, 90, 255, 0.4);
+  /* The indicator light goes to ink over the bright room, like the labels. */
+  --on-glass-indicator-pool: rgba(33, 28, 68, 0.1);
+  --on-glass-indicator-rim: rgba(33, 28, 68, 0.14);
+  --on-glass-indicator-lip: rgba(255, 255, 255, 0.5);
+  --on-glass-indicator-press: rgba(33, 28, 68, 0.08);
 }
 
 /* ------------------------------------------------------------------ */

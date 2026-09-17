@@ -105,9 +105,10 @@ positions from the pointer, decay from a clock — which is exactly why it is ga
 
 ### E5 — Declared backdrop
 
-`data-material-backdrop="dark | light"` on the stage element. The material reads it
-(`glass.css` remaps density within a declared band and flips rim polarity under
-`[data-material-backdrop='light']`); no surface reads its own pixels.
+`data-material-backdrop="dark | light"` on the stage element. The material reads it:
+`glass.css` sets `--material-backdrop`, the primitive takes its `color-scheme` from
+it (so the slab's `light-dark()` pairs follow the backdrop), and under `light` the
+chrome dock's labels go to dark ink. No surface reads its own pixels.
 
 - The declaration is **stage-owned**. In the authenticated shell its *source* is the theme
   (`AppLayout` derives it from `isDark`, `stores/app.ts`). On the landing it is **authored
@@ -115,9 +116,12 @@ positions from the pointer, decay from a clock — which is exactly why it is ga
   both. **Theme ≠ backdrop**; the theme is only one stage's way of knowing.
 - Near-static: changes on theme flip or gallery change, never on scroll or per frame.
 - Declared, never sampled — `adaptive-material.md` §7 gives the six reasons.
-- **Status: Contract (B4).** Not built. The login's bright-room flip
-  (`LoginView.vue` `.is-on-light`) is the hand-rolled predecessor and becomes the first
-  consumer.
+- The environment layers themselves (E1–E4) keep following the **theme**; only the
+  material follows the declaration.
+- **Status: Shipped (B4, 2026-09-17).** `LoginView` declares per gallery, `AppLayout`
+  from the theme; undeclared stages fall back to the theme (`tokens.css`). The
+  hand-rolled `.is-on-light` flip is gone. The light-backdrop density band and rim
+  polarity are **Contract (B5)** (decision L-A).
 
 ## 2. The two environments this product has
 
@@ -129,7 +133,7 @@ E2  atmosphere: graded dusk + slab pool  --environment-atmosphere, per theme, de
     secondary: the lotus drawing     screen-blended on the shadowed wall, faint at rest, opacity glow only
 E4  RevealField (the wake)            desktop fine-pointer only, never mounted otherwise
 E3  ambient pools stage-wide          slow drifting light the dock and slab refract
-E5  dark (login, sponsor) / light (product room) — still the private .is-on-light flip until B4
+E5  dark (login, sponsor) / light (product room), in both themes — data-material-backdrop (B4)
 M   GlassDock (chrome) · sign-in slab (hero)
 ```
 

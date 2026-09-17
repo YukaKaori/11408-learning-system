@@ -22,6 +22,10 @@ import { createDisplacementMapCache, createSettledMeasure } from './displacement
  *            body rises toward opaque from a floor, keeping rank order; rims,
  *            depth and light layers stay.
  *
+ * It also obeys the stage's declared backdrop (Phase B4, `environment.md` E5):
+ * the slab's `color-scheme` is `--material-backdrop`, so its `light-dark()`
+ * pairs answer to how bright the scene behind it is, never to the app theme.
+ *
  * The surface is a *living* optical object: on top of the refraction it
  * carries three CSS-driven lighting layers (inner glow, edge glow, and a
  * light-tracking sheen) steered entirely by custom properties, so a stage
@@ -325,6 +329,10 @@ defineExpose({ element: containerRef })
   align-items: center;
   justify-content: center;
   overflow: hidden;
+  /* The declared backdrop (Phase B4): every light-dark() pair in this slab —
+     and the preset tint — resolves against the stage's declaration, not the
+     theme. Undeclared, the token follows the theme (tokens.css). */
+  color-scheme: var(--material-backdrop);
   background: light-dark(
     hsl(0 0% 100% / calc(var(--glass-frost, 0) * (1 - var(--glass-proximity, 0) * 0.1))),
     hsl(0 0% 0% / calc(var(--glass-frost, 0) * (1 - var(--glass-proximity, 0) * 0.1)))

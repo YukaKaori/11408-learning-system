@@ -4,9 +4,10 @@ Apple's Liquid Glass is *content-aware*: one material works over a photo, a
 document, a video, and a dark home screen, because it adapts. That adaptivity is
 the reason it can be a single material rather than a family of them.
 
-Ours does not adapt yet, **by decision, not by oversight** — and since
-2026-09-16 the mechanism is specified: a **stage-declared backdrop** (Contract
-B4, §6) and a **boot-resolved material tier** (Contract B1, `materials.md` §8).
+Ours does not sample, **by decision, not by oversight** — the mechanism is a
+**stage-declared backdrop** (declaration shipped B4, light-backdrop optics
+Contract B5, §6) and a **boot-resolved material tier** (shipped B1,
+`materials.md` §8).
 This document records what adaptation means, what the inputs are, why the
 project postponed the mechanism, and why it will be declared, never sampled.
 Governed by `constitution.md` §9; the current state of the system is
@@ -128,10 +129,11 @@ The correct response is *not* a lighter, whiter material — that is
 glassmorphism, and it hides content. It is **more smoke plus inverted rim
 polarity**: the body darkens, the edges go to dark ink. The Phase 12 dock flip
 is exactly this behavior, discovered empirically before there was a name for it.
-Under Contract B4 it is the `[data-material-backdrop='light']` remap in
-`glass.css`: density up inside a declared band per rank, rims to dark ink, the
-dock's halo tokenized — and the flip stops being a private override in
-`LoginView`.
+Since B4 the flip is no longer a private override in `LoginView`: the Product
+room declares `light` and `glass.css` flips the chrome dock's labels, halo and
+indicator to dark ink under `[data-material-backdrop='light']`, values unchanged.
+The optical half — density up inside a declared band per rank, rims to dark ink —
+is Contract (B5), measured against the shell content it exists for (decision L-A).
 
 ### Dark backdrop
 
@@ -203,23 +205,38 @@ inverts with it.
 New decision: both are contracts with an owning phase; the reasons for the
 original deferral (§7) still hold and are why the order is B1 → B4.*
 
-**The backdrop declaration — Contract (B4).** `data-material-backdrop="dark |
-light"` on the stage element; `glass.css` remaps, under `[data-material-backdrop
-='light']`, exactly two things per rank: density (up, inside a declared band)
-and rim polarity (light rims → dark ink). The token guard pins the remapped
-values. Nothing samples.
+**The backdrop declaration — Shipped (B4, 2026-09-17).**
+`data-material-backdrop="dark | light"` on the stage element. `glass.css` turns
+it into `--material-backdrop`, and `GlassSurface` sets its own `color-scheme`
+from that token, so every `light-dark()` pair in the slab (tint, rims, glows)
+resolves against the backdrop instead of the theme. A stage that declares
+nothing falls back to the theme (`tokens.css`), which is how the material
+resolved before B4. Under `light` the chrome dock's labels, halo and indicator
+flip to dark ink (the Phase 12 values, moved unchanged). The token guard pins
+all of it. Nothing samples.
+
+**The light-backdrop optics — Contract (B5).** Under `[data-material-backdrop
+='light']`, per rank: density (up, inside a declared band) and rim polarity
+(light rims → dark ink). Decision L-A deferred these to B5 so they are tuned
+against `/today` and `/notes`, the backdrops the app dock will actually cross,
+rather than against the Product room, whose ink labels a denser body would dim.
 
 Who declares:
 
 | Stage | Source of the declaration |
 |---|---|
-| the authenticated shell (`AppLayout`) | derived from the theme (`isDark`) — the shell's backdrop *is* the theme, which is why P1 was unblocked |
+| the authenticated shell (`AppLayout`) | derived from the theme (`isDark`) — the shell's backdrop *is* the theme, which is why P1 was unblocked. (`isDark` tracks the OS preference live since the B4 store fix; before it, `system` mode went stale on an OS flip.) |
 | the login stage | authored per gallery: `dark` for the black installation in both themes; `light` for the Product room in both |
 | a future stage | whoever owns the stage, at author time |
 
-**Theme ≠ backdrop.** The tint tokens already flip via `light-dark()`
-(`--material-tint-*`), which follows the *theme*; the declaration follows the
-*stage*. A black stage under the light theme declares `dark`.
+**Theme ≠ backdrop.** Before B4 the tint tokens and the primitive's rims
+flipped via `light-dark()` against the *theme*, so the light-theme Login slab
+rendered its light-theme variant over a dusk backdrop: subtitle 3.93:1. Since
+B4 they resolve against the *stage's* declaration, so a dusk stage under the
+light theme declares `dark` and gets the dark material. That brought the
+subtitle to 5.09:1 at 1440 px with no preset, density or token retuned. The
+theme still owns the app tokens and the environment (the atmosphere is "the same
+room at a later hour").
 
 **The material tier — Contract (B1).** `prefers-reduced-transparency` and
 `prefers-contrast: more` fold into tier C `dense`, decided once at boot with
@@ -295,7 +312,7 @@ The deferral assumed no authenticated stage had a known backdrop. The shell
 does: it paints `--color-bg` behind every route, and `--color-bg` is a function
 of the theme the app already writes to `<html>`. The declaration therefore costs
 one attribute derived from state that exists, and P1 stopped being a phase and
-became a token block (B4). The *landing* is the opposite case — its backdrop is
+became a token block (shipped B4). The *landing* is the opposite case — its backdrop is
 authored per gallery and does not follow the theme — which is why the
 declaration is stage-owned rather than theme-owned.
 
