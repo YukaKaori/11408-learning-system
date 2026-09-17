@@ -35,12 +35,17 @@ export const useAppStore = defineStore('app', {
     dailyGoalMinutes: DEFAULT_DAILY_GOAL_MINUTES,
     /** Desktop sidebar collapsed to an icon rail. Persisted; irrelevant on mobile (drawer). */
     sidebarCollapsed: false,
+    /**
+     * The OS colour-scheme preference, held as state so `system` mode follows
+     * it live. `isDark` is a cached getter: reading `darkQuery.matches` inside
+     * it tracked nothing, so an OS flip left the theme stale until reload.
+     */
+    systemPrefersDark: darkQuery.matches,
   }),
 
   getters: {
     isDark(state): boolean {
-      // themeMode is tracked reactively; the system preference is re-read on change events.
-      return state.themeMode === 'dark' || (state.themeMode === 'system' && darkQuery.matches)
+      return state.themeMode === 'dark' || (state.themeMode === 'system' && state.systemPrefersDark)
     },
   },
 
@@ -57,7 +62,8 @@ export const useAppStore = defineStore('app', {
       this.sidebarCollapsed = localStorage.getItem(SIDEBAR_STORAGE_KEY) === '1'
       i18n.global.locale.value = this.locale
       this.applyTheme()
-      darkQuery.addEventListener('change', () => {
+      darkQuery.addEventListener('change', (event) => {
+        this.systemPrefersDark = event.matches
         if (this.themeMode === 'system') {
           this.applyTheme()
         }
