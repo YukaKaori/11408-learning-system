@@ -15,7 +15,7 @@ import {
   RevealField,
   SponsorPanel,
 } from '@/components'
-import type { GalleryName, IconName } from '@/components'
+import type { DockItem, IconName } from '@/components'
 import type { MaterialBackdrop } from '@/components/experience/materials'
 import roseLarge from '@/assets/welcome/flower-2560.jpg'
 import roseSmall from '@/assets/welcome/flower-1280.jpg'
@@ -88,11 +88,27 @@ const spotlight = useGlassSpotlight(stageRef, {
  * behind the dock. Closing returns focus to the dock facet that opened the
  * gallery, so keyboard travel never resets.
  */
+/**
+ * The three rooms this stage can show. The union lives here since Phase B5:
+ * `GlassDock` takes its destinations as data and knows nothing about
+ * galleries, which is what lets one recipe serve this stage and the
+ * authenticated shell.
+ */
+type GalleryName = 'login' | 'product' | 'sponsor'
+
+const GALLERIES: ReadonlyArray<GalleryName> = ['login', 'product', 'sponsor']
+
 const gallery = ref<GalleryName>('login')
 const dockRef = ref<InstanceType<typeof GlassDock> | null>(null)
 
-function onDockNavigate(target: GalleryName) {
-  gallery.value = target
+// Bare labels, no glyphs: the landing bar is text-first (the `labels` layout,
+// which is the recipe's default), and its wording is this view's to own.
+const galleryItems = computed<DockItem[]>(() =>
+  GALLERIES.map((key) => ({ key, label: t(`landing.dock.${key}`) })),
+)
+
+function onDockNavigate(target: string) {
+  gallery.value = target as GalleryName
 }
 
 // The stage's declared backdrop (Phase B4, `environment.md` E5), authored per
@@ -326,7 +342,10 @@ function toggleLocale() {
       <GlassDock
         ref="dockRef"
         class="landing-dock"
+        :items="galleryItems"
         :active="gallery"
+        :label="t('landing.dock.label')"
+        :current-title="t('landing.dock.current')"
         @navigate="onDockNavigate"
       />
     </div>

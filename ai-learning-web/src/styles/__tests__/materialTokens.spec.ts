@@ -2,6 +2,7 @@ import { readdirSync, readFileSync, statSync } from 'node:fs'
 import { fileURLToPath } from 'node:url'
 import { describe, expect, it } from 'vitest'
 import { MATERIAL_BACKDROPS, MATERIAL_PRESETS } from '../../components/experience/materials'
+import { MATERIAL_SURFACES } from '../../components/experience/__tests__/materialSurfaces'
 
 /**
  * Liquid Material token contract (Phase 17.2 Phase B/C).
@@ -57,12 +58,15 @@ const SHIPPED: Record<string, Record<Dial, string>> = {
   },
 }
 
-/** Surface → the preset it declares. The allow-listed budget of 3. */
-const SURFACES: Record<string, string> = {
-  'components/experience/GlassDock.vue': 'chrome',
-  'views/LoginView.vue': 'hero',
-  'features/notes/editor/NoteSelectionToolbar.vue': 'floating',
-}
+/**
+ * Recipe file → the preset it declares, derived from the one registry since
+ * Phase B5 so this file and the budget guard cannot disagree. The two dock
+ * instances share a recipe and a rank, so the map has one entry per *file* —
+ * which is what the assertions below read (they inspect source, not surfaces).
+ */
+const SURFACES: Record<string, string> = Object.fromEntries(
+  MATERIAL_SURFACES.map((surface) => [surface.recipe, surface.preset]),
+)
 
 /** Declarations of `--glass-<dial>: value;` in a block, last one winning. */
 function declaredDials(source: string): Partial<Record<Dial, string>> {
@@ -301,6 +305,66 @@ describe('liquid material tokens', () => {
     expect(declared).toEqual(LIGHT_INK)
     // no optical dial rides on the declaration in B4 (density/rims are B5's measurement)
     expect(glass).not.toMatch(/\[data-material-backdrop='light'\][^{]*\{[^}]*--(glass-|material-(?!backdrop:))/)
+  })
+
+  // ---- Phase B5.1: the app dock's authored geometry ------------------------
+
+  /*
+   * The dock's height is authored, not measured: nothing in the shell reads
+   * layout to find out how much room the bar needs. These assertions pin the
+   * arithmetic (`components.md` §7 — the primitive's own inset always
+   * participates) and the 44px touch floor.
+   */
+  it('the app dock height is derived from the item, the row and the primitive inset', () => {
+    const declaration = (name: string) =>
+      tokens.match(new RegExp(`${name}:\\s*([^;]+);`))?.[1].replace(/\s+/g, ' ').trim() ?? ''
+
+    expect(declaration('--app-dock-height')).toBe(
+      'calc( var(--app-dock-item) + 2 * var(--space-2) + 2 * var(--material-inset) )',
+    )
+    expect(declaration('--app-dock-space')).toBe(
+      'calc( var(--app-dock-height) + var(--app-dock-gutter) + env(safe-area-inset-bottom, 0px) )',
+    )
+
+    const px = (name: string) => {
+      const raw = tokens.match(new RegExp(`${name}:\\s*([^;]+);`))?.[1].trim() ?? ''
+      return raw.endsWith('rem') ? parseFloat(raw) * 16 : parseFloat(raw)
+    }
+    // 48 + 2x8 + 2x8 = 80px
+    expect(px('--app-dock-item') + 2 * px('--space-2') + 2 * px('--material-inset')).toBe(80)
+  })
+
+  it('the dock item clears the 44px touch floor', () => {
+    expect(parseFloat(tokens.match(/--app-dock-item:\s*([^;]+);/)?.[1] ?? '0')).toBeGreaterThanOrEqual(44)
+  })
+
+  it('the shell reserves exactly the dock space on its scroll container', () => {
+    const layout = read('layouts/AppLayout.vue')
+    expect(layout).toContain('padding-bottom: var(--app-dock-space);')
+    expect(layout).toContain('scroll-padding-bottom: var(--app-dock-space);')
+  })
+
+  it('the app dock declares no optics of its own — still the chrome recipe', () => {
+    const layout = read('layouts/AppLayout.vue')
+    expect(layout).toMatch(/<GlassDock[\s\S]*?layout="stacked"/)
+    // no dial, no preset, no material attribute at the host
+    expect(declaredDials(layout)).toEqual({})
+    expect(layout).not.toMatch(/\smaterial="/)
+    // and no tinted rectangle behind the bar (`navigation.md` §7)
+    expect(layout).not.toMatch(/\.app-dock(-anchor)?\s*\{[^}]*(background|box-shadow|border):/)
+  })
+
+  it('the stacked presentation moves layout only, never optics', () => {
+    const dock = read('components/experience/GlassDock.vue')
+    const stacked = [...dock.matchAll(/\.dock--stacked[^{]*\{([^}]*)\}/g)]
+      .map((match) => match[1])
+      .join('\n')
+
+    expect(stacked.length).toBeGreaterThan(0)
+    expect(stacked).not.toMatch(/--glass-|--material-(density|tint|depth|fresnel|edge|inner)/)
+    expect(stacked).not.toMatch(/backdrop-filter|filter:/)
+    // the concentric item radius is still the token, not a stacked override
+    expect(stacked).not.toMatch(/border-radius/)
   })
 
   it('the private bright-room override is gone from LoginView', () => {

@@ -2,6 +2,12 @@ import { readdirSync, readFileSync, statSync } from 'node:fs'
 import { join } from 'node:path'
 import { fileURLToPath } from 'node:url'
 import { describe, expect, it } from 'vitest'
+import { MATERIAL_PRESETS } from '../materials'
+import {
+  MATERIAL_BUDGET,
+  MATERIAL_FORK_COUNT,
+  MATERIAL_SURFACES,
+} from './materialSurfaces'
 
 /**
  * Material guard (Phase 16 Step 5 · extended by Phase 17.2 P0).
@@ -32,8 +38,14 @@ import { describe, expect, it } from 'vitest'
 const SRC = fileURLToPath(new URL('../../..', import.meta.url))
 
 /**
- * Files allowed to instantiate the primitive, and why. Three entries = the
- * approved budget of 3; the landing galleries (ProductPresentation,
+ * Files allowed to instantiate the primitive, and why.
+ *
+ * Phase B5 corrected what this list *is*. Three entries are the **fork count**
+ * — the files that own a mount of the primitive — not the budget. The budget is
+ * counted in logical surfaces (recipe × host) and is **4** since the app dock:
+ * `GlassDock` is one file mounted in two hosts, which this assertion cannot
+ * see. `materialSurfaces.ts` is the instrument for that, and the two are
+ * cross-checked below. The landing galleries (ProductPresentation,
  * SponsorPanel) deliberately carry no glass and must stay that way.
  */
 const ALLOWED = {
@@ -125,7 +137,8 @@ describe('optical glass budget', () => {
     const mounting = matching(/<GlassSurface[\s>]/, (path) => path.endsWith('GlassSurface.vue'))
 
     expect(mounting).toEqual(Object.keys(ALLOWED).sort())
-    expect(mounting).toHaveLength(3) // the approved Phase 16 budget, unchanged by Phase 17.2
+    // The fork count, not the budget — see the ALLOWED docblock and Phase B5.
+    expect(mounting).toHaveLength(MATERIAL_FORK_COUNT)
   })
 
   it('exactly one displacement surface lives in the authenticated feature tree', () => {
@@ -172,5 +185,82 @@ describe('optical glass budget', () => {
     const authors = matching(FACET_RIM)
 
     expect(authors).toEqual([FACET_OWNER, ...Object.keys(FACET_MIGRATING)].sort())
+  })
+})
+
+/**
+ * The surface registry (Phase B5) — the budget's missing instrument.
+ *
+ * Every assertion here reads `materialSurfaces.ts` against the source tree, so
+ * the table cannot drift from the code: a surface added to the app without a
+ * registry entry fails the fork/preset cross-checks, and an entry whose host
+ * stopped mounting it fails immediately.
+ */
+describe('the material surface registry', () => {
+  it('counts four logical surfaces — the Phase B5 budget', () => {
+    expect(MATERIAL_SURFACES).toHaveLength(MATERIAL_BUDGET)
+    expect(MATERIAL_BUDGET).toBe(4)
+    expect(new Set(MATERIAL_SURFACES.map((surface) => surface.id)).size).toBe(MATERIAL_BUDGET)
+  })
+
+  it('is one instance per (recipe, host) pair', () => {
+    const pairs = MATERIAL_SURFACES.map((surface) => `${surface.recipe}@${surface.host}`)
+    expect(new Set(pairs).size).toBe(pairs.length)
+  })
+
+  it('the dock is one recipe in two hosts — two instances, one implementation', () => {
+    const docks = MATERIAL_SURFACES.filter(
+      (surface) => surface.recipe === 'components/experience/GlassDock.vue',
+    )
+    expect(docks.map((surface) => surface.host).sort()).toEqual([
+      'layouts/AppLayout.vue',
+      'views/LoginView.vue',
+    ])
+    // ...and nobody forked it: the second host is a mount, not a second file.
+    expect(new Set(docks.map((surface) => surface.recipe)).size).toBe(1)
+  })
+
+  it('the fork count stays below the budget, and every recipe is allow-listed', () => {
+    const recipes = [...new Set(MATERIAL_SURFACES.map((surface) => surface.recipe))].sort()
+    expect(recipes).toEqual(Object.keys(ALLOWED).sort())
+    expect(recipes).toHaveLength(MATERIAL_FORK_COUNT)
+    expect(MATERIAL_FORK_COUNT).toBeLessThanOrEqual(MATERIAL_BUDGET)
+  })
+
+  it('every host actually mounts the surface it is registered for', () => {
+    for (const surface of MATERIAL_SURFACES) {
+      expect(readFileSync(join(SRC, surface.host), 'utf8'), surface.id).toContain(surface.mount)
+    }
+  })
+
+  it('every surface declares a rank that exists', () => {
+    for (const surface of MATERIAL_SURFACES) {
+      expect(MATERIAL_PRESETS, surface.id).toContain(surface.preset)
+    }
+  })
+
+  it('the app dock is mounted once, behind a media gate, never hidden with CSS', () => {
+    const layout = readFileSync(join(SRC, 'layouts/AppLayout.vue'), 'utf8')
+    // exactly one mount of the recipe in the shell
+    expect(layout.match(/<GlassDock[\s>]/g)).toHaveLength(1)
+    // a mounted-time media query decides whether it exists at all, so desktop
+    // carries no filter chain and no ResizeObserver for a hidden bar
+    expect(layout).toContain('<GlassDock')
+    expect(layout).toMatch(/v-if="isCompact"/)
+    expect(layout).toMatch(/window\.matchMedia\(COMPACT_QUERY\)/)
+    // ...and the gate is not a `display: none` on the dock or its anchor
+    expect(layout).not.toMatch(/\.app-dock(-anchor)?\s*\{[^}]*display:\s*none/)
+  })
+
+  it('no travelling light lives in the shell — the dock stands statically', () => {
+    // Usage, not prose: the layout's docblock explains *why* there is no
+    // spotlight here, and saying so must not trip the guard. An import or a
+    // call is what would actually put a light in `layouts/`.
+    const USES_LIGHT = /(?:from '[^']*(?:useGlassSpotlight|useRevealField|RevealField)[^']*'|useGlassSpotlight\(|useRevealField\(|<RevealField)/
+    const inLayouts = sourceFiles(join(SRC, 'layouts'))
+      .filter((file) => USES_LIGHT.test(readFileSync(file, 'utf8')))
+      .map(relative)
+
+    expect(inLayouts).toEqual([])
   })
 })

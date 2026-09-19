@@ -24,7 +24,7 @@ export { default as GlassDock } from './experience/GlassDock.vue'
 export { default as RevealField } from './experience/RevealField.vue'
 export { default as ProductPresentation } from './experience/ProductPresentation.vue'
 export { default as SponsorPanel } from './experience/SponsorPanel.vue'
-export type { GalleryName } from './experience/GlassDock.vue'
+export type { DockItem } from './experience/GlassDock.vue'
 
 export type { IconName } from './icons/registry'
 export * from './types'

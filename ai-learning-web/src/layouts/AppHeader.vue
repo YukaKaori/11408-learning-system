@@ -8,6 +8,14 @@ const { t } = useI18n()
 </script>
 
 <template>
+  <!--
+    Phase B5: the brand mark and product name are gone. `navigation.md` §4 —
+    branding and page titles belong to the scrollable content, not permanently
+    pinned in the bar; chrome that accumulates content stops being chrome, and
+    the app dock now carries the shell's identity on every mobile screen. What
+    remains is the one global control: the drawer summons, a second door to the
+    same solid panel the dock's More opens.
+  -->
   <header class="app-header">
     <button
       type="button"
@@ -17,8 +25,6 @@ const { t } = useI18n()
     >
       <AppIcon name="menu" />
     </button>
-    <span class="brand-mark" aria-hidden="true"></span>
-    <span class="brand-name">{{ t('app.name') }}</span>
   </header>
 </template>
 
@@ -50,19 +56,6 @@ const { t } = useI18n()
 
 .nav-toggle:hover {
   background-color: var(--color-surface-hover);
-}
-
-.brand-mark {
-  width: 18px;
-  height: 18px;
-  border-radius: var(--radius-sm);
-  background: linear-gradient(135deg, var(--color-primary), var(--color-primary-hover));
-}
-
-.brand-name {
-  font-size: var(--text-sm);
-  font-weight: 600;
-  letter-spacing: var(--tracking-tight);
 }
 
 @media (max-width: 768px) {

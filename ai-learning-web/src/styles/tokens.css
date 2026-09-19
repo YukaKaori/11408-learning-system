@@ -323,6 +323,25 @@
   --sidebar-width-collapsed: 64px;
   --header-height: 56px;
 
+  /* The authenticated app dock (Phase B5) — the floating bottom chrome of the
+     shell on compact viewports, and the room the scroll container owes it.
+     The height is AUTHORED, never measured: the item, the dock row's own
+     padding, and the primitive's content inset, which always participates
+     (`components.md` §7). Keeping it a token is what lets `.content` reserve
+     exactly the bar's room without reading layout.
+       item   48px  ≥ the 44px touch floor at every viewport
+       height 48 + 2×8 (row) + 2×8 (--material-inset) = 80px
+       space  height + the bottom gutter + the device's safe area */
+  --app-dock-item: 48px;
+  --app-dock-label: var(--text-xs);
+  --app-dock-gutter: var(--space-3);
+  --app-dock-height: calc(
+    var(--app-dock-item) + 2 * var(--space-2) + 2 * var(--material-inset)
+  );
+  --app-dock-space: calc(
+    var(--app-dock-height) + var(--app-dock-gutter) + env(safe-area-inset-bottom, 0px)
+  );
+
   color-scheme: light;
 }
 

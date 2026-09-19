@@ -17,6 +17,22 @@ const enUS: typeof zhCN = {
     profile: 'Profile',
     collapse: 'Collapse sidebar',
     expand: 'Expand sidebar',
+    /*
+     * The app dock's own labels (Phase B5). Separate from the sidebar's
+     * because a tab bar is a different typographic surface: six destinations
+     * share one phone row, so the wording is short by design — "Cards", not
+     * "Flashcards" — and the bar never reflows to fit a longer word.
+     */
+    dock: {
+      label: 'Primary navigation',
+      current: 'Current page',
+      today: 'Today',
+      subjects: 'Subjects',
+      notes: 'Notes',
+      flashcards: 'Cards',
+      aiTutor: 'Tutor',
+      more: 'More',
+    },
   },
   designSystem: {
     title: 'Design System',

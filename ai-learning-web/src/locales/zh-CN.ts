@@ -15,6 +15,16 @@ export default {
     profile: '个人主页',
     collapse: '收起侧栏',
     expand: '展开侧栏',
+    dock: {
+      label: '主导航',
+      current: '当前页面',
+      today: '今日',
+      subjects: '科目',
+      notes: '笔记',
+      flashcards: '卡片',
+      aiTutor: '导师',
+      more: '更多',
+    },
   },
   designSystem: {
     title: '设计系统',
