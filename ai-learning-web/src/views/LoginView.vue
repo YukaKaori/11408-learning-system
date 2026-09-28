@@ -12,31 +12,38 @@ import {
   GlassDock,
   GlassSurface,
   ProductPresentation,
-  RevealField,
+  RefractionField,
   SponsorPanel,
 } from '@/components'
 import type { DockItem, IconName } from '@/components'
 import type { MaterialBackdrop } from '@/components/experience/materials'
-import roseLarge from '@/assets/welcome/flower-2560.jpg'
-import roseSmall from '@/assets/welcome/flower-1280.jpg'
-import lotusUrl from '@/assets/login/pinklotus.png'
+import lotusUrl from '@/assets/environment/lotus.webp'
 
 // A room with a sign-in slab in it (Phase B3 — `environment.md`). The stage is
 // composed back to front as environment, then material, then content:
 //
-//   E1 wallpaper    the rose room — a real photograph, full-bleed, present at rest
-//   E2 atmosphere   a dusk graded from above: bright where no glass sits, deeper
-//                   toward the dock; no blur, no white, the room always visible
-//   secondary       the luminous lotus drawing on the shadowed wall, resting faint
-//   E4 wake         RevealField — where the pointer has just travelled the dusk
-//                   lifts and the drawing wakes, then settles (desktop only)
+//   E1 wallpaper    the field (the stage's own dusk colour) and the pink lotus,
+//                   placed twice — present at rest, never behind the form
+//   E4 wake         RefractionField — where the pointer is, a small liquid lens
+//                   bends the wallpaper; its residue relaxes (desktop only)
+//   E2 atmosphere   a dusk graded from above, deepest toward the dock; no blur,
+//                   no white. Above the wake, so the lens is dimmed exactly as
+//                   the wallpaper it bends
 //   E3 ambient      three slow pools of the room's light
 //   M  glass        the sign-in slab (hero) and the dock (chrome)
 //   C  content      the form
 //
+// The wallpaper is the translucent pink lotus this project generated for the
+// Login stage in Phase 4 (scripts/environment/source) — one flower, used twice
+// rather than a second style: a near bloom and a far one, the far one mirrored
+// so both lean toward the middle. On a wide stage they stand either side of the
+// slab, each running off its own edge, and the middle is open air; on a
+// portrait stage they take the corners above and below the form. Screen-blended
+// onto the field, so the artwork's black ground is simply the room.
+//
 // Environment layers are not glass and not budget instances. Every material
 // cue lives in GlassSurface + glass.css; the one light lives in
-// useGlassSpotlight (the wake reads its eased cursor); this view owns
+// useGlassSpotlight (the wake reads its raw pointer); this view owns
 // composition. The dock moves the camera between three galleries — the sign-in
 // slab, the product keynote and the sponsor page — full-screen layers that
 // appear behind the dock while the room and the glass remain.
@@ -68,8 +75,10 @@ const AUTH_ERROR_KEYS: Record<number, string> = {
 // Optical lighting: the composable eases the pointer light and writes CSS
 // variables on the card (proximity-reactive glass + Fresnel angle) and on
 // every glass facet — the controls AND the dock — so one light travels across
-// the whole installation. Its eased cursor is also the wake's only input: one
-// cursor per stage. Inert on touch / reduced motion.
+// the whole installation. Its pointer is also the wake's only input: one
+// listener per stage. The wake takes the RAW position, not the eased light —
+// a light may drift after the hand, a wake may not. Inert on touch / reduced
+// motion.
 const stageRef = ref<HTMLElement | null>(null)
 const cardRef = ref<InstanceType<typeof GlassSurface> | null>(null)
 const cardEl = computed(() => cardRef.value?.element ?? null)
@@ -127,10 +136,11 @@ function closeGallery() {
   }
 }
 
-// Environment elements the wake reads: the wallpaper and the secondary drawing
-// it re-draws at full light, and the two slabs it mostly stays out of.
-const wallpaperRef = ref<HTMLImageElement | null>(null)
-const secondaryRef = ref<HTMLImageElement | null>(null)
+// Environment elements the wake reads: the wallpaper's two lotus layers (the
+// plate it bends is re-drawn from them) and the two slabs a lens fades out under.
+const lotusNearRef = ref<HTMLImageElement | null>(null)
+const lotusFarRef = ref<HTMLImageElement | null>(null)
+const lotusLayers = computed(() => [lotusNearRef.value, lotusFarRef.value])
 const dockAnchorRef = ref<HTMLElement | null>(null)
 const wakeShelters = computed(() => [cardEl.value, dockAnchorRef.value])
 
@@ -202,30 +212,29 @@ function toggleLocale() {
 
 <template>
   <main ref="stageRef" class="login-stage" :data-material-backdrop="stageBackdrop">
-    <!-- Environment — decorative, behind everything, never glass. -->
-    <img
-      ref="wallpaperRef"
-      class="stage-wallpaper"
-      :src="roseLarge"
-      :srcset="`${roseSmall} 1280w, ${roseLarge} 2560w`"
-      sizes="100vw"
-      alt=""
-      aria-hidden="true"
-      decoding="async"
-      fetchpriority="high"
-    />
-    <div class="stage-atmosphere" aria-hidden="true"></div>
-    <div class="stage-secondary" aria-hidden="true">
-      <img ref="secondaryRef" class="stage-secondary__art" :src="lotusUrl" alt="" decoding="async" />
+    <!-- Environment — decorative, behind everything, never glass. The
+         wallpaper is the stage's own colour and one lotus placed twice. -->
+    <div class="stage-lotus stage-lotus--near" aria-hidden="true">
+      <img
+        ref="lotusNearRef"
+        class="stage-lotus__art"
+        :src="lotusUrl"
+        alt=""
+        decoding="async"
+        fetchpriority="high"
+      />
     </div>
-    <RevealField
+    <div class="stage-lotus stage-lotus--far" aria-hidden="true">
+      <img ref="lotusFarRef" class="stage-lotus__art" :src="lotusUrl" alt="" decoding="async" />
+    </div>
+    <RefractionField
       :light="spotlight"
       :stage="stageRef"
-      :wallpaper="wallpaperRef"
-      :secondary="secondaryRef"
+      :layers="lotusLayers"
       :shelters="wakeShelters"
       :active="gallery === 'login'"
     />
+    <div class="stage-atmosphere" aria-hidden="true"></div>
     <div class="stage-ambient" aria-hidden="true">
       <i class="ambient-pool ambient-pool--rose"></i>
       <i class="ambient-pool ambient-pool--violet"></i>
@@ -380,60 +389,73 @@ function toggleLocale() {
 }
 
 /* Environment layers share one rule: positioned, decorative, inert. */
-.stage-wallpaper,
+.stage-lotus,
 .stage-atmosphere,
-.stage-secondary,
 .stage-ambient {
   position: absolute;
   pointer-events: none;
 }
 
 /*
- * E1 — the wallpaper: a rose on a plaster wall in a raking beam of light.
- * Cover-fit, the rose head kept in frame at every aspect ratio. It does not
- * breathe: the wake re-draws it pixel for pixel, and a scaling wallpaper would
- * ghost against its own awake plate. The ambient pools carry the life.
+ * E1 — the wallpaper: the field (this stage's background colour) and the lotus,
+ * twice. Each placement is authored by where its bloom stands — the centre of
+ * the cup, (--lotus-x, --lotus-y) on the stage — and by its width; the cup sits
+ * at 39.7% × 30.7% of the artwork, and it is also the pivot the far bloom is
+ * mirrored and turned about, so a placement never drifts when it turns.
+ *
+ * Screen blend: the artwork is light on black, so its ground adds nothing and
+ * only the petals' light lands on the field — no frame, no card edge, at any
+ * crop. Static by rule: the wake re-draws these layers pixel for pixel, and a
+ * moving layer would ghost against its own refraction. The ambient pools carry
+ * the room's life.
  */
-.stage-wallpaper {
-  inset: 0;
+.stage-lotus {
+  left: calc(var(--lotus-x) - 0.397 * var(--lotus-width));
+  top: calc(var(--lotus-y) - 0.307 * var(--lotus-width) * 880 / 760);
+  width: var(--lotus-width);
+  aspect-ratio: 760 / 880;
+  mix-blend-mode: screen;
+  opacity: calc(var(--environment-lotus-light) * var(--lotus-depth, 1));
+}
+
+.stage-lotus__art {
+  display: block;
   width: 100%;
   height: 100%;
-  object-fit: cover;
-  object-position: 52% 32%;
+  transform-origin: 39.7% 30.7%;
+  transform: scaleX(var(--lotus-mirror, 1)) rotate(var(--lotus-turn, 0deg));
+}
+
+/* Wide stages: a diagonal. The near bloom high on the right, running off the
+   right edge; the far one low on the left, running off the left edge —
+   smaller, quieter and mirrored to lean inward. Sized by the stage's height,
+   placed from its edges, so the slab keeps open air on every side. */
+.stage-lotus--near {
+  --lotus-x: calc(100% - 10.4vw);
+  --lotus-y: 24.5vh;
+  --lotus-width: 62vh;
+  --lotus-turn: -4deg;
+}
+
+.stage-lotus--far {
+  --lotus-x: 11.8vw;
+  --lotus-y: 62vh;
+  --lotus-width: 52vh;
+  --lotus-mirror: -1;
+  --lotus-turn: 8deg;
+  --lotus-depth: 0.8;
 }
 
 /*
  * E2 — the atmosphere: the dusk that makes Clear glass legal, graded from the
- * one light above. Light at the top so the room reads bright and spacious,
- * deepest behind the dock. A token (`--environment-atmosphere`), shared with
- * the welcome hero; deepened under reduced transparency.
+ * one light above, deepest behind the dock. A token (`--environment-atmosphere`),
+ * shared with the welcome hero; deepened under reduced transparency. It lies
+ * over the wake as over the wallpaper, so a lens is never lighter than the
+ * room it bends.
  */
 .stage-atmosphere {
   inset: 0;
   background: var(--environment-atmosphere);
-}
-
-/*
- * Secondary — the lotus drawing, hung on the shadowed wall to the right of the
- * rose: a luminous line drawing on a black field, screen-blended so only its
- * light is added to the room. Faint at rest (the wall carries a trace of it);
- * the wake brings it to full light where the pointer passes. The glow breathes
- * on opacity only — the wake re-draws this element's box, so it never scales.
- */
-.stage-secondary {
-  top: 50%;
-  left: 76%;
-  width: min(58vw, 980px);
-  transform: translate(-50%, -50%);
-  mix-blend-mode: screen;
-  opacity: var(--environment-secondary-rest);
-}
-
-.stage-secondary__art {
-  display: block;
-  width: 100%;
-  height: auto;
-  animation: app-glow 16s var(--ease-in-out) infinite alternate;
 }
 
 /*
@@ -677,22 +699,51 @@ function toggleLocale() {
     padding: var(--space-4);
   }
 
-  /* Narrow screens: the slab covers the rose head, so the drawing moves down
-     to the shadowed wall beside the stem, between the slab and the dock,
-     instead of stacking a second flower on the first. Touch devices have no
-     wake, so this is the whole appearance there. */
-  .stage-secondary {
-    top: 80%;
-    left: 74%;
-    width: min(96vw, 520px);
-  }
-
   .login-card {
     margin-top: clamp(64px, 12vh, 140px);
   }
 
   .card-body {
     padding: var(--space-8) var(--space-5) var(--space-5);
+  }
+}
+
+/* Narrow landscape stages (small laptops, tablets on their side): the side
+   bands shrink faster than the height, so the blooms step down in size and
+   out toward the edges to keep air around the slab. */
+@media (max-width: 1180px) and (min-aspect-ratio: 4/5) {
+  .stage-lotus--near {
+    --lotus-x: calc(100% - 7vw);
+    --lotus-width: 56vh;
+  }
+
+  .stage-lotus--far {
+    --lotus-x: 8vw;
+    --lotus-width: 46vh;
+  }
+}
+
+/*
+ * Portrait stages: the form fills the width, so the blooms take the corners
+ * above and below it instead — the near one high on the right, mirrored so its
+ * long petal lies along the slab's top edge and its stem falls clear of the
+ * title, the far one low on the left in the band between the slab and the
+ * dock. The composition turns a quarter; the space the form stands in stays
+ * open, and the slab's rim bends only the calm parts of the flower.
+ */
+@media (max-aspect-ratio: 4/5) {
+  .stage-lotus--near {
+    --lotus-x: calc(100% - 66px);
+    --lotus-y: 44px;
+    --lotus-width: min(96vw, 500px);
+    --lotus-mirror: -1;
+    --lotus-turn: -2deg;
+  }
+
+  .stage-lotus--far {
+    --lotus-x: 60px;
+    --lotus-y: calc(100% - 142px);
+    --lotus-width: min(84vw, 440px);
   }
 }
 </style>

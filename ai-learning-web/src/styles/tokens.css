@@ -258,42 +258,39 @@
      Everything the material sits in front of on the Login stage and the
      welcome hero. Environment, not material: none of these reach a slab.
 
-     Anchor (`color.md` §3): the wallpaper itself — the shadowed plaster wall
-     of the rose photograph, ≈ oklch(0.40 0.03 355). Every colour below keeps
-     that hue family and walks lightness: the dusk that dims the room is the
-     wall's own shadow, the ambient pools are the room's own light.
+     Anchor (`color.md` §3): the wallpaper itself — the pink lotus's petals,
+     ≈ oklch(0.86 0.06 5), drawn in light on a black ground. The field is that
+     ground brought into the rose family: a dusk of the petals' own hue, dark
+     enough that the screen-blended flower still reads as light. Every colour
+     below keeps the family and walks lightness: the dusk that dims the room is
+     the room's own depth, the ambient pools are the room's own light.
 
-     E1 field       the stage colour behind the wallpaper (visible only while it loads)
+     E1 field       the stage colour — the wallpaper's ground
+        lotus       how much of the artwork's light lands on the field (screen)
      E2 atmosphere  a neutral-density dusk graded top → bottom, the one light
-                    being above: the room stays bright where no glass sits and
+                    being above: the room stays open where no glass sits and
                     deepens toward the dock, which is what makes Clear glass
                     legal there. No blur, no white: the wallpaper is always seen.
-     secondary      the luminous lotus drawing — its resting presence (screen blend)
      E3 ambient     three slow pools of the room's light
-     E4 wake        the awake plate's daylight exposure (screen-applied by the
-                    wake's canvas at plate build — theme-invariant, the daylight
-                    is the same at any hour) and how much of the plate the wake
-                    lets through (per theme) */
-  --environment-field: oklch(0.36 0.03 355);
+     E4 wake        no token: the refraction wake only moves wallpaper pixels */
+  --environment-field: oklch(0.31 0.05 354);
+  --environment-lotus-light: 1;
   --environment-atmosphere:
     radial-gradient(
-      ellipse min(40vw, 560px) min(46vh, 440px) at 50% 42%,
-      oklch(0.15 0.02 350 / 0.7),
-      oklch(0.16 0.02 350 / 0) 100%
+      ellipse min(40vw, 560px) min(48vh, 480px) at 50% 40%,
+      oklch(0.15 0.03 348 / 0.46),
+      oklch(0.15 0.03 348 / 0) 100%
     ),
     linear-gradient(
       180deg,
-      oklch(0.2 0.025 350 / 0.08) 0%,
-      oklch(0.2 0.025 350 / 0.22) 46%,
-      oklch(0.16 0.02 350 / 0.76) 82%,
-      oklch(0.14 0.02 350 / 0.8) 100%
+      oklch(0.2 0.035 350 / 0) 0%,
+      oklch(0.2 0.035 350 / 0.08) 50%,
+      oklch(0.15 0.03 346 / 0.5) 84%,
+      oklch(0.13 0.028 344 / 0.62) 100%
     );
-  --environment-secondary-rest: 0.3;
-  --environment-ambient-rose: oklch(0.8 0.09 10 / 0.16);
-  --environment-ambient-violet: oklch(0.72 0.09 300 / 0.12);
-  --environment-ambient-warm: oklch(0.96 0.04 80 / 0.14);
-  --environment-wake-daylight: oklch(0.96 0.035 70 / 0.2);
-  --environment-wake-strength: 0.9;
+  --environment-ambient-rose: oklch(0.8 0.09 10 / 0.12);
+  --environment-ambient-violet: oklch(0.72 0.09 300 / 0.1);
+  --environment-ambient-warm: oklch(0.96 0.04 80 / 0.08);
 
   /* Spacing scale (4px-rooted) */
   --space-0-5: 2px;
@@ -410,27 +407,26 @@ html.dark {
   /* The brand tile's lip keeps its violet cast on the dark theme. */
   --scene-brand-lip: rgba(180, 172, 255, 0.18);
 
-  /* Environment — the same room at a later hour: the dusk deepens, the
-     lotus drawing glows a little more, the wake lets less daylight in. */
-  --environment-field: oklch(0.24 0.025 350);
+  /* Environment — the same room at a later hour: the ground falls toward
+     night and the blooms, a little quieter, carry the room. */
+  --environment-field: oklch(0.15 0.025 350);
+  --environment-lotus-light: 0.9;
   --environment-atmosphere:
     radial-gradient(
-      ellipse min(40vw, 560px) min(46vh, 440px) at 50% 42%,
-      oklch(0.13 0.02 340 / 0.3),
-      oklch(0.13 0.02 340 / 0) 100%
+      ellipse min(40vw, 560px) min(48vh, 480px) at 50% 40%,
+      oklch(0.11 0.02 346 / 0.4),
+      oklch(0.11 0.02 346 / 0) 100%
     ),
     linear-gradient(
       180deg,
-      oklch(0.16 0.025 340 / 0.4) 0%,
-      oklch(0.15 0.025 340 / 0.5) 46%,
-      oklch(0.13 0.02 340 / 0.72) 82%,
-      oklch(0.11 0.02 340 / 0.82) 100%
+      oklch(0.12 0.02 348 / 0) 0%,
+      oklch(0.12 0.02 348 / 0.1) 50%,
+      oklch(0.1 0.018 346 / 0.5) 84%,
+      oklch(0.09 0.016 344 / 0.62) 100%
     );
-  --environment-secondary-rest: 0.42;
-  --environment-ambient-rose: oklch(0.72 0.1 10 / 0.12);
-  --environment-ambient-violet: oklch(0.64 0.11 300 / 0.12);
-  --environment-ambient-warm: oklch(0.92 0.04 80 / 0.08);
-  --environment-wake-strength: 0.72;
+  --environment-ambient-rose: oklch(0.72 0.1 10 / 0.1);
+  --environment-ambient-violet: oklch(0.64 0.11 300 / 0.1);
+  --environment-ambient-warm: oklch(0.92 0.04 80 / 0.06);
 
   color-scheme: dark;
 }
@@ -438,18 +434,18 @@ html.dark {
 /*
  * Reduced transparency / increased contrast — the environment's half of tier C
  * (`environment.md` §4): the material turns dense on its own; the atmosphere
- * deepens and the secondary drawing recedes so nothing decorative competes with
- * a label. Declared once, for both themes (same specificity, later wins).
+ * deepens and the blooms recede so nothing decorative competes with a label.
+ * Declared once, for both themes (same specificity, later wins).
  */
 @media (prefers-reduced-transparency: reduce), (prefers-contrast: more) {
   :root,
   html.dark {
     --environment-atmosphere: linear-gradient(
       180deg,
-      oklch(0.15 0.02 345 / 0.62) 0%,
-      oklch(0.14 0.02 345 / 0.72) 50%,
-      oklch(0.12 0.02 345 / 0.86) 100%
+      oklch(0.15 0.025 345 / 0.56) 0%,
+      oklch(0.14 0.025 345 / 0.68) 50%,
+      oklch(0.12 0.022 344 / 0.84) 100%
     );
-    --environment-secondary-rest: 0.16;
+    --environment-lotus-light: 0.6;
   }
 }

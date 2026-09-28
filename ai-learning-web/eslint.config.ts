@@ -15,7 +15,10 @@ export default defineConfigWithVueTs(
     files: ['**/*.{vue,ts,mts,tsx}'],
   },
 
-  globalIgnores(['**/dist/**', '**/dist-ssr/**', '**/coverage/**']),
+  // `scripts/**` is node-only authoring tooling (the environment plates), run by
+  // hand and never bundled; it is CommonJS on purpose, so the app's module rules
+  // do not apply to it.
+  globalIgnores(['**/dist/**', '**/dist-ssr/**', '**/coverage/**', 'scripts/**/*.cjs']),
 
   ...pluginVue.configs['flat/essential'],
   vueTsConfigs.recommended,

@@ -256,7 +256,7 @@ describe('the material surface registry', () => {
     // Usage, not prose: the layout's docblock explains *why* there is no
     // spotlight here, and saying so must not trip the guard. An import or a
     // call is what would actually put a light in `layouts/`.
-    const USES_LIGHT = /(?:from '[^']*(?:useGlassSpotlight|useRevealField|RevealField)[^']*'|useGlassSpotlight\(|useRevealField\(|<RevealField)/
+    const USES_LIGHT = /(?:from '[^']*(?:useGlassSpotlight|useRefractionField|RefractionField)[^']*'|useGlassSpotlight\(|useRefractionField\(|<RefractionField)/
     const inLayouts = sourceFiles(join(SRC, 'layouts'))
       .filter((file) => USES_LIGHT.test(readFileSync(file, 'utf8')))
       .map(relative)

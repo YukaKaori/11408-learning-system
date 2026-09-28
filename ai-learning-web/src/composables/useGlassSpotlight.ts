@@ -64,7 +64,8 @@ const INTENSITY_RELEASE = 0.022
  * and tests — binding them in templates would re-render Vue at 60fps.
  *
  * Engineering constraints (the stage-light contract; the Login wake reads
- * `smoothedCursor` instead of adding a second pointer listener):
+ * `cursor` — the raw position, not the eased light — instead of adding a
+ * second pointer listener):
  * - Only CSS variables are written inside the frame loop; element rects are
  *   cached and re-measured at most once per frame, and only when a resize /
  *   scroll / observer callback marked them dirty.
