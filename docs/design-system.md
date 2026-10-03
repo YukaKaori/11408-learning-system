@@ -2,13 +2,13 @@
 
 Originally a Phase 3 deliverable; **§ Phase 7 additions** at the end of this
 document records the dark-theme re-skin, `StatTile`, and the view-state
-pattern added since. Full component/token reference for `ai-learning-web`.
+pattern added since. Full component/token reference for the frontend (`web/`).
 Binding conventions live in `docs/architecture.md` — this document explains
 them.
 
 ## Philosophy
 
-An AI-native learning workspace, not an admin dashboard. The visual language takes
+An exam-preparation system a candidate lives in for a year, not an admin dashboard. The visual language takes
 cues from Apple, Linear, Notion, Raycast, Cursor, Vercel and Arc: calm, minimal,
 content-forward, quietly premium. Concretely:
 

@@ -112,8 +112,9 @@ chrome dock's labels go to dark ink. No surface reads its own pixels.
 
 - The declaration is **stage-owned**. In the authenticated shell its *source* is the theme
   (`AppLayout` derives it from `isDark`, `stores/app.ts`). On the landing it is **authored
-  per gallery**: the black stage is `dark` in both themes; the Product room is `light` in
-  both. **Theme ≠ backdrop**; the theme is only one stage's way of knowing.
+  per gallery**: the sign-in room is `dark` in both themes; the two daylight galleries —
+  the Product and Sponsor rooms (light and solid since 2026-09-30, `--landing-*` tokens) —
+  are `light` in both. **Theme ≠ backdrop**; the theme is only one stage's way of knowing.
 - Near-static: changes on theme flip or gallery change, never on scroll or per frame.
 - Declared, never sampled — `adaptive-material.md` §7 gives the six reasons.
 - The environment layers themselves (E1–E4) keep following the **theme**; only the
@@ -133,7 +134,7 @@ E2  atmosphere: graded dusk + slab pool  --environment-atmosphere, per theme, de
     secondary: the lotus drawing     screen-blended on the shadowed wall, faint at rest, opacity glow only
 E4  RevealField (the wake)            desktop fine-pointer only, never mounted otherwise
 E3  ambient pools stage-wide          slow drifting light the dock and slab refract
-E5  dark (login, sponsor) / light (product room), in both themes — data-material-backdrop (B4)
+E5  dark (login) / light (product and sponsor rooms), in both themes — data-material-backdrop (B4)
 M   GlassDock (chrome) · sign-in slab (hero)
 ```
 

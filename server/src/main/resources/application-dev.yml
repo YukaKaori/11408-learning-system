@@ -1,0 +1,20 @@
+spring:
+  datasource:
+    url: jdbc:mysql://localhost:3306/ai_learning?useUnicode=true&characterEncoding=utf8&useSSL=false&serverTimezone=Asia/Shanghai&allowPublicKeyRetrieval=true
+    username: ${DB_USERNAME:root}
+    password: ${DB_PASSWORD:1234}
+    driver-class-name: com.mysql.cj.jdbc.Driver
+
+logging:
+  level:
+    com.yuka.learning: debug
+
+app:
+  security:
+    jwt:
+      # Local development only — never reuse outside this machine. Prod requires JWT_SECRET.
+      secret: ${JWT_SECRET:dev-only-jwt-secret-change-me-0123456789abcdef}
+
+mybatis-plus:
+  configuration:
+    log-impl: org.apache.ibatis.logging.stdout.StdOutImpl

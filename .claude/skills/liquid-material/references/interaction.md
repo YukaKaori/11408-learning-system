@@ -79,7 +79,10 @@ absorbing a force. Anything larger becomes a button animation and destroys the
 reading of a thick, heavy slab.
 
 Explicitly forbidden: proportional scaling on press, spring return, any
-displacement large enough that a user could measure it by eye.
+displacement large enough that a user could measure it by eye. *One exception,
+Amendment A1:* the landing dock's selection lens lifts (×1.5) under a press or
+drag — the selection object, never the slab that was pressed, and never a
+spring (`navigation.md` §4 "The selection lens").
 
 **Press illumination.** The optical half, and currently the *missing* half in
 this codebase (`docs/liquid-glass-apple-audit.md` §2.3): the rim brightens under
@@ -200,11 +203,15 @@ The constitution's current text ("reflections move; objects don't") forbids
 both, and the audit found that the second was rejected **by association with the
 first** rather than on its own merits (`docs/liquid-glass-apple-audit.md` §2.2).
 
-**Status: not adopted.** Adopting transition morphing is a *constitution
-amendment* (deferred item P3), not an implementation task, and not something any
-phase may introduce by building it first. Until such an amendment exists, the
-constitution's text governs and morphing does not ship. This section exists so
-the distinction is recorded and the decision, when it is taken, is taken
+**Status: not adopted** — with one bounded exception. Adopting transition
+morphing in general is a *constitution amendment* (deferred item P3), not an
+implementation task, and not something any phase may introduce by building it
+first. Amendment A1 (2026-10-02, the owner's request) took that decision for a
+single object: the landing dock's **selection lens** swells when the user
+presses or drags it and settles when it lands — causal, bounded in time, damped,
+transform-only, off under reduced motion. Nothing else morphs: bars, cards and
+panels keep their shape, and control-into-panel morphing remains P3. This
+section exists so the distinction is recorded and each decision is taken
 deliberately.
 
 **What is *not* a morph:** the navigation indicator changing width as it

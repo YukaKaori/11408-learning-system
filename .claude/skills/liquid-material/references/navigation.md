@@ -93,8 +93,8 @@ Two consequences the codebase already enforces:
 Each entry is a **recipe**, in the sense of `components.md` §3: a composition of
 the one primitive at a declared rank, never a new implementation. Mounting any
 of them is still a budget renegotiation, counted in **logical surfaces**
-(`components.md` §1): **3** shipped (landing dock, sign-in slab, note toolbar),
-**4** proposed with the app dock.
+(`components.md` §1): **5** mounted — landing dock, its selection lens (A1),
+app dock, sign-in slab, note toolbar.
 
 ### Landing dock (shipped: `GlassDock` on `/login`)
 
@@ -109,7 +109,9 @@ of them is still a budget renegotiation, counted in **logical surfaces**
 - **Layout:** wide bar, text labels solid and high-contrast, touch targets
   ≥44px. Width adapts to item count rather than letting items overflow; labels
   ellipsize before the bar reflows. A bar that changes *shape* as items are
-  added is a bar the user cannot build muscle memory against.
+  added is a bar the user cannot build muscle memory against. Since A1 the
+  landing bar is a **segmented control** — equal cells across a 780px bar,
+  15px labels in 56px cells — marked by the selection lens below.
 - **Bright rooms:** over the Product gallery the labels flip to dark ink.
   Shipped (B4): the stage declares `data-material-backdrop="light"` for that
   gallery and `glass.css` flips the chrome rank's on-glass tokens; the private
@@ -144,15 +146,17 @@ of them is still a budget renegotiation, counted in **logical surfaces**
 
 ### The indicator — a light, not a slab
 
-*The contract for "you are here", 2026-09-16. **Shipped (B2)** on the landing
-dock: `composables/useNavIndicator.ts` + the `.dock-indicator` light layer in
-`GlassDock.vue`. The same composable is what the app dock (B5) will bind; the
-desktop rail's active row was **not** converted in B2 (it stays the solid
-brand-soft fill) and is re-decided with the desktop chrome (decision D).*
+*The contract for "you are here", 2026-09-16. **Shipped (B2)**:
+`composables/useNavIndicator.ts` + the `.dock-indicator` light layer in
+`GlassDock.vue` — the app dock's marker (B5). The landing dock has marked its
+current gallery with the selection lens since Amendment A1 (below), which rides
+on the same geometry. The desktop rail's active row was **not** converted in B2
+(it stays the solid brand-soft fill) and is re-decided with the desktop chrome
+(decision D).*
 
 - **What it is:** a pool of light rising from below plus a thin rim and top
   lip under the current item, painted by the bar's **own** light layer from
-  custom properties the composable writes on the nav container — the
+  custom properties the composable writes on the dock's frame — the
   travelling pair `--nav-indicator-x` / `--nav-indicator-w`, the marked item's
   static `--nav-indicator-y` / `--nav-indicator-h`, and `--nav-indicator-ready`
   (0 until measured). Colours are the `--on-glass-indicator-*` tokens
@@ -179,8 +183,48 @@ brand-soft fill) and is re-decided with the desktop chrome (decision D).*
   before the bar reflows.
 - **Drag:** permissible in principle for the *light* (clamped inside the bar,
   snap to the nearest measured centre on release) — deferred, decision I; not
-  in B2. Drag never deforms the bar.
+  in B2. Drag never deforms the bar. (A1 decided it for the lens, below.)
 - **Mechanism:** `implementation.md` §15.
+
+### The selection lens — Amendment A1 (2026-10-02)
+
+*The owner's request: "the moving glass block can be bigger, like the iPhone's
+navigation bars — the glass block taller than the bar." Apple's tab bars and
+segmented controls mark the current item with a capsule of glass that, under
+the finger, lifts into a lens standing proud of the bar. **Shipped** on the
+landing dock (`<GlassDock lens>` in `LoginView`); the app dock keeps the light.*
+
+- **What it is:** a second slab of the dock recipe — `GlassSurface`,
+  `material="chrome"`, the same glass as the bar — sized as a capsule one cell
+  high and as wide as a label needs (≤156px, never wider than its cell). It
+  rides on the indicator's own geometry (`--nav-indicator-*`, written on the
+  dock's frame), so it is correct on first paint and invisible before the
+  first measurement, exactly like the light.
+- **Three layers, back to front:** the bar's slab, the lens, the labels. The
+  lens is a **sibling** of the bar, never nested: a slab clips its content and
+  is a backdrop root, so a nested lens could neither swell past the bar nor see
+  the stage. The labels ride above both, so text is never refracted. The
+  frame carries `data-material="chrome"` so the label layer keeps the on-glass
+  tokens and the light-backdrop ink flip.
+- **The lift:** pressing a label lifts the lens (×1.5, transform only) and
+  carries it to that cell; past 6px of travel the press is a drag that steers
+  it along the bar, clamped between the first and last cell centres, and the
+  release navigates to the nearest cell. The lens stays lifted while it
+  travels and settles back into the bar on landing. Swell 280ms, settle 520ms
+  on the house ease-out — light arrives faster than it leaves; no overshoot, no
+  spring. Lifted it stands 6px proud of each edge (cell × 1.5 > cell + 2 × inset).
+- **Gentler optics than the bar:** a third of the bar's displacement and a
+  whisper of dispersion. At full strength a 56px slab pulls the bar's own rims
+  inside itself and reads as a pill within a pill.
+- **What it keeps:** keyboard and assistive paths are the buttons, untouched (a
+  plain click navigates through its button; the pointer is captured only once a
+  press becomes a drag). The lens is `aria-hidden` and `pointer-events: none`.
+  Reduced motion: no lift, direct placement; a drag places under the hand
+  directly (the hand is the clock).
+- **Cost, accepted deliberately:** one more logical surface (budget 4 → 5) and
+  a third primitive on the login stage (concurrency 2 → 3). Registered in
+  `materialSurfaces.ts` as role `lens`; pinned by `useNavIndicator.spec.ts` ("A1")
+  and `glassBudget.spec.ts`.
 
 ### Header / top bar
 

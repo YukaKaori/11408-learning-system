@@ -8,7 +8,7 @@ else is composition.
 
 ## 1. The primitive: `GlassSurface.vue`
 
-`ai-learning-web/src/components/experience/GlassSurface.vue` is the sole owner
+`web/src/components/experience/GlassSurface.vue` is the sole owner
 of the displacement filter chain. It provides:
 
 - The per-instance SVG filter (`feImage` map → 3× `feDisplacementMap` →
@@ -40,7 +40,8 @@ whether or not it is currently visible.**
 | Counts as an instance | Never counts |
 |---|---|
 | each (recipe, host) pair — the landing dock and the app dock are **two** instances of one recipe | environment layers: wallpaper, shroud/veil, ambient light, the reveal wake (`environment.md`) |
-| a shared material container composing several controls on **one** slab — one | the navigation indicator — a light on an existing slab (`navigation.md` §4) |
+| a second role a recipe mounts in the same host — the landing dock's selection lens (A1) is its own instance: (recipe, host, **role**) | the navigation indicator *light* — a light on an existing slab (`navigation.md` §4) |
+| a shared material container composing several controls on **one** slab — one | |
 | a surface mounted only while a state holds (toolbar, palette) — still one | `.glass-material` control skins on an existing slab |
 | | adaptive states, tier variants, backdrop remaps, per-theme values, `v-if`/`v-show` re-renders |
 
@@ -48,9 +49,9 @@ Three numbers travel together:
 
 | Number | Today | Measured by |
 |---|---|---|
-| **Budget** (logical surfaces) | **3** — landing dock (chrome), sign-in slab (hero), note toolbar (floating); **4** proposed with the app dock (Contract B5, decision B) | a surface registry in the guard (B5) |
+| **Budget** (logical surfaces) | **5** — landing dock and its selection lens (chrome, A1), app dock (chrome, B5), sign-in slab (hero), note toolbar (floating) | the surface registry in the guard (`materialSurfaces.ts`, B5) |
 | **Fork count** (files containing `<GlassSurface`) | 3 | `glassBudget.spec.ts` "only the allow-listed surfaces instantiate GlassSurface" — **this is what the shipped test counts**; it is a fork guard, not a surface budget, and a recipe mounted twice is invisible to it |
-| **Concurrency ceiling** (primitives mounted at once on any screen) | 2 | the `verify` skill at the real surface |
+| **Concurrency ceiling** (primitives mounted at once on any screen) | 3 — the login stage: sign-in slab, dock, lens (A1; it was 2) | the `verify` skill at the real surface |
 
 The fork count must always be ≤ the budget and every entry must be a recipe or
 a sanctioned inline surface. A phase may not raise the budget because it
@@ -59,7 +60,7 @@ contains the word "glass"; it raises it by naming a surface that passes
 
 ## 2. The skin system: `.glass-material` in `glass.css`
 
-On-glass control styling lives in `ai-learning-web/src/styles/glass.css` under
+On-glass control styling lives in `web/src/styles/glass.css` under
 `.glass-material`. This is how buttons, inputs, and chips *on* a slab get their
 glass-appropriate skin **without** new glass primitives:
 

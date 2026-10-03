@@ -1,14 +1,14 @@
 ---
 name: verify
-description: Build, launch and drive the AI Learning Platform (Spring Boot :8080 + Vite :5173) to verify changes at the real surface — API via curl, UI via Playwright from the npx cache.
+description: Build, launch and drive the 11408 Learning System (Spring Boot :8080 + Vite :5173) to verify changes at the real surface — API via curl, UI via Playwright from the npx cache.
 ---
 
-# Verifying the AI Learning Platform
+# Verifying the 11408 Learning System
 
 ## Launch
 
-- Backend: `cd ai-learning-server && ./mvnw -q spring-boot:run` (JDK 22, MySQL 9.1 running locally, DB `ai_learning`). Ready when `curl http://localhost:8080/api/v1/system/info` returns 200.
-- Frontend: `cd ai-learning-web && npm run dev` → http://localhost:5173.
+- Backend: `cd server && ./mvnw -q spring-boot:run` (JDK 22, MySQL 9.1 running locally, DB `ai_learning`). Ready when `curl http://localhost:8080/api/v1/system/info` returns 200.
+- Frontend: `cd web && npm run dev` → http://localhost:5173.
 - Ports often stay held after stopping tasks: `netstat -ano | grep -E ':(8080|5173).*LISTEN'` then `taskkill //PID <pid> //F` (Git Bash).
 
 ## API surface
@@ -37,3 +37,11 @@ NODE_PATH="C:/Users/10529/AppData/Local/npm-cache/_npx/361ceb562f3b3235/node_mod
 ## Data hygiene
 
 Dev DB is shared and NOT clean: two Phase 6 notes (未命名笔记, Verify Note) and one conversation (Hello, explain recursion) are deliberately kept. Delete anything you create (UI or `DELETE` via API) and re-verify the list afterwards. AI streaming without `DEEPSEEK_API_KEY` yields the graceful error reply (抱歉，这次没能获得回复，请重试。) — the send/persist path still exercises fully.
+
+## The exam year (M1) — timer, sittings, plan
+
+- Routes: `/sittings` (模考), `/plan` (规划; `/calendar` is its second tab). API: `/api/v1/focus` (GET, POST start, POST `/stop`, DELETE), `/api/v1/sittings` (+ `/overview`), `/api/v1/plan`.
+- The timer UI is loaded after the shell (`defineAsyncComponent`): wait for `.focus-rail` / `.focus-compact` before asserting on it.
+- A recorded session needs ≥ 1 minute. To test one without waiting, backdate the running timer: `UPDATE ai_learning.focus_timers SET started_at = DATE_SUB(NOW(), INTERVAL 70 MINUTE) WHERE user_id=<demo id>` (the demo id: `SELECT id FROM ai_learning.users WHERE username='demo'`), then reload and stop.
+- The demo account saved preferences before V10, so its daily goal is the old 60 minutes and the plan divides one hour; change it on `/plan` (调整) and restore it afterwards.
+- Hygiene: delete sittings through `DELETE /api/v1/sittings/{id}`, the timer's sessions in the calendar (or SQL for the demo id), and restore the exam-profile targets you changed (`PUT /api/v1/exam/profile`).

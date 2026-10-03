@@ -1,247 +1,167 @@
-# Product Domain
+# Product Domain — 11408 Learning System
 
-Originally a Phase 5 deliverable (mock-data shell); **updated in Phase 7** to
-describe the real, per-user-isolated product — every module below is backed
-by a real database table and a real endpoint today, not a fixture. Read
-`docs/architecture.md` first for the engineering constitution this domain
-model has to obey (Phase 7's additions are in its own § Phase 7 section), and
-`docs/design-system.md` for the visual language every screen below reuses.
-Phase-7-specific migration bookkeeping (what replaced each deleted mock) is
-in `docs/mock-migration.md`.
+The product domain as of the 11408 transformation (2026-09). Binding
+engineering rules live in [`architecture.md`](architecture.md) § 11408; the
+AI grounding in [`ai-engine.md`](ai-engine.md). The previous domain model (the
+general "AI Learning Platform" with free-form subjects) is archived at
+[`archive/product-domain-ai-learning-platform.md`](archive/product-domain-ai-learning-platform.md).
 
-## Positioning
+## Who it is for
 
-The AI Learning Platform is an AI-native learning workspace — not an educational
-admin system, not a course-delivery CMS. Everything revolves around one verb:
-**learning**. The product surface is organized around what a learner actually does:
-learn, practice, review, create, reflect, track progress — with AI assistance
-arriving as a first-class capability in Phase 6, not bolted on afterward.
+A candidate preparing for China's national postgraduate entrance exam in the
+**11408** combination — the most common computer-science track:
 
-Phase 5 built the full workspace shell and every product module with realistic
-mock data and a real (empty) backend schema. Phase 6 made AI real (DeepSeek,
-streaming, persisted conversations). Phase 7 made everything else real: Subject/
-Material/Task/Calendar/Preferences CRUD, the Workspace/Analytics read models,
-and subject linkage across Notes/Flashcards/AI Tutor — closing the "every view
-reads from `mock.ts`" gap described lower in this document as a historical
-note. Zero `mock.ts` files remain anywhere in `src/features/`.
+| Paper | Code | Full score | Shape of the paper |
+| --- | --- | --- | --- |
+| 政治 (思想政治理论) | 101 | 100 | 16 single choice · 17 multiple choice · 5 analysis questions |
+| 英语一 | 201 | 100 | cloze · reading A/B · translation · two essays |
+| 数学一 | 301 | 150 | 10 choice · 6 fill-in · 6 worked solutions |
+| 408 (计算机学科专业基础) | 408 | 150 | 40 single choice · 7 comprehensive questions |
+
+The candidate studies for most of a year, alone, against a fixed date. What
+they need is not a place to store things; it is an answer, every day, to
+*what should I do now, and am I getting closer?*
+
+That question has two levels, and the product answers both:
+
+- **The 考点 level** — what do I know, point by point? Practice, the mistake
+  book, spaced repetition and the mastery model (M0).
+- **The paper level** — what would I score, and where does my time go? Whole
+  papers sat under time, hours measured per paper, and a plan that divides
+  each day by the gap between estimate and target (M1, "the exam year").
+
+## The loop
+
+Everything in the product serves one loop, run daily:
+
+```
+learn a 考点 ──► practise it ──► diagnose what went wrong ──► redo it on schedule
+     ▲                                                              │
+     │                                                              ▼
+improve ◄── see readiness rise ◄── plan the day ◄── remember (spaced repetition)
+```
+
+| Step | Where it happens | What makes it real |
+| --- | --- | --- |
+| Learn | 考纲 (syllabus map), 考点 pages, notes, materials, AI 讲解 | every artifact anchored to the same syllabus tree |
+| Practise | 练习 (practice) | server-drawn sets from the question bank; honest grading |
+| Diagnose | 错题本 (mistake book) | wrong answers filed automatically; cause + reflection; AI 诊断 |
+| Redo | Today's plan, the mistake book | FSRS-spaced redos; three correct due-day redos resolve a mistake |
+| Remember | 记忆卡片 (flashcards) | FSRS-6 review; decks anchored on 考点; cards generated from note selections by AI |
+| Plan | 规划 (Plan), 今日 (Today) | the day divided among the papers by phase and by the gap to target; whole papers per week; a server-ranked, capped plan of due work plus one suggested 考点 per paper |
+| Sit | 模考 (mock exams & past papers) | whole papers under time, scored by section: the paper estimate, where the points go, the 真题 shelf |
+| Measure | the focus timer (sidebar, Today, every 考点 page) | study time recorded per paper as it happens — one tap, server-side, a switch saves the running block |
+| Improve | 学习分析 (analytics), the syllabus map, 模考 | score-weighted readiness per paper, weakest 考点, mistake causes; the estimate against the target per paper |
 
 ## Domain model
 
 ```
-User (Phase 2)
-  └─ Subject                          (anchor of the learning domain)
-       ├─ LearningMaterial            (pdf / markdown / video / article / link / document)
-       ├─ Note                        (optional subject link)
-       ├─ FlashcardDeck → Flashcard   (optional subject link)
-       ├─ LearningTask                (optional subject link)
-       └─ StudySession                (optional subject link)
+The exam (content, versioned with the code — no tables)
+  Blueprint 11408
+  └─ Paper ×4 ─ Module ─ Chapter ─ 考点 (point, weight 1–3)
+     every node addressed by a hierarchical code: cs408 › cs408.os › cs408.os.process › cs408.os.process.sync
 
-Workspace   — read-model façade, owns no tables, aggregates the above
-Analytics   — read-model façade, owns no tables, derives from the above
+Candidate (User)
+  ├─ ExamProfile          target 考研年份, confirmed exam date (else estimated), target score per paper
+  ├─ Question             own questions (captured from paper); library questions ship as content packs
+  │    └─ QuestionPoint   1–6 考点 of one paper
+  ├─ QuestionAttempt      the answer log — immutable, the evidence behind every figure
+  ├─ PracticeSession      a drawn set (topic / weakness / mistakes / random) and its progress
+  ├─ Mistake              one per question: status, cause, reflection, FSRS redo state
+  ├─ PaperSitting         a whole paper (or part) sat under time: 真题 year or mock name, score per section
+  ├─ FocusTimer           the study timer running now — at most one; stopping it writes a StudySession
+  ├─ FlashcardDeck → Flashcard (FSRS-6)
+  ├─ Note (wiki links, backlinks)   ├─ LearningMaterial   ├─ LearningTask
+  ├─ StudySession                   ├─ AiConversation → AiMessage
+  └─ Preferences
+     every artifact above may carry a node_code: the one anchor
+
+Read models (own no tables, derived per request)
+  Mastery          per 考点 mastery + level; per aggregate readiness + coverage
+  Recommendations  prioritised 考点 (importance × need × freshness, phase-aware)
+  Today            plan (reviews, due mistakes, tasks, sessions) + focus + progress + exam countdown
+  Analytics        readiness per paper, practice trend, mistake causes, weakest 考点, time shares
+  Workspace        the Today ledger: practice in flight, recent notes and conversations, the week
+  ScoreEstimate    per paper: recency-weighted whole-paper estimate, section profile, trajectory, 真题 shelf
+  Plan             the day split per paper (phase base × gap to target), weekly cadence, phase timeline, exam timetable
 ```
 
-**Subject is the anchor.** Every other learning artifact *may* hang off a subject via
-a logical `subject_id` FK, but none of them *require* one — a note, task, or study
-session can exist independently. This mirrors how people actually learn: not
-everything is filed under a course.
+**The syllabus is the anchor.** It replaced per-user subjects: in an 11408
+system the subjects are fixed and global, and they are only the roots of a
+deeper structure. A note on all of 操作系统, a deck on 进程同步, a textbook
+filed under 408, a question tagged with two 考点 — all are addressed the same
+way, so any 考点 page can gather everything the candidate has there.
 
-**Workspace and Analytics own no tables.** They are aggregation façades. The
-workspace dashboard endpoint (Phase 6+) will compose reads across subjects, tasks,
-sessions and flashcards; if that composition ever gets expensive, a materialized
-summary table is added *inside* the `analytics` package by a new migration — never by
-widening the source domains to carry derived data they don't own.
+**Evidence lives in one place.** Mastery, recommendations, readiness, the
+AI's diagnosis and the analytics are all computed from the answer log
+(`question_attempts`) and the mistake book, per request. Nothing derived is
+stored, so no two screens can disagree.
 
-### Entity relationships
+## Modules
 
-| Entity | Belongs to | Optional subject link | Notes |
-| --- | --- | --- | --- |
-| `Subject` | User | — | `progress` is the only denormalized/user-curated field; study time and material counts are derived. |
-| `LearningMaterial` | Subject (required) | — | Exactly one of `sourceUrl` (external) or `storageKey` (uploaded, future `StorageService`) is expected to be set. |
-| `Note` | User | optional | Markdown source only; outline/excerpt are computed client-side, never stored. |
-| `FlashcardDeck` / `Flashcard` | User | optional | Scheduling columns (`due_at`, `interval_days`, `ease`) are reserved for a future spaced-repetition engine — present in the schema now so no migration is needed when it lands. |
-| `LearningTask` | User | optional | Deliberately not a project-management system: no assignees, no nesting, no workflow states beyond todo/in-progress/done. |
-| `StudySession` | User | optional | Duration is always derived (`endsAt - startsAt`), never stored. Powers both the calendar and analytics. |
+| Module | Owns | Surface |
+| --- | --- | --- |
+| `exam` | exam profile; the syllabus content | 考纲 map and 考点 pages; Settings › 考试 |
+| `question` | questions, tags, the answer log; content-pack import | question drawer on 考点 pages; capture dialog |
+| `practice` | practice sessions | 练习 (launcher, recent sets), the practice stage, the report |
+| `mistake` | the mistake book | 错题本 (overview, filters, drawer, capture) |
+| `mastery` | — (read model) | meters on the map, Today's focus, recommendations |
+| `srs` | — (pure scheduling) | FSRS-6 for cards and mistake redos |
+| `flashcard` | decks, cards, reviews | 记忆卡片; the review stage (also mounted on Today) |
+| `note` | notes, derived link index | 笔记 (TipTap workspace, AI selection toolbar) |
+| `material` | reference materials | the materials shelf on every 考点 page |
+| `task`, `calendar` | tasks, study sessions, the focus timer | 日历 (under 规划); the timer in the sidebar, the mobile header, Today and every 考点 page |
+| `sitting` | paper sittings | 模考 (paper cards, estimate, trajectory, section profile, 真题 shelf, records) |
+| `plan` | — (read model) | 规划 (timeline, the day's split and its reasons, the week, the exam timetable); Today's time band |
+| `ai` | conversations and messages | AI 导师 (chat, scoped to a node); AI panels on questions, mistakes and 考点 |
+| `workspace`, `analytics` | — (read models) | 今日; 学习分析 |
+| `auth`, `preference` | users, tokens, preferences | login, profile, settings |
 
-## Module responsibilities
+## Information architecture
 
-| Product module | Route | Backend package | Responsibility |
-| --- | --- | --- | --- |
-| Workspace | `/workspace` | `workspace` (façade) | Learning dashboard: greeting, streak/goal/due-cards stats, continue-learning rail, today's tasks/sessions, recent notes/chats. |
-| Subjects | `/subjects`, `/subjects/:id` | `subject`, `material` | Subject grid + detail: progress, materials, related notes. |
-| AI Tutor | `/ai-tutor/:conversationId?` | `ai` | Conversation list + streaming chat thread, built against the `ChatProvider` abstraction (see below); optional real subject linkage since Phase 7. |
-| Flashcards | `/flashcards` | `flashcard` | Deck list, card list, review-mode preview (flip only — spaced-repetition scheduling is a Phase 8+ candidate, columns already reserved). |
-| Notes | `/notes` | `note` | Note list + outline rail + read-only content preview, optional real subject linkage since Phase 7 (full markdown editor is a later phase). |
-| Calendar | `/calendar` | `calendar`, `task` | Week/month views merging real study sessions with real due-dated tasks; session/task create-edit dialog shared with Workspace. |
-| Analytics | `/analytics` | `analytics` (façade) | Real weekly activity, subject time distribution, study heatmap, streak — server-aggregated, zero mock data, validated against the dataviz six-checks palette. |
-| Profile | `/profile` | `user`, `auth` (existing) | Identity + real learning-overview stats; `memberSince` from `AuthUserResponse.createdAt`; nickname/avatar editable via `PUT /v1/auth/profile`. |
-| Settings | `/settings` | `preference` | Appearance/language/daily-goal controls, persisted server-side (`user_preferences`, V4) and reconciled cross-device — see `docs/architecture.md` § Phase 7 preferences reconciliation contract. |
+Navigation follows the loop. The sidebar lists, in order: **今日 · 考纲 · 练习 ·
+模考 · 错题本 · 记忆卡片 · 笔记 · AI 导师 · 规划 · 学习分析**, then 设置 and 个人主页;
+日历 is the plan's second view (规划 | 日历), and the study timer sits between
+the destinations and the footer.
+On compact screens the dock carries the practice loop — **今日 · 考纲 · 练习 ·
+错题 · 导师** — and More opens the full list.
 
-Every route above is wired in `router/index.ts` and backed by a real endpoint —
-the historical "even where the underlying API doesn't exist yet" caveat from
-Phase 5 no longer applies as of Phase 7.
-
-## Frontend architecture
-
-Feature-first, one directory per module under `src/features/`:
-
-```
-features/<module>/
-  types.ts        — domain types (mirrors the backend entity/DTO shape)
-  <Module>View.vue
-  components/     — module-local components (e.g. subjects/components/SubjectCard.vue)
-```
-
-The `mock.ts` fixture file this section historically documented existed in all
-8 product modules (`subjects`, `ai-tutor`, `analytics`, `calendar`, `flashcards`,
-`notes`, `tasks`, `workspace`) through Phase 5–6 and was **deleted in Phase 7**
-once each view had a real `api/modules/<feature>.ts` to call instead — see
-`docs/mock-migration.md` for the per-file mapping. `types.ts` needed no
-changes when the swap happened in most modules, because it was written to
-mirror the backend DTO shape from the start (Phase 5's own design goal, see
-below); subject-scoped types picked up a `subjectId` field where linkage was
-added (B4).
-
-`src/views/` keeps only the pages that predate the feature-module pattern
-(`LoginView`, `WelcomeView`, `DesignSystemView`, `NotFoundView` — the last
-added in Phase 7's de-demo pass) — every product surface lives under
-`features/`, per the architecture doc's "grow into `features/` when modules
-appear."
-
-Nothing here duplicates Phase 1–4 infrastructure: every view is built from the
-existing `AppX` component library, existing layout/router/i18n/API-layer seams, and
-existing design tokens. Two additions were made *to* those shared layers (not
-around them), because every module needed them:
-
-- **Accent tokens** (`--accent-indigo/teal/amber/rose/violet` in `tokens.css`) — the
-  fixed-order categorical palette used for subject identity and every chart's
-  categorical color. Validated per mode (light/dark) with the dataviz skill's
-  six-checks script (lightness band, chroma floor, CVD separation, contrast) before
-  being written into the token file.
-- **Sidebar collapse state** (`stores/app.ts`) — persisted alongside the existing
-  theme/locale preferences, since the fuller nine-item nav needed a rail mode.
-
-### AI provider abstraction (`features/ai-tutor/provider.ts`)
-
-```ts
-interface ChatProvider {
-  readonly id: string
-  streamReply(history: ChatMessage[]): AsyncGenerator<string, void, undefined>
-}
-```
-
-The chat UI (`AiTutorView.vue`) only knows this interface — it appends yielded
-chunks, auto-scrolls, and shows a busy/streaming state. Phase 5 shipped it wired
-to `MockChatProvider`, which typed out an i18n-supplied canned reply with
-realistic timing. Since Phase 6 it's wired to `ServerSseChatProvider`, which
-opens a real SSE connection to the backend's AI service; the UI did not change
-shape when that swap happened — this was the seam the roadmap's "SSE streaming
-chat" item plugged into. See `docs/ai-engine.md` for the real implementation.
-
-## Backend architecture
-
-Package-by-feature, matching every existing module (`auth`, `user`). Phase 5 added
-seven packages with `entity` + `mapper` only (schema-first, no endpoints yet).
-Phase 7 gave every one of them its first real `service`/`controller`/`dto`
-(plus `preference`, new this phase):
-
-```
-subject/      entity, mapper, service/SubjectService (D1/D2), controller, dto/*
-material/     entity, mapper, service/MaterialService, controller, dto/*
-note/         entity/Note, mapper/NoteMapper                      (real since Phase 6; +subjectId Phase 7)
-flashcard/    entity/FlashcardDeck, entity/Flashcard, mapper/*     (real since Phase 6; +subjectId Phase 7)
-task/         entity, mapper, service/TaskService, controller, dto/*
-calendar/     entity, mapper, service/StudySessionService, controller, dto/*
-workspace/    controller/WorkspaceController, service — façade only, no entities/mapper
-analytics/    controller/AnalyticsController, service — façade only, no entities/mapper
-preference/   entity/UserPreference, mapper, service, controller, dto/*   (new Phase 7)
-```
-
-Schema: `V2__create_learning_domain_tables.sql` (Phase 5, seven tables:
-`subjects`, `learning_materials`, `notes`, `flashcard_decks`, `flashcards`,
-`learning_tasks`, `study_sessions`), `V3__create_ai_conversation_tables.sql`
-(Phase 6), `V4__create_user_preferences.sql` (Phase 7, `user_preferences`),
-`V5__add_subject_id_to_ai_conversations.sql` (Phase 7, nullable logical FK +
-index on `ai_conversations`). Same conventions throughout — snowflake ids,
-audit columns, logical (indexed, unconstrained) foreign keys,
-`utf8mb4_unicode_ci`.
-
-Reserved error-code ranges (contiguous with the existing `100000–109999` auth
-block, 10000 per module):
-
-| Range | Module |
+| Screen | The question it answers |
 | --- | --- |
-| 110000–119999 | `subject` |
-| 120000–129999 | `material` |
-| 130000–139999 | `note` |
-| 140000–149999 | `flashcard` |
-| 150000–159999 | `task` |
-| 160000–169999 | `calendar` |
-| 170000–179999 | `workspace` |
-| 180000–189999 | `analytics` |
-| 190000–199999 | `ai` (Phase 6) |
-| 200000–209999 | `preference` (Phase 7) |
+| 今日 | What should I do now, and how many days are left? |
+| 考纲 | Where does each paper stand, and what is worth practising next? |
+| 考点 page | What do I have on this point — standing, questions, notes, materials — and can the tutor explain it? |
+| 练习 | How do I want to draw today's set? |
+| Practice stage | One question at a time: answer, see the verdict, understand it. |
+| 错题本 | What is due, where do my mistakes cluster, and why did each one happen? |
+| 模考 | What do whole papers yield per paper, where are the points lost, which 真题 are done? |
+| 规划 | How does my day divide among the papers, why, and how is this week going? |
+| 学习分析 | How ready am I per paper, and where is the evidence? |
+| AI 导师 | Anything else — scoped to a 考点 when that helps. |
 
-Full per-code detail (which codes are actually in use vs. reserved-but-empty):
-`docs/architecture.md` § Phase 7.
+## Rules the product keeps
 
-## Data flow (Phase 7 — current state)
+- **Honest grading.** The system grades what it can judge and asks the
+  candidate to grade the rest against the reference answer. It never marks
+  an answer wrong that it could not judge.
+- **Honest numbers.** Untested is "—", never 0%. Readiness converted to points
+  is labelled a conversion, never a predicted score. The paper estimate comes
+  only from whole papers sat in the last 90 days and says so. An estimated
+  exam date is labelled "预计".
+- **Time is what was recorded.** Study hours are recorded sessions (timer or
+  calendar); the plan cannot see unrecorded study and does not pretend to.
+  A day *studied* (the streak) is any study activity.
+- **Today is a plan, not a dashboard.** The server decides rank, cap and
+  whether the day is complete; suggestions travel beside the plan and never
+  decide it.
+- **Content is never glass.** Question stems, explanations and plans are solid
+  surfaces; the Liquid Material budget is unchanged by the transformation.
+- **Every string is localized** (zh-CN primary, en-US mirrored key for key).
 
-Every view reads through `api/modules/<module>.ts` (typed axios calls via
-`api/http.ts`, envelope unwrapped, errors normalized to `ApiError`) and the
-standard `useAsync` view-state sequence (`docs/design-system.md` § View-state
-pattern): Skeleton while loading, then content | `AppEmpty` | an
-error-with-retry line. Cross-view entity caches (e.g. the `subjects` Pinia
-store used for the subject picker across Notes/Flashcards/AI-Tutor/Calendar)
-are options-API stores mirroring `stores/auth.ts`; single-view data stays
-local to the view. No query/cache library was introduced — `useAsync` plus
-Pinia covers every current need at this app's scale (~10 views).
+## Not built yet
 
-This retired the Phase 5→6 "today vs. later phase" distinction this section
-used to document: the mock fixtures' internal consistency (a subject's
-materials/notes/sessions all referencing the same subject id) is now simply
-what the real per-user data looks like, produced by real writes instead of a
-fixture file. `types.ts` needed minimal changes during the swap because it
-was written to mirror the backend entities from the start (see the Phase 5
-design goal below, which held).
-
-## Architecture decisions
-
-| Decision | Rationale |
-| --- | --- |
-| Subject is optional everywhere except `LearningMaterial` | Materials without a subject have no home in the UI (there's no "unfiled materials" view); notes/tasks/sessions all have one. |
-| No AI/conversation persistence in Phase 5 | Keeps this phase's migration free of a schema that Phase 6's `AiService` design might still change; the chat UI already proves the streaming UX without it. |
-| `ChatProvider` abstraction introduced now, not in Phase 6 | The chat UI is real product surface today (Phase 6 explicitly says "prepare... do NOT implement AI yet") — building it against an interface instead of a hardcoded mock means Phase 6 is a provider swap, not a UI rewrite. |
-| Flashcard scheduling columns reserved but unused | Same reasoning as the RBAC tables in `V1`: the schema is complete on day one so the review engine's arrival needs no migration, only a service. |
-| Workspace/Analytics own no tables | Prevents duplicate-source-of-truth bugs (e.g. a cached "total study minutes" drifting from the sessions it's summed from). |
-| Accent color is a token, not a per-subject hex in code | Keeps the categorical palette centrally validated (CVD-safe, contrast-safe in both themes) instead of allowing ad-hoc colors to creep in as subjects are added. |
-
-## Phase 6 readiness (historical — resolved)
-
-What Phase 6 found waiting for it, kept for the historical record:
-
-- `ChatProvider` interface + `MockChatProvider` reference implementation to replace.
-- Empty `ai` backend package slot and reserved error-code range (190000–199999).
-- `AiService` abstraction point already named in `docs/architecture.md`'s
-  infrastructure section — the SSE provider implements against it.
-- Every product surface that AI will eventually touch (AI Tutor chat, flashcard
-  generation, note summarization, analytics "AI usage" stat) already had a stable UI
-  and route, so Phase 6 was additive, not a redesign.
-
-All resolved in Phase 6 — see `docs/ai-engine.md`.
-
-## Phase 7 summary
-
-Phase 7 closed the remaining "mock data" gap this document originally
-described as future work: real Subject/Material/Task/Calendar/Preferences
-CRUD, real Workspace/Analytics read models, subject linkage through
-Notes/Flashcards/AI-Tutor, and the D2 delete-cascade policy. Full delivery
-detail: `docs/phase7-delivery-report.md` and `docs/phase7-final-report.md`.
-Deferred items (file upload/OSS, spaced-repetition engine, server-side AI
-suggestions, client-timezone streak, `subject_name` snapshot retirement):
-`docs/mock-migration.md` § Deferred items.
-
-What a future phase finds waiting for it: every domain entity, error range,
-and UI surface this document describes is real and stable; there is no
-remaining "mock vs. real" seam anywhere in `src/features/`. Candidate next
-areas are listed in `docs/phase7-final-report.md`'s "Recommended Phase 8
-scope" — not decided here.
+Papers sat *inside* the app under a timer (today a sitting is recorded after
+it is sat on paper — which is how 真题 are meant to be done), a question bank
+at real scale, retrieval-grounded AI with citations, AI-assisted scoring of
+essays and translations, file upload, registration and password reset. Order
+and rationale: [`roadmap.md`](roadmap.md).

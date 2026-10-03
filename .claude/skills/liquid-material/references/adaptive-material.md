@@ -226,7 +226,7 @@ Who declares:
 | Stage | Source of the declaration |
 |---|---|
 | the authenticated shell (`AppLayout`) | derived from the theme (`isDark`) — the shell's backdrop *is* the theme, which is why P1 was unblocked. (`isDark` tracks the OS preference live since the B4 store fix; before it, `system` mode went stale on an OS flip.) |
-| the login stage | authored per gallery: `dark` for the black installation in both themes; `light` for the Product room in both |
+| the login stage | authored per gallery: `dark` for the sign-in room in both themes; `light` for the Product and Sponsor rooms in both (the Sponsor room joined them when both became daylight pages, 2026-09-30) |
 | a future stage | whoever owns the stage, at author time |
 
 **Theme ≠ backdrop.** Before B4 the tint tokens and the primitive's rims

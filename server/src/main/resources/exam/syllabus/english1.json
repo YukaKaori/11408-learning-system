@@ -1,0 +1,135 @@
+{
+  "code": "english1",
+  "paperCode": "201",
+  "name": "英语（一）",
+  "fullScore": 100,
+  "durationMinutes": 180,
+  "examDay": 1,
+  "startTime": "14:00",
+  "pastPaperFirstYear": 2010,
+  "sections": [
+    { "code": "english1.cloze", "name": "完形填空", "questionType": "single_choice", "count": 20, "score": 0.5, "total": 10 },
+    { "code": "english1.reading-a", "name": "阅读理解 Part A", "questionType": "single_choice", "count": 20, "score": 2, "total": 40 },
+    { "code": "english1.reading-b", "name": "阅读理解 Part B（新题型）", "questionType": "single_choice", "count": 5, "score": 2, "total": 10 },
+    { "code": "english1.translation", "name": "阅读理解 Part C（翻译）", "questionType": "open", "count": 5, "score": 2, "total": 10 },
+    { "code": "english1.writing-a", "name": "写作 Part A（应用文）", "questionType": "open", "count": 1, "score": 10, "total": 10 },
+    { "code": "english1.writing-b", "name": "写作 Part B（短文写作）", "questionType": "open", "count": 1, "score": 20, "total": 20 }
+  ],
+  "modules": [
+    {
+      "code": "english1.foundation",
+      "name": "词汇与语法",
+      "score": 0,
+      "chapters": [
+        {
+          "code": "english1.foundation.vocab",
+          "name": "词汇",
+          "points": [
+            { "code": "english1.foundation.vocab.core", "name": "考研核心词汇", "weight": 3 },
+            { "code": "english1.foundation.vocab.polysemy", "name": "熟词僻义", "weight": 2 },
+            { "code": "english1.foundation.vocab.collocation", "name": "词组与固定搭配", "weight": 2 }
+          ]
+        },
+        {
+          "code": "english1.foundation.grammar",
+          "name": "语法与长难句",
+          "points": [
+            { "code": "english1.foundation.grammar.clauses", "name": "定语从句、名词性从句与状语从句", "weight": 3 },
+            { "code": "english1.foundation.grammar.nonfinite", "name": "非谓语动词", "weight": 2 },
+            { "code": "english1.foundation.grammar.special", "name": "倒装、强调、省略与插入", "weight": 2 },
+            { "code": "english1.foundation.grammar.long-sentence", "name": "长难句分析", "weight": 3 }
+          ]
+        }
+      ]
+    },
+    {
+      "code": "english1.cloze",
+      "name": "完形填空",
+      "score": 10,
+      "chapters": [
+        {
+          "code": "english1.cloze.skills",
+          "name": "完形填空解题",
+          "points": [
+            { "code": "english1.cloze.skills.logic", "name": "上下文逻辑与语篇衔接", "weight": 3 },
+            { "code": "english1.cloze.skills.word", "name": "词义辨析", "weight": 2 },
+            { "code": "english1.cloze.skills.collocation", "name": "固定搭配与语法结构", "weight": 1 }
+          ]
+        }
+      ]
+    },
+    {
+      "code": "english1.reading",
+      "name": "阅读理解",
+      "score": 40,
+      "chapters": [
+        {
+          "code": "english1.reading.types",
+          "name": "阅读题型",
+          "points": [
+            { "code": "english1.reading.types.detail", "name": "细节题", "weight": 3 },
+            { "code": "english1.reading.types.inference", "name": "推理判断题", "weight": 3 },
+            { "code": "english1.reading.types.main-idea", "name": "主旨大意题", "weight": 2 },
+            { "code": "english1.reading.types.attitude", "name": "观点态度题", "weight": 2 },
+            { "code": "english1.reading.types.meaning", "name": "词义句意题", "weight": 2 }
+          ]
+        }
+      ]
+    },
+    {
+      "code": "english1.new-types",
+      "name": "新题型",
+      "score": 10,
+      "chapters": [
+        {
+          "code": "english1.new-types.formats",
+          "name": "新题型解题",
+          "points": [
+            { "code": "english1.new-types.formats.seven-five", "name": "七选五", "weight": 3 },
+            { "code": "english1.new-types.formats.ordering", "name": "排序题", "weight": 2 },
+            { "code": "english1.new-types.formats.matching", "name": "小标题与信息匹配", "weight": 2 }
+          ]
+        }
+      ]
+    },
+    {
+      "code": "english1.translation",
+      "name": "翻译",
+      "score": 10,
+      "chapters": [
+        {
+          "code": "english1.translation.skills",
+          "name": "英译汉",
+          "points": [
+            { "code": "english1.translation.skills.understanding", "name": "理解与句子结构拆分", "weight": 3 },
+            { "code": "english1.translation.skills.techniques", "name": "翻译技巧：词性转换、语序调整与被动语态", "weight": 2 }
+          ]
+        }
+      ]
+    },
+    {
+      "code": "english1.writing",
+      "name": "写作",
+      "score": 30,
+      "chapters": [
+        {
+          "code": "english1.writing.practical",
+          "name": "应用文（小作文）",
+          "points": [
+            { "code": "english1.writing.practical.letter", "name": "书信", "weight": 3 },
+            { "code": "english1.writing.practical.notice", "name": "通知、备忘录与告示", "weight": 1 }
+          ]
+        },
+        {
+          "code": "english1.writing.essay",
+          "name": "短文写作（大作文）",
+          "points": [
+            { "code": "english1.writing.essay.description", "name": "图画与图表描述", "weight": 2 },
+            { "code": "english1.writing.essay.argument", "name": "阐释与论证", "weight": 3 },
+            { "code": "english1.writing.essay.expression", "name": "语言表达与句式", "weight": 2 }
+          ]
+        }
+      ]
+    }
+  ]
+}

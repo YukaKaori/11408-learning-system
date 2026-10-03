@@ -4,7 +4,7 @@ The default engineering reference for every session in this repository. It recor
 
 ## Project philosophy
 
-An AI-native learning workspace built to **commercial SaaS quality** (Apple/Linear/Notion register — see `docs/architecture.md` § Product positioning). Two consequences:
+The 11408 Learning System — an exam-preparation product for the 11408 postgraduate entrance exam — built to **commercial SaaS quality** (Apple/Linear/Notion register — see `docs/architecture.md` § Product positioning). Two consequences:
 
 - **Honest data over fake polish.** Empty accounts get designed empty states and CTAs, never fabricated numbers. Metrics without a meaningful value render "—", not 0 (nullable `weekDeltaPercent` convention).
 - **Business completion before visual polish.** A phase's feature steps land fully before its theming/UX pass; never ship a half-wired view because the styling sprint arrived.
@@ -20,7 +20,7 @@ An AI-native learning workspace built to **commercial SaaS quality** (Apple/Line
 
 - `/api/v1/...`, `ApiResponse<T>` envelope (`code 0` = success), record DTOs with `from()` mappers, snowflake ids as **strings**, instants as **epoch ms** (exception: calendar-bucket dates are ISO `yyyy-MM-dd` strings).
 - Error codes: one range per feature (see the table in `docs/architecture.md`); services throw `BusinessException(ErrorCode)`; only `GlobalExceptionHandler` builds error bodies.
-- **Partial-update convention**: omitted/null fields keep their value; explicit clear sentinels are `""` (nullable strings/links, e.g. `subjectId`) and `0` (nullable instants, e.g. `dueAt`). Document sentinels on the request DTO and its frontend payload type.
+- **Partial-update convention**: omitted/null fields keep their value; explicit clear sentinels are `""` (nullable strings/links, e.g. `nodeCode`) and `0` (nullable instants, e.g. `dueAt`). Document sentinels on the request DTO and its frontend payload type.
 - Frontend mirrors: `api/modules/<feature>.ts` with `XxxDto` / `CreateXxxPayload` / `UpdateXxxPayload`, string-literal unions for closed vocabularies. **Write types against the actual Java records, not from memory.**
 
 ## Frontend conventions
@@ -62,7 +62,7 @@ An AI-native learning workspace built to **commercial SaaS quality** (Apple/Line
 
 ## Security principles
 
-- Every query is user-scoped; cross-user access must 404/403 (`OwnershipGuard`). Never trust client-sent ids — resolve ownership server-side (`resolveOwnedSubject` pattern).
+- Every query is user-scoped; cross-user access must 404/403 (`OwnershipGuard`). Never trust client-sent ids or codes — resolve ownership server-side (`OwnershipGuard`, `QuestionService.requireVisible`) and syllabus codes through `Syllabus.resolve`.
 - Secrets only from environment variables (`JWT_SECRET`, `DEEPSEEK_API_KEY`); never in YAML, code, or commits.
 - Auth details (token model, rotation, reuse detection): `docs/architecture.md` § Identity & security.
 

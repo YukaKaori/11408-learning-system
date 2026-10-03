@@ -1,4 +1,13 @@
-# AI Learning Engine (Phase 6)
+# AI Learning Engine
+
+> **2026-09 — the 11408 transformation.** The engine now tutors an 11408
+> candidate: every call is grounded in the exam countdown, a syllabus scope,
+> the candidate's diagnosis in that scope and their own notes, materials and
+> cards there (§ Context pipeline), and three streaming tutoring actions sit
+> on the practice loop (§ Tutoring on the practice loop). The provider,
+> streaming, conversation and prompt machinery below are unchanged since
+> Phase 6/7. Where this document still mentions subjects, it is describing
+> the retired design (§ Phase 6 limitation … is kept as history).
 
 Phase 6 deliverable. This document records how the `ai` backend package and
 its frontend consumers are built — read `docs/architecture.md` first for the
@@ -23,9 +32,9 @@ ai/
   provider/AiProvider.java         interface: id(), isConfigured(), chat(ChatRequest, ChatStreamListener)
   provider/DeepSeekProvider.java   OpenAI-compatible /chat/completions, SSE parsing, retry + error translation
   provider/dto/*                   DeepSeek wire DTOs (package-private)
-  context/LearningContext.java     record: subject snapshot + material titles, note/flashcard counts, stats snapshot, focus content
-  context/ContextHints.java        caller-supplied hints: a resolved subjectId (Phase 7) plus string fallbacks LearningContextService can't derive itself
-  context/LearningContextService.java   builds LearningContext from userId (real note/flashcard data), resolves subjectId → subject/materials/notes server-side (Phase 7), falls back to string hints
+  context/LearningContext.java     record: exam countdown + targets, syllabus scope, diagnosis, materials/notes/cards in scope, stats snapshot, focus content
+  context/ContextHints.java        caller-supplied hints: a resolved syllabus nodeCode, a stats snapshot, focus label/content
+  context/LearningContextService.java   builds LearningContext per request from the exam profile, the syllabus, the mastery snapshot and the candidate's corpus
   prompt/PromptTemplate.java       one system prompt per use-case (TUTOR, EXPLAIN, QUIZ, FLASHCARDS, STUDY_PLAN, SUMMARY, SUGGESTIONS, NOTE_*, WEAK_POINTS, WEEKLY_SUMMARY)
   prompt/PromptBuilder.java        renders template + context + history + input into the final message list; enforces maxPromptChars
   stream/SseRelay.java             drives AiProvider.chat on a virtual thread, relays tokens to SseEmitter, handles cancellation
@@ -127,19 +136,53 @@ true` on the message row), so the user never loses a partial answer.
 ## Context pipeline
 
 ```java
-public record ContextHints(Long subjectId, String subjectName,
-        String subjectDescription, String statsSnapshot,
+public record ContextHints(String nodeCode, String statsSnapshot,
         String focusLabel, String focusContent)
 
-public record LearningContext(String subjectName, String subjectDescription,
-        List<String> subjectMaterialTitles,
+public record LearningContext(String exam, String targets,
+        String scores, String plan,
+        String scope, String scopeDetail, String diagnosis,
+        List<String> materialTitles,
         int totalNotes, List<String> recentNoteTitles,
-        int totalFlashcardDecks, int totalFlashcards, int dueFlashcards,
+        int totalFlashcards, int dueFlashcards,
         String statsSnapshot, String focusLabel, String focusContent)
 ```
 
-`LearningContextService.build(userId, hints)` assembles a `LearningContext`
-from two sources:
+`LearningContextService.build(userId, hints)` assembles the context every AI
+call is grounded in, in four layers, all read per request from real data:
+
+1. **The exam** — the countdown and phase ("2027 考研 · 初试 2026-12-26（预计）·
+   距今 88 天 · 真题阶段") and the target scores, from `ExamProfileService`. An
+   estimated date is labelled as one here too. Since the exam-year milestone
+   (M1, 2026-10) two more facts travel with it:
+   - **模考估分** — what whole papers have actually yielded, from
+     `SittingService.estimates` ("408 112.5（近 3 套，98–121）"); scoped requests
+     see only their own paper's estimate, and a paper never sat shows nothing
+     rather than a guess.
+   - **时间规划** — for general (unscoped) requests only, how today's study time
+     divides among the papers and what has been studied, from `PlanService`
+     ("每天 8h：政治 1.6h · 英语一 1.6h · 数学一 2.6h · 408 2.3h；今天已学 3.5h；
+     本周整套模考 1/6"). A question about one 考点 does not need the timetable;
+     "我该怎么安排时间" does.
+2. **The scope** — where in the syllabus the request sits (`nodeCode`, always
+   passed through `Syllabus.resolve` first — never a raw client string) and
+   what that node contains or is worth.
+3. **The diagnosis** — readiness, the weakest 考点 and the open mistakes in
+   scope, from the same `MasterySnapshot` the syllabus map shows the
+   candidate, so the tutor never contradicts the product.
+4. **The corpus** — the candidate's notes and reference materials anchored
+   in scope: the subtree *and* its ancestors (a note on all of 操作系统, or a
+   textbook filed under all of 408, is still context for 进程同步). Card
+   totals and due counts are account-wide.
+
+`PromptBuilder` renders the non-empty parts into a `## 考生情况` block
+appended to the template's system prompt. A conversation's scope is persisted
+on `ai_conversations.node_code` (V8); `nodeCode` on a send follows the
+partial-update convention (omitted keeps it, `''` clears it).
+
+The Phase 6/7 description of the two context sources follows, kept for the
+parts that still hold (the focus-content contract, no controller ever
+concatenating a prompt):
 
 - **Real, server-resolved data** — recent note titles and flashcard/deck
   counts, queried from `NoteMapper`/`FlashcardDeckMapper`/`FlashcardMapper`,
@@ -163,7 +206,7 @@ conversation history and the current user input — every AI use-case (chat and
 one-shot generation alike) goes through this one method, so no controller or
 service ever concatenates a prompt string itself.
 
-### Phase 6 limitation, closed in Phase 7: server-side subject resolution
+### Phase 6 limitation, closed in Phase 7: server-side subject resolution *(history — subjects were retired in 2026-09; conversations are now scoped by `node_code`)*
 
 Phase 6 shipped with subjects living only in frontend mocks, so every AI
 action sent the subject's `name`/`description` as plain client-supplied text.
@@ -189,6 +232,31 @@ a nullable `subject_id` logical FK (V5), and the chat endpoints accept a
 readable after a subject is renamed or deleted — subject deletion nullifies
 `subject_id` (Phase 7 cascade in `SubjectService.delete`) but leaves the
 snapshot.
+
+## Tutoring on the practice loop (2026-09)
+
+Three streaming actions put the tutor where a candidate actually needs it —
+beside a question, a mistake or a 考点 — rather than only in the chat:
+
+| Endpoint | Template | Grounded in |
+| --- | --- | --- |
+| `POST /v1/ai/questions/{id}/explain/stream` | `QUESTION_EXPLAIN` | the question (stem, options, reference answer, 解析), the candidate's own answer when given, scoped to its first 考点 |
+| `POST /v1/ai/mistakes/{id}/diagnose/stream` | `MISTAKE_DIAGNOSIS` | the question, every attempt, the candidate's cause and reflection |
+| `POST /v1/ai/knowledge/explain/stream` | `POINT_EXPLAIN` | the node, scoped context and diagnosis |
+
+All three speak the chat's SSE vocabulary (`token` / `done` / `error`), so the
+frontend reads them with the same `streamTokens` helper and renders them in
+one component (`features/ai-tutor/AiExplainPanel.vue`: solid, `aria-live`,
+stop/regenerate). Nothing is persisted — an explanation is read, not stored.
+Ownership is checked before anything reaches the prompt: a question must be
+visible to the caller, a mistake must be theirs.
+
+Every tutoring template carries one shared **stance** (`PromptTemplate.STANCE`):
+answer in the candidate's language, write math as LaTeX (`$…$`, `$$…$$` —
+the frontend renders it with KaTeX), defer to the syllabus and standard
+textbooks, say "not sure" rather than invent a source, year or question
+number, and flag the knowledge cut-off on current-affairs politics. The
+note-rewrite templates opt out — they transform the candidate's own text.
 
 ## Prompt system
 

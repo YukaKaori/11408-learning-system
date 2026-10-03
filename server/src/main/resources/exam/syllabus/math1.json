@@ -1,0 +1,246 @@
+{
+  "code": "math1",
+  "paperCode": "301",
+  "name": "数学（一）",
+  "fullScore": 150,
+  "durationMinutes": 180,
+  "examDay": 2,
+  "startTime": "08:30",
+  "pastPaperFirstYear": 1987,
+  "scoreApproximate": true,
+  "sections": [
+    { "code": "math1.choice", "name": "选择题", "questionType": "single_choice", "count": 10, "score": 5, "total": 50 },
+    { "code": "math1.fill", "name": "填空题", "questionType": "fill_blank", "count": 6, "score": 5, "total": 30 },
+    { "code": "math1.solution", "name": "解答题", "questionType": "open", "count": 6, "score": null, "total": 70 }
+  ],
+  "modules": [
+    {
+      "code": "math1.calculus",
+      "name": "高等数学",
+      "score": 90,
+      "chapters": [
+        {
+          "code": "math1.calculus.limit",
+          "name": "函数、极限、连续",
+          "points": [
+            { "code": "math1.calculus.limit.function", "name": "函数的概念与性质", "weight": 1 },
+            { "code": "math1.calculus.limit.sequence", "name": "数列极限（单调有界准则、夹逼准则）", "weight": 2 },
+            { "code": "math1.calculus.limit.limit", "name": "函数极限的计算（等价无穷小、洛必达法则、泰勒公式）", "weight": 3 },
+            { "code": "math1.calculus.limit.infinitesimal", "name": "无穷小的比较与阶", "weight": 3 },
+            { "code": "math1.calculus.limit.continuity", "name": "函数的连续性与间断点", "weight": 2 }
+          ]
+        },
+        {
+          "code": "math1.calculus.derivative",
+          "name": "一元函数微分学",
+          "points": [
+            { "code": "math1.calculus.derivative.concepts", "name": "导数与微分的概念、可导与连续", "weight": 2 },
+            { "code": "math1.calculus.derivative.computation", "name": "导数的计算（复合、隐函数、参数方程、高阶导数）", "weight": 3 },
+            { "code": "math1.calculus.derivative.mvt", "name": "微分中值定理", "weight": 3 },
+            { "code": "math1.calculus.derivative.application", "name": "导数的应用：单调性、极值、凹凸性、拐点与渐近线", "weight": 3 },
+            { "code": "math1.calculus.derivative.inequality", "name": "不等式证明与方程根的讨论", "weight": 2 }
+          ]
+        },
+        {
+          "code": "math1.calculus.integral",
+          "name": "一元函数积分学",
+          "points": [
+            { "code": "math1.calculus.integral.indefinite", "name": "不定积分的计算", "weight": 2 },
+            { "code": "math1.calculus.integral.definite", "name": "定积分的概念、性质与计算", "weight": 3 },
+            { "code": "math1.calculus.integral.variable-limit", "name": "变限积分", "weight": 3 },
+            { "code": "math1.calculus.integral.improper", "name": "反常积分", "weight": 2 },
+            { "code": "math1.calculus.integral.application", "name": "定积分的应用：面积、体积、弧长与物理应用", "weight": 2 }
+          ]
+        },
+        {
+          "code": "math1.calculus.vector",
+          "name": "向量代数与空间解析几何",
+          "points": [
+            { "code": "math1.calculus.vector.vector", "name": "向量的运算", "weight": 1 },
+            { "code": "math1.calculus.vector.plane-line", "name": "平面与直线", "weight": 2 },
+            { "code": "math1.calculus.vector.surface", "name": "曲面与空间曲线", "weight": 1 }
+          ]
+        },
+        {
+          "code": "math1.calculus.multivariable",
+          "name": "多元函数微分学",
+          "points": [
+            { "code": "math1.calculus.multivariable.concepts", "name": "多元函数的极限、连续、偏导数与全微分", "weight": 3 },
+            { "code": "math1.calculus.multivariable.computation", "name": "复合函数与隐函数的偏导数", "weight": 3 },
+            { "code": "math1.calculus.multivariable.gradient", "name": "方向导数与梯度", "weight": 2 },
+            { "code": "math1.calculus.multivariable.geometry", "name": "多元微分学的几何应用：切平面与法线", "weight": 1 },
+            { "code": "math1.calculus.multivariable.extremum", "name": "多元函数的极值与条件极值", "weight": 3 }
+          ]
+        },
+        {
+          "code": "math1.calculus.multiple-integral",
+          "name": "多元函数积分学",
+          "points": [
+            { "code": "math1.calculus.multiple-integral.double", "name": "二重积分", "weight": 3 },
+            { "code": "math1.calculus.multiple-integral.triple", "name": "三重积分", "weight": 2 },
+            { "code": "math1.calculus.multiple-integral.line", "name": "曲线积分与格林公式", "weight": 3 },
+            { "code": "math1.calculus.multiple-integral.surface", "name": "曲面积分、高斯公式与斯托克斯公式", "weight": 3 },
+            { "code": "math1.calculus.multiple-integral.field", "name": "散度与旋度", "weight": 1 }
+          ]
+        },
+        {
+          "code": "math1.calculus.series",
+          "name": "无穷级数",
+          "points": [
+            { "code": "math1.calculus.series.convergence", "name": "常数项级数的敛散性判别", "weight": 3 },
+            { "code": "math1.calculus.series.power", "name": "幂级数的收敛域与和函数", "weight": 3 },
+            { "code": "math1.calculus.series.expansion", "name": "函数的幂级数展开", "weight": 2 },
+            { "code": "math1.calculus.series.fourier", "name": "傅里叶级数", "weight": 1 }
+          ]
+        },
+        {
+          "code": "math1.calculus.ode",
+          "name": "常微分方程",
+          "points": [
+            { "code": "math1.calculus.ode.first-order", "name": "一阶微分方程", "weight": 3 },
+            { "code": "math1.calculus.ode.reducible", "name": "可降阶的高阶微分方程", "weight": 1 },
+            { "code": "math1.calculus.ode.linear", "name": "高阶线性微分方程与常系数线性方程", "weight": 3 },
+            { "code": "math1.calculus.ode.euler", "name": "欧拉方程", "weight": 1 }
+          ]
+        }
+      ]
+    },
+    {
+      "code": "math1.linear",
+      "name": "线性代数",
+      "score": 30,
+      "chapters": [
+        {
+          "code": "math1.linear.determinant",
+          "name": "行列式",
+          "points": [
+            { "code": "math1.linear.determinant.properties", "name": "行列式的性质与展开定理", "weight": 2 },
+            { "code": "math1.linear.determinant.computation", "name": "行列式的计算", "weight": 3 }
+          ]
+        },
+        {
+          "code": "math1.linear.matrix",
+          "name": "矩阵",
+          "points": [
+            { "code": "math1.linear.matrix.operations", "name": "矩阵的运算", "weight": 2 },
+            { "code": "math1.linear.matrix.inverse", "name": "逆矩阵与伴随矩阵", "weight": 3 },
+            { "code": "math1.linear.matrix.elementary", "name": "初等变换与初等矩阵", "weight": 2 },
+            { "code": "math1.linear.matrix.rank", "name": "矩阵的秩", "weight": 3 }
+          ]
+        },
+        {
+          "code": "math1.linear.vector",
+          "name": "向量",
+          "points": [
+            { "code": "math1.linear.vector.dependence", "name": "向量组的线性相关与线性无关", "weight": 3 },
+            { "code": "math1.linear.vector.rank", "name": "向量组的秩与极大线性无关组", "weight": 3 },
+            { "code": "math1.linear.vector.space", "name": "向量空间、基变换与坐标变换", "weight": 1 }
+          ]
+        },
+        {
+          "code": "math1.linear.equations",
+          "name": "线性方程组",
+          "points": [
+            { "code": "math1.linear.equations.homogeneous", "name": "齐次线性方程组与基础解系", "weight": 3 },
+            { "code": "math1.linear.equations.nonhomogeneous", "name": "非齐次线性方程组的解的结构", "weight": 3 }
+          ]
+        },
+        {
+          "code": "math1.linear.eigen",
+          "name": "矩阵的特征值与特征向量",
+          "points": [
+            { "code": "math1.linear.eigen.eigen", "name": "特征值与特征向量的计算与性质", "weight": 3 },
+            { "code": "math1.linear.eigen.similar", "name": "相似矩阵与相似对角化", "weight": 3 },
+            { "code": "math1.linear.eigen.symmetric", "name": "实对称矩阵的正交相似对角化", "weight": 3 }
+          ]
+        },
+        {
+          "code": "math1.linear.quadratic",
+          "name": "二次型",
+          "points": [
+            { "code": "math1.linear.quadratic.standard", "name": "二次型的标准形与规范形", "weight": 3 },
+            { "code": "math1.linear.quadratic.congruence", "name": "合同变换与惯性定理", "weight": 2 },
+            { "code": "math1.linear.quadratic.definite", "name": "正定二次型与正定矩阵", "weight": 2 }
+          ]
+        }
+      ]
+    },
+    {
+      "code": "math1.probability",
+      "name": "概率论与数理统计",
+      "score": 30,
+      "chapters": [
+        {
+          "code": "math1.probability.events",
+          "name": "随机事件和概率",
+          "points": [
+            { "code": "math1.probability.events.operations", "name": "事件的关系与运算", "weight": 1 },
+            { "code": "math1.probability.events.classical", "name": "古典概型与几何概型", "weight": 2 },
+            { "code": "math1.probability.events.conditional", "name": "条件概率、全概率公式与贝叶斯公式", "weight": 3 },
+            { "code": "math1.probability.events.independence", "name": "事件的独立性", "weight": 2 }
+          ]
+        },
+        {
+          "code": "math1.probability.variable",
+          "name": "随机变量及其分布",
+          "points": [
+            { "code": "math1.probability.variable.distribution", "name": "分布函数", "weight": 2 },
+            { "code": "math1.probability.variable.discrete", "name": "常见离散型分布", "weight": 3 },
+            { "code": "math1.probability.variable.continuous", "name": "常见连续型分布", "weight": 3 },
+            { "code": "math1.probability.variable.function", "name": "随机变量函数的分布", "weight": 3 }
+          ]
+        },
+        {
+          "code": "math1.probability.multivariate",
+          "name": "多维随机变量及其分布",
+          "points": [
+            { "code": "math1.probability.multivariate.joint", "name": "二维随机变量的联合分布与边缘分布", "weight": 3 },
+            { "code": "math1.probability.multivariate.independence", "name": "随机变量的独立性", "weight": 2 },
+            { "code": "math1.probability.multivariate.function", "name": "两个随机变量函数的分布", "weight": 3 }
+          ]
+        },
+        {
+          "code": "math1.probability.moments",
+          "name": "随机变量的数字特征",
+          "points": [
+            { "code": "math1.probability.moments.expectation", "name": "数学期望与方差", "weight": 3 },
+            { "code": "math1.probability.moments.covariance", "name": "协方差与相关系数", "weight": 3 }
+          ]
+        },
+        {
+          "code": "math1.probability.limit",
+          "name": "大数定律和中心极限定理",
+          "points": [
+            { "code": "math1.probability.limit.lln", "name": "大数定律", "weight": 1 },
+            { "code": "math1.probability.limit.clt", "name": "中心极限定理", "weight": 2 }
+          ]
+        },
+        {
+          "code": "math1.probability.statistics",
+          "name": "数理统计的基本概念",
+          "points": [
+            { "code": "math1.probability.statistics.sampling", "name": "总体、样本与统计量", "weight": 2 },
+            { "code": "math1.probability.statistics.distributions", "name": "三大抽样分布（χ² 分布、t 分布、F 分布）", "weight": 3 }
+          ]
+        },
+        {
+          "code": "math1.probability.estimation",
+          "name": "参数估计",
+          "points": [
+            { "code": "math1.probability.estimation.point", "name": "矩估计与最大似然估计", "weight": 3 },
+            { "code": "math1.probability.estimation.criteria", "name": "估计量的评选标准", "weight": 2 },
+            { "code": "math1.probability.estimation.interval", "name": "区间估计", "weight": 1 }
+          ]
+        },
+        {
+          "code": "math1.probability.testing",
+          "name": "假设检验",
+          "points": [
+            { "code": "math1.probability.testing.concepts", "name": "假设检验的基本思想与两类错误", "weight": 1 },
+            { "code": "math1.probability.testing.normal", "name": "正态总体参数的假设检验", "weight": 1 }
+          ]
+        }
+      ]
+    }
+  ]
+}

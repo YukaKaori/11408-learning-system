@@ -1,0 +1,65 @@
+spring:
+  application:
+    name: 11408-learning-system-server
+  profiles:
+    # Local development unless a profile is set explicitly (prod sets SPRING_PROFILES_ACTIVE=prod).
+    default: dev
+  flyway:
+    locations: classpath:db/migration
+  threads:
+    virtual:
+      # AI streaming holds a thread open for the duration of a DeepSeek response;
+      # virtual threads make that cheap instead of pinning a platform thread per chat.
+      enabled: true
+
+server:
+  port: 8080
+  shutdown: graceful
+
+mybatis-plus:
+  configuration:
+    map-underscore-to-camel-case: true
+  global-config:
+    banner: false
+    db-config:
+      id-type: assign_id
+      logic-delete-field: deleted
+      logic-delete-value: 1
+      logic-not-delete-value: 0
+
+management:
+  endpoints:
+    web:
+      exposure:
+        include: health,info,metrics
+
+app:
+  cors:
+    allowed-origins:
+      - http://localhost:5173
+  security:
+    jwt:
+      # Secret comes from the environment; dev/test profiles provide a local default.
+      secret: ${JWT_SECRET:}
+      issuer: 11408-learning-system
+      access-token-ttl: 30m
+      refresh-token-ttl: 14d
+    password-policy:
+      min-length: 8
+  flashcard:
+    # Max brand-new cards introduced per user per day (client-zone). Caps the
+    # first review queue of a freshly migrated deck. See Phase 15 / ReviewService.
+    new-cards-per-day: 20
+  ai:
+    provider: deepseek
+    max-prompt-chars: 24000
+    deepseek:
+      # Secret comes from the environment only — never hardcoded.
+      api-key: ${DEEPSEEK_API_KEY:}
+      base-url: https://api.deepseek.com
+      model: deepseek-chat
+      temperature: 0.7
+      top-p: 0.95
+      max-tokens: 2048
+      timeout: 60s
+      streaming-enabled: true

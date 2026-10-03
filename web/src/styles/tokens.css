@@ -1,0 +1,485 @@
+/**
+ * Design tokens — the single source of truth for the visual language.
+ * Components must consume these variables; never hard-code colors, radii,
+ * spacing, shadows or motion in component styles.
+ *
+ * Breakpoints (reference only — media queries cannot consume custom
+ * properties, so components hard-code these literal values):
+ *   sm 640px · md 768px · lg 1024px · xl 1280px
+ */
+:root {
+  /* Typography — primitives */
+  --font-sans:
+    -apple-system, BlinkMacSystemFont, 'Segoe UI', 'Helvetica Neue', 'PingFang SC',
+    'Hiragino Sans GB', 'Microsoft YaHei', sans-serif;
+  --font-mono: ui-monospace, 'SF Mono', 'Cascadia Code', Consolas, monospace;
+  --text-xs: 12px;
+  --text-sm: 13px;
+  --text-base: 14px;
+  --text-lg: 16px;
+  --text-xl: 20px;
+  --text-2xl: 28px;
+  --text-3xl: 36px;
+  --leading-tight: 1.3;
+  --leading-normal: 1.6;
+  --tracking-tight: -0.02em;
+  --tracking-normal: -0.01em;
+  --tracking-wide: 0.02em;
+
+  /* Typography — semantic scale (size / weight / line-height / letter-spacing) */
+  --font-display-family: var(--font-sans);
+  --font-display-size: clamp(28px, 2.4vw + 20px, 40px);
+  --font-display-weight: 650;
+  --font-display-leading: 1.15;
+  --font-display-tracking: -0.03em;
+
+  /* Hero — reserved for signature full-bleed surfaces (welcome, marketing-grade pages) */
+  --font-hero-family: var(--font-sans);
+  --font-hero-size: clamp(44px, 5vw + 24px, 84px);
+  --font-hero-weight: 650;
+  --font-hero-leading: 1.05;
+  --font-hero-tracking: -0.035em;
+
+  --font-headline-family: var(--font-sans);
+  --font-headline-size: clamp(22px, 1.2vw + 18px, var(--text-2xl));
+  --font-headline-weight: 600;
+  --font-headline-leading: 1.25;
+  --font-headline-tracking: -0.02em;
+
+  --font-title-family: var(--font-sans);
+  --font-title-size: var(--text-xl);
+  --font-title-weight: 600;
+  --font-title-leading: var(--leading-tight);
+  --font-title-tracking: -0.01em;
+
+  --font-body-family: var(--font-sans);
+  --font-body-size: var(--text-base);
+  --font-body-weight: 400;
+  --font-body-leading: var(--leading-normal);
+  --font-body-tracking: normal;
+
+  --font-caption-family: var(--font-sans);
+  --font-caption-size: var(--text-sm);
+  --font-caption-weight: 400;
+  --font-caption-leading: var(--leading-normal);
+  --font-caption-tracking: normal;
+
+  --font-label-family: var(--font-sans);
+  --font-label-size: var(--text-xs);
+  --font-label-weight: 600;
+  --font-label-leading: var(--leading-tight);
+  --font-label-tracking: var(--tracking-wide);
+
+  /* Brand */
+  --color-primary: #5e6ad2;
+  --color-primary-hover: #6e7ae2;
+  --color-primary-active: #4f5abf;
+  --color-primary-soft: rgba(94, 106, 210, 0.1);
+
+  --color-secondary: #52525b;
+  --color-secondary-hover: #71717a;
+  --color-secondary-active: #3f3f46;
+  --color-secondary-soft: rgba(82, 82, 91, 0.08);
+
+  /* Semantic surfaces (light) */
+  --color-bg: #fafafa;
+  --color-surface: #ffffff;
+  --color-surface-hover: #f4f4f5;
+  --color-border: #e4e4e7;
+  --color-border-strong: #d4d4d8;
+  --color-muted: #a1a1aa;
+  --color-muted-soft: #f4f4f5;
+  --color-overlay: rgba(24, 24, 27, 0.44);
+
+  /* Text */
+  --color-text: #18181b;
+  --color-text-secondary: #52525b;
+  --color-text-tertiary: #a1a1aa;
+
+  /* Status */
+  --color-success: #16a34a;
+  --color-success-soft: rgba(22, 163, 74, 0.1);
+  --color-warning: #d97706;
+  --color-warning-soft: rgba(217, 119, 6, 0.1);
+  --color-danger: #dc2626;
+  --color-danger-soft: rgba(220, 38, 38, 0.1);
+  --color-info: #2563eb;
+  --color-info-soft: rgba(37, 99, 235, 0.1);
+
+  /* Accents — subject identity & categorical data-viz palette. Fixed order
+     (indigo → teal → amber → rose → violet), validated per mode against the
+     surface color for lightness band, chroma, CVD separation and contrast
+     (dataviz six checks). Never cycle or generate extra hues — a 6th category
+     folds into "other". */
+  --accent-indigo: #5e6ad2;
+  --accent-teal: #0d9488;
+  --accent-amber: #d97706;
+  --accent-rose: #e11d48;
+  --accent-violet: #7c3aed;
+
+  /* Interactive */
+  --color-focus-ring: var(--color-primary);
+  --opacity-hover: 0.92;
+  --opacity-disabled: 0.5;
+  --border-width-sm: 1px;
+  --border-width-md: 2px;
+
+  /* Geometry — base scale */
+  --radius-sm: 6px;
+  --radius-md: 8px;
+  --radius-lg: 12px;
+  --radius-xl: 16px;
+  --radius-full: 9999px;
+
+  /* Geometry — semantic aliases */
+  --radius-button: var(--radius-md);
+  --radius-input: var(--radius-md);
+  --radius-card: var(--radius-lg);
+  --radius-dialog: var(--radius-xl);
+  --radius-panel: var(--radius-lg);
+
+  /* Elevation — soft and subtle, never heavy */
+  --shadow-sm: 0 1px 2px rgba(0, 0, 0, 0.04);
+  --shadow-md: 0 2px 8px rgba(0, 0, 0, 0.06), 0 1px 2px rgba(0, 0, 0, 0.04);
+  --shadow-lg: 0 8px 24px rgba(0, 0, 0, 0.08), 0 2px 6px rgba(0, 0, 0, 0.04);
+  --shadow-float: 0 12px 32px rgba(24, 24, 27, 0.1), 0 4px 10px rgba(24, 24, 27, 0.05);
+  /* The deepest elevation step — modals, drawers, floating panels. Named for
+     what it does, not for a material: it was `--shadow-glass` until Phase 17.2. */
+  --shadow-overlay: 0 16px 48px rgba(24, 24, 27, 0.12), 0 2px 8px rgba(24, 24, 27, 0.04);
+
+  /* ── Liquid Material ────────────────────────────────────────────────────
+     The canonical vocabulary of the one material (Phase 17.2 Phase B).
+     `GlassSurface` reads the `--glass-*` runtime contract; these tokens are
+     what that contract is *set from*, so the dials stop being magic numbers
+     typed at three call sites. Bundled into named presets in `glass.css`.
+
+     Apple ships two material variants and the rule is about legibility, not
+     looks: CLEAR may only be used where the stage supplies its own dimming
+     (a shroud, a dark stage, a controlled underlight) and the backdrop is
+     meant to be seen through; REGULAR floats over arbitrary content and must
+     carry legibility alone, in its own neutral-density body.
+
+     Theme behaviour: the body TINT resolves per theme via `light-dark()`
+     below. The density and geometry dials are deliberately theme-INVARIANT —
+     the house material is smoked in both themes (never white in light mode),
+     which is what lets on-glass text use one fixed dusk palette. Giving them
+     per-theme values would be a retune, and this phase changes no pixels. */
+
+  /* Body density — the legibility dial (how much smoke is in the slab) */
+  --material-density-clear: 0.16; /* Clear · the dock over its dark stage */
+  --material-density-clear-stage: 0.34; /* Clear · stage-tuned for brighter artwork */
+  --material-density-regular: 0.62; /* Regular · carries legibility alone */
+
+  /* Body tint — the colour of the neutral-density smoke, per material rank */
+  --material-tint-chrome: light-dark(rgb(24 26 36), rgb(13 15 24));
+  --material-tint-hero: light-dark(rgb(17 18 24), rgb(7 9 15));
+  --material-tint-floating: light-dark(rgb(12 13 19), rgb(7 8 14));
+
+  /* Thickness cues (double rim, back-face, internal scatter) and the
+     directional Fresnel arc. Both are fully present on every shipped slab. */
+  --material-depth: 1;
+  --material-fresnel: 1;
+
+  /* Declared backdrop (Phase B4, `environment.md` E5) — `dark | light`, the
+     colour scheme every `light-dark()` pair in the slab (tint, rims, glows)
+     resolves against: GlassSurface sets `color-scheme` from it. A stage sets it
+     with `data-material-backdrop` (glass.css); this root value is only the
+     fallback for a stage that declares nothing, and it follows the theme —
+     which is exactly how the material resolved before B4. */
+  --material-backdrop: light;
+
+  /* Engine tiers (Phase B1, `materials.md` §8). The tier itself is decided
+     once at boot and written on <html> as data-glass-tier; these are the two
+     dials the non-refracting tiers read.
+       diffuse  — blur radius of the diffusion that stands in for refraction
+       dense    — the floor the body rises from toward opaque: alpha =
+                  floor + (1 − floor) × density, so rank order survives
+                  (chrome .765 · hero .815 · floating .894) */
+  --material-diffusion: 10px;
+  --material-density-dense-floor: 0.72;
+
+  /* Geometry (Phase B1, `components.md` §7). A slab's radius belongs to its
+     recipe; the primitive's own content inset is part of every nested radius
+     derivation. Derived control radii are authored here, once, as
+     max(material radius − total inset, --radius-md) — never computed per
+     instance. The chrome control token is the dock item: 30 − 8 − 8 = 14px. */
+  --material-radius-chrome: 30px;
+  --material-radius-hero: 28px;
+  --material-radius-floating: 16px;
+  --material-inset: 0.5rem;
+  --material-radius-chrome-control: max(
+    calc(var(--material-radius-chrome) - var(--material-inset) - var(--space-2)),
+    var(--radius-md)
+  );
+
+  /* Edge + interior reflection strength, per material rank */
+  --material-edge-glow-chrome: 0.85;
+  --material-edge-glow-hero: 0.68;
+  --material-edge-glow-floating: 0.7;
+  --material-inner-glow-chrome: 0.65;
+  --material-inner-glow-hero: 0.55;
+  --material-inner-glow-floating: 0.5;
+
+  /* Refraction — base radius of the travelling light. This is the one part of
+     the `--glass-light-*` RUNTIME contract with a configurable base: stages may
+     override it, `useGlassSpotlight` reads it once and then swells it slightly
+     near a surface, writing the result back per frame. It is not a legacy name
+     and not an alias — the rest of that contract (x/y/angle/strength) is
+     per-frame state that must stay undriven, so this keeps their prefix. */
+  --glass-light-radius: 360px;
+
+  /* Interactive-emphasis glow — a very-low-alpha halo reserved for the
+     handful of elements that ARE the emphasis (primary CTA, active nav item,
+     a focused/hovered interactive card). Never applied ambiently. Light mode
+     keeps this a real (zero-alpha) shadow value, not the `none` keyword, so
+     component CSS can always list it alongside a base shadow. */
+  --shadow-glow-primary: 0 0 0 0 rgba(94, 106, 210, 0);
+
+  /* Scene — the welcome hero (`GlassScene`). Since Phase B3 it is the Login
+     environment's wallpaper under the same atmosphere, not a white frosted
+     veil: its text rides on dusk in both themes, so these are the dusk values
+     the dark theme always had. --scene-aura is the rose glow behind the solid
+     welcome sections below the hero. */
+  --scene-text: #f6f2f3;
+  --scene-text-soft: rgba(246, 242, 243, 0.8);
+  --scene-aura: rgba(219, 168, 178, 0.22);
+  /* The hero chip riding on the scene, and the sign-in brand tile's lip. */
+  --scene-chip-bg: rgba(18, 16, 26, 0.5);
+  --scene-chip-border: rgba(246, 242, 243, 0.22);
+  --scene-brand-lip: rgba(255, 255, 255, 0.55);
+
+  /* Environment — text resting directly on a dark stage (the login colophon).
+     Not on glass, so not `--on-glass-*`; not theme-relative, because the
+     stage is dusk in both themes. A frozen dusk value (`color.md` §1), moved
+     out of the component in Phase B1. */
+  --environment-stage-text: rgba(228, 226, 240, 0.38);
+
+  /* ── Environment (Phase B3, `environment.md`) ─────────────────────────────
+     Everything the material sits in front of on the Login stage and the
+     welcome hero. Environment, not material: none of these reach a slab.
+
+     Anchor (`color.md` §3): the wallpaper itself — the pink lotus's petals,
+     ≈ oklch(0.86 0.06 5), drawn in light on a black ground. The field is that
+     ground brought into the rose family: a dusk of the petals' own hue, dark
+     enough that the screen-blended flower still reads as light. Every colour
+     below keeps the family and walks lightness: the dusk that dims the room is
+     the room's own depth, the ambient pools are the room's own light.
+
+     E1 field       the stage colour — the wallpaper's ground
+        lotus       how much of the artwork's light lands on the field (screen)
+     E2 atmosphere  a neutral-density dusk graded top → bottom, the one light
+                    being above: the room stays open where no glass sits and
+                    deepens toward the dock, which is what makes Clear glass
+                    legal there. No blur, no white: the wallpaper is always seen.
+     E3 ambient     three slow pools of the room's light
+     E4 wake        no token: the refraction wake only moves wallpaper pixels */
+  --environment-field: oklch(0.31 0.05 354);
+  --environment-lotus-light: 1;
+  --environment-atmosphere:
+    radial-gradient(
+      ellipse min(40vw, 560px) min(48vh, 480px) at 50% 40%,
+      oklch(0.15 0.03 348 / 0.46),
+      oklch(0.15 0.03 348 / 0) 100%
+    ),
+    linear-gradient(
+      180deg,
+      oklch(0.2 0.035 350 / 0) 0%,
+      oklch(0.2 0.035 350 / 0.08) 50%,
+      oklch(0.15 0.03 346 / 0.5) 84%,
+      oklch(0.13 0.028 344 / 0.62) 100%
+    );
+  --environment-ambient-rose: oklch(0.8 0.09 10 / 0.12);
+  --environment-ambient-violet: oklch(0.72 0.09 300 / 0.1);
+  --environment-ambient-warm: oklch(0.96 0.04 80 / 0.08);
+
+  /* ── Landing rooms — the Product and Sponsor galleries ────────────────────
+     The two daylight rooms of the login stage. Both declare a `light`
+     backdrop in both themes (`environment.md` E5), so these tokens are
+     theme-INVARIANT: `html.dark` never redeclares them, and neither room reads
+     a theme-relative `--color-*` token.
+
+     Anchor (`color.md` §3): the brand — `--color-primary` #5e6ad2 =
+     oklch(0.567 0.159 275). Neutrals are the anchor's hue at near-zero chroma
+     (a cool paper, an indigo-black ink); the accent steps are the anchor's
+     tapered ladder (L .95 · .73 · anchor · .48). Alphas and shadows are
+     derived with color-mix — never a second literal. Contrast on paper:
+       ink 17.1 : 1 · ink-2 7.0 : 1 · ink-3 4.6 : 1 (captions only)
+       accent 4.6 : 1 (large text, fills) · accent-ink 6.7 : 1 (small text)
+     Paper under ink gives 17.1 : 1 on the one filled button. */
+  --landing-paper: oklch(0.995 0.002 275);
+  --landing-mist: oklch(0.972 0.004 275);
+  --landing-ink: oklch(0.22 0.018 275);
+  --landing-ink-2: oklch(0.46 0.014 275);
+  --landing-ink-3: oklch(0.56 0.012 275);
+  --landing-accent: oklch(0.567 0.159 275);
+  --landing-accent-ink: oklch(0.48 0.128 275);
+  --landing-accent-soft: oklch(0.73 0.105 275);
+  --landing-accent-tint: oklch(0.95 0.048 275);
+  --landing-line: color-mix(in oklch, var(--landing-ink) 9%, transparent);
+  --landing-line-strong: color-mix(in oklch, var(--landing-ink) 16%, transparent);
+  /* Elevation of a product shot resting on paper: a contact line and one long,
+     soft fall — the one light is above, so the shadow falls below. */
+  --landing-shadow:
+    0 1px 2px color-mix(in oklch, var(--landing-ink) 6%, transparent),
+    0 28px 56px -28px color-mix(in oklch, var(--landing-ink) 22%, transparent);
+  --landing-shadow-lg:
+    0 1px 2px color-mix(in oklch, var(--landing-ink) 6%, transparent),
+    0 48px 96px -40px color-mix(in oklch, var(--landing-ink) 28%, transparent);
+
+  /* Spacing scale (4px-rooted) */
+  --space-0-5: 2px;
+  --space-1: 4px;
+  --space-2: 8px;
+  --space-3: 12px;
+  --space-4: 16px;
+  --space-5: 20px;
+  --space-6: 24px;
+  --space-8: 32px;
+  --space-10: 40px;
+  --space-12: 48px;
+  --space-16: 64px;
+  --space-20: 80px;
+  --space-24: 96px;
+
+  /* Motion */
+  --duration-fast: 120ms;
+  --duration-base: 200ms;
+  --duration-slow: 320ms;
+  --ease-out: cubic-bezier(0.16, 1, 0.3, 1);
+  --ease-in-out: cubic-bezier(0.65, 0, 0.35, 1);
+  --ease-spring: cubic-bezier(0.34, 1.56, 0.64, 1);
+
+  /* Layout */
+  --sidebar-width: 240px;
+  --sidebar-width-collapsed: 64px;
+  --header-height: 56px;
+
+  /* The authenticated app dock (Phase B5) — the floating bottom chrome of the
+     shell on compact viewports, and the room the scroll container owes it.
+     The height is AUTHORED, never measured: the item, the dock row's own
+     padding, and the primitive's content inset, which always participates
+     (`components.md` §7). Keeping it a token is what lets `.content` reserve
+     exactly the bar's room without reading layout.
+       item   48px  ≥ the 44px touch floor at every viewport
+       height 48 + 2×8 (row) + 2×8 (--material-inset) = 80px
+       space  height + the bottom gutter + the device's safe area */
+  --app-dock-item: 48px;
+  --app-dock-label: var(--text-xs);
+  --app-dock-gutter: var(--space-3);
+  --app-dock-height: calc(
+    var(--app-dock-item) + 2 * var(--space-2) + 2 * var(--material-inset)
+  );
+  --app-dock-space: calc(
+    var(--app-dock-height) + var(--app-dock-gutter) + env(safe-area-inset-bottom, 0px)
+  );
+
+  color-scheme: light;
+}
+
+html.dark {
+  /* Black+purple luxury identity — a low-saturation indigo-violet hue (~248°)
+     carried through every neutral step (bg → surface → hover → border),
+     instead of a flat gray-black. Re-validated 2026-07 (step 12): all
+     text/border contrast ratios meet or beat the previous gray-black ramp
+     (see the handoff's verification section for the exact figures), and the
+     categorical accent set below still passes the dataviz six-checks
+     validator against the new surface. */
+  --color-primary: #7b86e8;
+  --color-primary-hover: #8b95ee;
+  --color-primary-active: #6a76dd;
+  --color-primary-soft: rgba(123, 134, 232, 0.14);
+
+  --color-secondary: #a1a1aa;
+  --color-secondary-hover: #b4b4bb;
+  --color-secondary-active: #8a8a92;
+  --color-secondary-soft: rgba(161, 161, 170, 0.12);
+
+  --color-bg: #0a0910;
+  --color-surface: #12101a;
+  --color-surface-hover: #191823;
+  --color-border: #262433;
+  --color-border-strong: #343243;
+  --color-muted: #6e6b80;
+  --color-muted-soft: #191823;
+  --color-overlay: rgba(8, 7, 14, 0.66);
+
+  --color-text: #f4f4f5;
+  --color-text-secondary: #a8a6b4;
+  --color-text-tertiary: #6e6b80;
+
+  --color-success: #4ade80;
+  --color-success-soft: rgba(74, 222, 128, 0.14);
+  --color-warning: #fbbf24;
+  --color-warning-soft: rgba(251, 191, 36, 0.14);
+  --color-danger: #f87171;
+  --color-danger-soft: rgba(248, 113, 113, 0.14);
+  --color-info: #60a5fa;
+  --color-info-soft: rgba(96, 165, 250, 0.14);
+
+  /* Accents — dark steps re-picked (not auto-flipped) and validated against
+     the dark surface; teal/amber/rose pass both modes unchanged. */
+  --accent-indigo: #6674dd;
+  --accent-teal: #0d9488;
+  --accent-amber: #d97706;
+  --accent-rose: #e11d48;
+  --accent-violet: #8b5cf6;
+
+  --shadow-sm: 0 1px 2px rgba(0, 0, 0, 0.4);
+  --shadow-md: 0 2px 8px rgba(0, 0, 0, 0.5), 0 1px 2px rgba(0, 0, 0, 0.4);
+  --shadow-lg: 0 8px 24px rgba(0, 0, 0, 0.6), 0 2px 6px rgba(0, 0, 0, 0.4);
+  --shadow-float: 0 12px 32px rgba(0, 0, 0, 0.55), 0 4px 10px rgba(0, 0, 0, 0.35);
+  --shadow-overlay: 0 16px 48px rgba(0, 0, 0, 0.6), 0 2px 8px rgba(0, 0, 0, 0.3);
+
+  /* Reserved for the primary CTA / active nav item / focused interactive
+     card — see the :root definition for the "why". */
+  --shadow-glow-primary: 0 0 0 1px rgba(124, 134, 234, 0.35), 0 8px 24px rgba(124, 134, 234, 0.22);
+
+  /* The undeclared backdrop follows the theme (see :root). */
+  --material-backdrop: dark;
+
+  --scene-aura: rgba(219, 168, 178, 0.08);
+  /* The brand tile's lip keeps its violet cast on the dark theme. */
+  --scene-brand-lip: rgba(180, 172, 255, 0.18);
+
+  /* Environment — the same room at a later hour: the ground falls toward
+     night and the blooms, a little quieter, carry the room. */
+  --environment-field: oklch(0.15 0.025 350);
+  --environment-lotus-light: 0.9;
+  --environment-atmosphere:
+    radial-gradient(
+      ellipse min(40vw, 560px) min(48vh, 480px) at 50% 40%,
+      oklch(0.11 0.02 346 / 0.4),
+      oklch(0.11 0.02 346 / 0) 100%
+    ),
+    linear-gradient(
+      180deg,
+      oklch(0.12 0.02 348 / 0) 0%,
+      oklch(0.12 0.02 348 / 0.1) 50%,
+      oklch(0.1 0.018 346 / 0.5) 84%,
+      oklch(0.09 0.016 344 / 0.62) 100%
+    );
+  --environment-ambient-rose: oklch(0.72 0.1 10 / 0.1);
+  --environment-ambient-violet: oklch(0.64 0.11 300 / 0.1);
+  --environment-ambient-warm: oklch(0.92 0.04 80 / 0.06);
+
+  color-scheme: dark;
+}
+
+/*
+ * Reduced transparency / increased contrast — the environment's half of tier C
+ * (`environment.md` §4): the material turns dense on its own; the atmosphere
+ * deepens and the blooms recede so nothing decorative competes with a label.
+ * Declared once, for both themes (same specificity, later wins).
+ */
+@media (prefers-reduced-transparency: reduce), (prefers-contrast: more) {
+  :root,
+  html.dark {
+    --environment-atmosphere: linear-gradient(
+      180deg,
+      oklch(0.15 0.025 345 / 0.56) 0%,
+      oklch(0.14 0.025 345 / 0.68) 50%,
+      oklch(0.12 0.022 344 / 0.84) 100%
+    );
+    --environment-lotus-light: 0.6;
+  }
+}

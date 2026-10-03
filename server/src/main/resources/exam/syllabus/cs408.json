@@ -1,0 +1,309 @@
+{
+  "code": "cs408",
+  "paperCode": "408",
+  "name": "计算机学科专业基础",
+  "fullScore": 150,
+  "durationMinutes": 180,
+  "examDay": 2,
+  "startTime": "14:00",
+  "pastPaperFirstYear": 2009,
+  "sections": [
+    { "code": "cs408.choice", "name": "单项选择题", "questionType": "single_choice", "count": 40, "score": 2, "total": 80 },
+    { "code": "cs408.comprehensive", "name": "综合应用题", "questionType": "open", "count": 7, "score": null, "total": 70 }
+  ],
+  "modules": [
+    {
+      "code": "cs408.ds",
+      "name": "数据结构",
+      "score": 45,
+      "chapters": [
+        {
+          "code": "cs408.ds.basics",
+          "name": "基本概念",
+          "points": [
+            { "code": "cs408.ds.basics.concepts", "name": "数据结构的基本概念", "weight": 1 },
+            { "code": "cs408.ds.basics.complexity", "name": "算法的时间复杂度与空间复杂度", "weight": 3 }
+          ]
+        },
+        {
+          "code": "cs408.ds.list",
+          "name": "线性表",
+          "points": [
+            { "code": "cs408.ds.list.sequential", "name": "顺序表", "weight": 2 },
+            { "code": "cs408.ds.list.linked", "name": "单链表、双链表与循环链表", "weight": 3 },
+            { "code": "cs408.ds.list.application", "name": "线性表的应用与算法设计", "weight": 3 }
+          ]
+        },
+        {
+          "code": "cs408.ds.stack",
+          "name": "栈、队列和数组",
+          "points": [
+            { "code": "cs408.ds.stack.stack", "name": "栈的基本概念与存储结构", "weight": 2 },
+            { "code": "cs408.ds.stack.queue", "name": "队列与循环队列", "weight": 3 },
+            { "code": "cs408.ds.stack.application", "name": "栈和队列的应用（表达式求值、括号匹配、递归）", "weight": 2 },
+            { "code": "cs408.ds.stack.array", "name": "多维数组的存储", "weight": 1 },
+            { "code": "cs408.ds.stack.matrix", "name": "特殊矩阵的压缩存储", "weight": 2 }
+          ]
+        },
+        {
+          "code": "cs408.ds.tree",
+          "name": "树与二叉树",
+          "points": [
+            { "code": "cs408.ds.tree.concepts", "name": "树的基本概念与性质", "weight": 2 },
+            { "code": "cs408.ds.tree.binary", "name": "二叉树的定义、性质与存储结构", "weight": 3 },
+            { "code": "cs408.ds.tree.traversal", "name": "二叉树的遍历", "weight": 3 },
+            { "code": "cs408.ds.tree.threaded", "name": "线索二叉树", "weight": 2 },
+            { "code": "cs408.ds.tree.forest", "name": "树、森林的存储、转换与遍历", "weight": 2 },
+            { "code": "cs408.ds.tree.huffman", "name": "哈夫曼树与哈夫曼编码", "weight": 3 },
+            { "code": "cs408.ds.tree.union-find", "name": "并查集", "weight": 2 },
+            { "code": "cs408.ds.tree.heap", "name": "堆及其应用", "weight": 2 }
+          ]
+        },
+        {
+          "code": "cs408.ds.graph",
+          "name": "图",
+          "points": [
+            { "code": "cs408.ds.graph.concepts", "name": "图的基本概念", "weight": 2 },
+            { "code": "cs408.ds.graph.storage", "name": "图的存储：邻接矩阵、邻接表、十字链表、邻接多重表", "weight": 3 },
+            { "code": "cs408.ds.graph.traversal", "name": "深度优先与广度优先遍历", "weight": 3 },
+            { "code": "cs408.ds.graph.mst", "name": "最小生成树（Prim、Kruskal）", "weight": 3 },
+            { "code": "cs408.ds.graph.shortest-path", "name": "最短路径（Dijkstra、Floyd）", "weight": 3 },
+            { "code": "cs408.ds.graph.topo", "name": "拓扑排序", "weight": 2 },
+            { "code": "cs408.ds.graph.critical-path", "name": "关键路径", "weight": 2 }
+          ]
+        },
+        {
+          "code": "cs408.ds.search",
+          "name": "查找",
+          "points": [
+            { "code": "cs408.ds.search.basic", "name": "查找的基本概念与顺序、分块查找", "weight": 1 },
+            { "code": "cs408.ds.search.binary", "name": "折半查找", "weight": 3 },
+            { "code": "cs408.ds.search.bst", "name": "二叉搜索树", "weight": 2 },
+            { "code": "cs408.ds.search.avl", "name": "平衡二叉树", "weight": 3 },
+            { "code": "cs408.ds.search.rbtree", "name": "红黑树", "weight": 2 },
+            { "code": "cs408.ds.search.btree", "name": "B 树与 B+ 树", "weight": 3 },
+            { "code": "cs408.ds.search.hash", "name": "散列表", "weight": 3 },
+            { "code": "cs408.ds.search.string", "name": "字符串模式匹配（KMP）", "weight": 2 }
+          ]
+        },
+        {
+          "code": "cs408.ds.sort",
+          "name": "排序",
+          "points": [
+            { "code": "cs408.ds.sort.insertion", "name": "插入排序（直接插入、折半插入、希尔排序）", "weight": 2 },
+            { "code": "cs408.ds.sort.exchange", "name": "交换排序（冒泡排序、快速排序）", "weight": 3 },
+            { "code": "cs408.ds.sort.selection", "name": "选择排序（简单选择排序、堆排序）", "weight": 3 },
+            { "code": "cs408.ds.sort.merge-radix", "name": "归并排序与基数排序", "weight": 2 },
+            { "code": "cs408.ds.sort.external", "name": "外部排序", "weight": 2 },
+            { "code": "cs408.ds.sort.analysis", "name": "排序算法的比较与应用", "weight": 3 }
+          ]
+        }
+      ]
+    },
+    {
+      "code": "cs408.co",
+      "name": "计算机组成原理",
+      "score": 45,
+      "chapters": [
+        {
+          "code": "cs408.co.overview",
+          "name": "计算机系统概述",
+          "points": [
+            { "code": "cs408.co.overview.hierarchy", "name": "计算机系统层次结构与工作原理", "weight": 1 },
+            { "code": "cs408.co.overview.performance", "name": "计算机性能指标（CPI、MIPS、执行时间）", "weight": 2 }
+          ]
+        },
+        {
+          "code": "cs408.co.data",
+          "name": "数据的表示和运算",
+          "points": [
+            { "code": "cs408.co.data.radix", "name": "进位计数制与编码", "weight": 1 },
+            { "code": "cs408.co.data.fixed", "name": "定点数的表示（原码、补码、移码）", "weight": 3 },
+            { "code": "cs408.co.data.integer", "name": "整数的运算与溢出判断", "weight": 3 },
+            { "code": "cs408.co.data.alu", "name": "运算部件：加法器与 ALU", "weight": 2 },
+            { "code": "cs408.co.data.float", "name": "浮点数的表示（IEEE 754）与运算", "weight": 3 }
+          ]
+        },
+        {
+          "code": "cs408.co.memory",
+          "name": "存储器层次结构",
+          "points": [
+            { "code": "cs408.co.memory.hierarchy", "name": "存储器的分类与层次结构", "weight": 1 },
+            { "code": "cs408.co.memory.ram", "name": "半导体存储器（SRAM、DRAM、Flash）", "weight": 2 },
+            { "code": "cs408.co.memory.main", "name": "主存储器：芯片扩展、多模块存储器与 CPU 连接", "weight": 3 },
+            { "code": "cs408.co.memory.external", "name": "外部存储器（磁盘、固态硬盘）", "weight": 2 },
+            { "code": "cs408.co.memory.cache", "name": "Cache：映射方式、替换算法与写策略", "weight": 3 },
+            { "code": "cs408.co.memory.virtual", "name": "虚拟存储器：页式、段式与 TLB", "weight": 3 }
+          ]
+        },
+        {
+          "code": "cs408.co.isa",
+          "name": "指令系统",
+          "points": [
+            { "code": "cs408.co.isa.format", "name": "指令格式", "weight": 2 },
+            { "code": "cs408.co.isa.addressing", "name": "寻址方式", "weight": 3 },
+            { "code": "cs408.co.isa.alignment", "name": "数据的对齐与大/小端存放", "weight": 2 },
+            { "code": "cs408.co.isa.cisc-risc", "name": "CISC 与 RISC", "weight": 1 },
+            { "code": "cs408.co.isa.machine-code", "name": "高级语言程序与机器级代码的对应", "weight": 3 }
+          ]
+        },
+        {
+          "code": "cs408.co.cpu",
+          "name": "中央处理器",
+          "points": [
+            { "code": "cs408.co.cpu.structure", "name": "CPU 的功能、结构与指令执行过程", "weight": 2 },
+            { "code": "cs408.co.cpu.datapath", "name": "数据通路", "weight": 3 },
+            { "code": "cs408.co.cpu.control", "name": "控制器：硬布线与微程序", "weight": 2 },
+            { "code": "cs408.co.cpu.interrupt", "name": "异常和中断机制", "weight": 2 },
+            { "code": "cs408.co.cpu.pipeline", "name": "指令流水线与冒险处理", "weight": 3 },
+            { "code": "cs408.co.cpu.multiprocessor", "name": "多处理器的基本概念", "weight": 1 }
+          ]
+        },
+        {
+          "code": "cs408.co.io",
+          "name": "总线和输入/输出系统",
+          "points": [
+            { "code": "cs408.co.io.bus", "name": "总线的组成、性能指标与定时", "weight": 2 },
+            { "code": "cs408.co.io.interface", "name": "I/O 接口", "weight": 1 },
+            { "code": "cs408.co.io.polling", "name": "程序查询方式", "weight": 1 },
+            { "code": "cs408.co.io.interrupt", "name": "程序中断方式", "weight": 3 },
+            { "code": "cs408.co.io.dma", "name": "DMA 方式", "weight": 3 }
+          ]
+        }
+      ]
+    },
+    {
+      "code": "cs408.os",
+      "name": "操作系统",
+      "score": 35,
+      "chapters": [
+        {
+          "code": "cs408.os.overview",
+          "name": "操作系统概述",
+          "points": [
+            { "code": "cs408.os.overview.concepts", "name": "操作系统的基本概念、特征与发展", "weight": 1 },
+            { "code": "cs408.os.overview.runtime", "name": "程序运行环境：内核态与用户态、中断和异常、系统调用", "weight": 3 },
+            { "code": "cs408.os.overview.structure", "name": "操作系统结构、引导与虚拟机", "weight": 1 }
+          ]
+        },
+        {
+          "code": "cs408.os.process",
+          "name": "进程管理",
+          "points": [
+            { "code": "cs408.os.process.concepts", "name": "进程与线程的概念、状态与转换", "weight": 3 },
+            { "code": "cs408.os.process.ipc", "name": "进程间通信", "weight": 1 },
+            { "code": "cs408.os.process.scheduling", "name": "CPU 调度与调度算法", "weight": 3 },
+            { "code": "cs408.os.process.sync", "name": "同步与互斥：锁、信号量与条件变量", "weight": 3 },
+            { "code": "cs408.os.process.classic", "name": "经典同步问题", "weight": 3 },
+            { "code": "cs408.os.process.deadlock", "name": "死锁：预防、避免（银行家算法）、检测与解除", "weight": 3 }
+          ]
+        },
+        {
+          "code": "cs408.os.memory",
+          "name": "内存管理",
+          "points": [
+            { "code": "cs408.os.memory.basics", "name": "内存管理基础与连续分配", "weight": 2 },
+            { "code": "cs408.os.memory.paging", "name": "页式、段式与段页式管理", "weight": 3 },
+            { "code": "cs408.os.memory.virtual", "name": "请求分页与页框分配", "weight": 2 },
+            { "code": "cs408.os.memory.replacement", "name": "页面置换算法与抖动", "weight": 3 },
+            { "code": "cs408.os.memory.mmap", "name": "内存映射文件", "weight": 1 }
+          ]
+        },
+        {
+          "code": "cs408.os.file",
+          "name": "文件管理",
+          "points": [
+            { "code": "cs408.os.file.concepts", "name": "文件、文件控制块与索引节点", "weight": 2 },
+            { "code": "cs408.os.file.structure", "name": "文件的逻辑结构与物理结构", "weight": 3 },
+            { "code": "cs408.os.file.directory", "name": "目录结构、硬链接与软链接", "weight": 2 },
+            { "code": "cs408.os.file.system", "name": "文件系统布局、空闲空间管理与挂载", "weight": 2 }
+          ]
+        },
+        {
+          "code": "cs408.os.io",
+          "name": "输入输出管理",
+          "points": [
+            { "code": "cs408.os.io.basics", "name": "I/O 控制方式与 I/O 软件层次结构", "weight": 2 },
+            { "code": "cs408.os.io.buffering", "name": "缓冲区管理、设备分配与 SPOOLing", "weight": 2 },
+            { "code": "cs408.os.io.disk", "name": "磁盘结构与磁盘调度算法", "weight": 3 },
+            { "code": "cs408.os.io.ssd", "name": "固态硬盘", "weight": 1 }
+          ]
+        }
+      ]
+    },
+    {
+      "code": "cs408.cn",
+      "name": "计算机网络",
+      "score": 25,
+      "chapters": [
+        {
+          "code": "cs408.cn.overview",
+          "name": "计算机网络体系结构",
+          "points": [
+            { "code": "cs408.cn.overview.concepts", "name": "计算机网络的组成、分类与性能指标", "weight": 2 },
+            { "code": "cs408.cn.overview.architecture", "name": "分层结构、协议与 OSI/TCP-IP 模型", "weight": 2 }
+          ]
+        },
+        {
+          "code": "cs408.cn.physical",
+          "name": "物理层",
+          "points": [
+            { "code": "cs408.cn.physical.theory", "name": "奈奎斯特定理与香农定理", "weight": 3 },
+            { "code": "cs408.cn.physical.coding", "name": "编码与调制", "weight": 2 },
+            { "code": "cs408.cn.physical.switching", "name": "电路交换、报文交换与分组交换", "weight": 2 },
+            { "code": "cs408.cn.physical.media", "name": "传输介质与物理层设备", "weight": 1 }
+          ]
+        },
+        {
+          "code": "cs408.cn.link",
+          "name": "数据链路层",
+          "points": [
+            { "code": "cs408.cn.link.framing", "name": "组帧与差错控制（CRC）", "weight": 2 },
+            { "code": "cs408.cn.link.arq", "name": "可靠传输：停止-等待、GBN 与 SR", "weight": 3 },
+            { "code": "cs408.cn.link.mac", "name": "介质访问控制：信道划分、CSMA/CD 与 CSMA/CA", "weight": 3 },
+            { "code": "cs408.cn.link.lan", "name": "局域网：以太网、IEEE 802.11 与 VLAN", "weight": 2 },
+            { "code": "cs408.cn.link.wan", "name": "广域网与 PPP 协议", "weight": 1 },
+            { "code": "cs408.cn.link.switch", "name": "以太网交换机", "weight": 2 }
+          ]
+        },
+        {
+          "code": "cs408.cn.network",
+          "name": "网络层",
+          "points": [
+            { "code": "cs408.cn.network.functions", "name": "网络层的功能与 SDN", "weight": 1 },
+            { "code": "cs408.cn.network.routing", "name": "路由算法：距离-向量与链路状态", "weight": 2 },
+            { "code": "cs408.cn.network.ipv4", "name": "IPv4 分组、地址与 NAT", "weight": 3 },
+            { "code": "cs408.cn.network.subnet", "name": "子网划分、CIDR 与路由聚合", "weight": 3 },
+            { "code": "cs408.cn.network.protocols", "name": "ARP、DHCP 与 ICMP", "weight": 2 },
+            { "code": "cs408.cn.network.ipv6", "name": "IPv6", "weight": 1 },
+            { "code": "cs408.cn.network.routing-protocols", "name": "路由协议：RIP、OSPF 与 BGP", "weight": 2 },
+            { "code": "cs408.cn.network.multicast", "name": "IP 组播与移动 IP", "weight": 1 },
+            { "code": "cs408.cn.network.router", "name": "路由器与分组转发", "weight": 2 }
+          ]
+        },
+        {
+          "code": "cs408.cn.transport",
+          "name": "传输层",
+          "points": [
+            { "code": "cs408.cn.transport.services", "name": "传输层服务与端口", "weight": 1 },
+            { "code": "cs408.cn.transport.udp", "name": "UDP 协议", "weight": 2 },
+            { "code": "cs408.cn.transport.tcp-connection", "name": "TCP 报文段与连接管理", "weight": 3 },
+            { "code": "cs408.cn.transport.tcp-reliable", "name": "TCP 可靠传输与流量控制", "weight": 3 },
+            { "code": "cs408.cn.transport.tcp-congestion", "name": "TCP 拥塞控制", "weight": 3 }
+          ]
+        },
+        {
+          "code": "cs408.cn.application",
+          "name": "应用层",
+          "points": [
+            { "code": "cs408.cn.application.models", "name": "C/S 与 P2P 模型", "weight": 1 },
+            { "code": "cs408.cn.application.dns", "name": "DNS", "weight": 3 },
+            { "code": "cs408.cn.application.ftp", "name": "FTP", "weight": 1 },
+            { "code": "cs408.cn.application.email", "name": "电子邮件：SMTP、POP3 与 MIME", "weight": 2 },
+            { "code": "cs408.cn.application.http", "name": "WWW 与 HTTP", "weight": 3 }
+          ]
+        }
+      ]
+    }
+  ]
+}

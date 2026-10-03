@@ -2,7 +2,7 @@
 
 How the material is physically constructed. Governed by `constitution.md`.
 Source research: `docs/liquid-glass-analysis.md`; living reference
-implementation: `ai-learning-web/src/components/experience/GlassSurface.vue`.
+implementation: `web/src/components/experience/GlassSurface.vue`.
 
 ---
 

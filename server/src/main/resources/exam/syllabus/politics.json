@@ -1,0 +1,228 @@
+{
+  "code": "politics",
+  "paperCode": "101",
+  "name": "思想政治理论",
+  "fullScore": 100,
+  "durationMinutes": 180,
+  "examDay": 1,
+  "startTime": "08:30",
+  "pastPaperFirstYear": 2008,
+  "scoreApproximate": true,
+  "sections": [
+    { "code": "politics.single", "name": "单项选择题", "questionType": "single_choice", "count": 16, "score": 1, "total": 16 },
+    { "code": "politics.multi", "name": "多项选择题", "questionType": "multi_choice", "count": 17, "score": 2, "total": 34 },
+    { "code": "politics.analysis", "name": "分析题", "questionType": "open", "count": 5, "score": 10, "total": 50 }
+  ],
+  "modules": [
+    {
+      "code": "politics.marx",
+      "name": "马克思主义基本原理",
+      "score": 24,
+      "chapters": [
+        {
+          "code": "politics.marx.intro",
+          "name": "导论",
+          "points": [
+            { "code": "politics.marx.intro.features", "name": "马克思主义的创立、发展与基本特征", "weight": 1 }
+          ]
+        },
+        {
+          "code": "politics.marx.materiality",
+          "name": "世界的物质性及发展规律",
+          "points": [
+            { "code": "politics.marx.materiality.matter", "name": "物质观与意识的本质、能动作用", "weight": 3 },
+            { "code": "politics.marx.materiality.connection", "name": "事物的普遍联系与变化发展", "weight": 2 },
+            { "code": "politics.marx.materiality.laws", "name": "对立统一、质量互变与否定之否定规律", "weight": 3 },
+            { "code": "politics.marx.materiality.method", "name": "唯物辩证法的基本范畴与思维方法", "weight": 2 }
+          ]
+        },
+        {
+          "code": "politics.marx.practice",
+          "name": "实践与认识及其发展规律",
+          "points": [
+            { "code": "politics.marx.practice.practice", "name": "实践的本质、基本结构与形式", "weight": 2 },
+            { "code": "politics.marx.practice.cognition", "name": "认识的本质、过程与发展规律", "weight": 3 },
+            { "code": "politics.marx.practice.truth", "name": "真理与价值", "weight": 3 }
+          ]
+        },
+        {
+          "code": "politics.marx.society",
+          "name": "人类社会及其发展规律",
+          "points": [
+            { "code": "politics.marx.society.existence", "name": "社会存在与社会意识", "weight": 3 },
+            { "code": "politics.marx.society.contradiction", "name": "社会基本矛盾及其运动规律", "weight": 3 },
+            { "code": "politics.marx.society.motive", "name": "社会历史发展的动力", "weight": 2 },
+            { "code": "politics.marx.society.masses", "name": "人民群众在历史发展中的作用", "weight": 2 }
+          ]
+        },
+        {
+          "code": "politics.marx.capitalism",
+          "name": "资本主义的本质及规律",
+          "points": [
+            { "code": "politics.marx.capitalism.commodity", "name": "商品经济与价值规律（商品二因素、劳动二重性）", "weight": 3 },
+            { "code": "politics.marx.capitalism.surplus", "name": "剩余价值的生产与分配", "weight": 3 },
+            { "code": "politics.marx.capitalism.reproduction", "name": "资本积累、资本循环周转与社会再生产", "weight": 2 },
+            { "code": "politics.marx.capitalism.superstructure", "name": "资本主义上层建筑", "weight": 1 }
+          ]
+        },
+        {
+          "code": "politics.marx.development",
+          "name": "资本主义的发展及其趋势",
+          "points": [
+            { "code": "politics.marx.development.monopoly", "name": "垄断资本主义的形成与发展", "weight": 2 },
+            { "code": "politics.marx.development.contemporary", "name": "当代资本主义的新变化与历史趋势", "weight": 2 }
+          ]
+        },
+        {
+          "code": "politics.marx.socialism",
+          "name": "社会主义与共产主义",
+          "points": [
+            { "code": "politics.marx.socialism.principles", "name": "科学社会主义的基本原则与社会主义发展规律", "weight": 2 },
+            { "code": "politics.marx.socialism.communism", "name": "共产主义社会的基本特征与实现", "weight": 1 }
+          ]
+        }
+      ]
+    },
+    {
+      "code": "politics.mao",
+      "name": "毛泽东思想和中国特色社会主义理论体系概论",
+      "score": 30,
+      "chapters": [
+        {
+          "code": "politics.mao.thought",
+          "name": "毛泽东思想",
+          "points": [
+            { "code": "politics.mao.thought.formation", "name": "毛泽东思想的形成发展与活的灵魂", "weight": 3 },
+            { "code": "politics.mao.thought.revolution", "name": "新民主主义革命理论", "weight": 3 },
+            { "code": "politics.mao.thought.transformation", "name": "社会主义改造理论", "weight": 2 },
+            { "code": "politics.mao.thought.exploration", "name": "社会主义建设道路初步探索的理论成果", "weight": 2 }
+          ]
+        },
+        {
+          "code": "politics.mao.theory",
+          "name": "中国特色社会主义理论体系",
+          "points": [
+            { "code": "politics.mao.theory.deng", "name": "邓小平理论", "weight": 2 },
+            { "code": "politics.mao.theory.three-represents", "name": "“三个代表”重要思想", "weight": 1 },
+            { "code": "politics.mao.theory.scientific", "name": "科学发展观", "weight": 1 }
+          ]
+        },
+        {
+          "code": "politics.mao.xi",
+          "name": "习近平新时代中国特色社会主义思想",
+          "points": [
+            { "code": "politics.mao.xi.position", "name": "思想的创立、核心要义与历史地位", "weight": 3 },
+            { "code": "politics.mao.xi.socialism", "name": "坚持和发展中国特色社会主义", "weight": 3 },
+            { "code": "politics.mao.xi.modernization", "name": "中国式现代化与新发展理念", "weight": 3 },
+            { "code": "politics.mao.xi.governance", "name": "全面深化改革与全面依法治国", "weight": 2 },
+            { "code": "politics.mao.xi.party", "name": "全面从严治党", "weight": 2 },
+            { "code": "politics.mao.xi.world", "name": "推动构建人类命运共同体", "weight": 2 }
+          ]
+        }
+      ]
+    },
+    {
+      "code": "politics.history",
+      "name": "中国近现代史纲要",
+      "score": 14,
+      "chapters": [
+        {
+          "code": "politics.history.modern",
+          "name": "近代中国（1840—1919）",
+          "points": [
+            { "code": "politics.history.modern.invasion", "name": "资本—帝国主义对中国的侵略与中国人民的抗争", "weight": 2 },
+            { "code": "politics.history.modern.exploration", "name": "早期探索与辛亥革命", "weight": 3 }
+          ]
+        },
+        {
+          "code": "politics.history.revolution",
+          "name": "新民主主义革命（1919—1949）",
+          "points": [
+            { "code": "politics.history.revolution.may-fourth", "name": "五四运动与中国共产党的成立", "weight": 3 },
+            { "code": "politics.history.revolution.road", "name": "中国革命新道路的探索", "weight": 3 },
+            { "code": "politics.history.revolution.anti-japanese", "name": "全民族抗日战争", "weight": 2 },
+            { "code": "politics.history.revolution.liberation", "name": "解放战争与新中国的成立", "weight": 2 }
+          ]
+        },
+        {
+          "code": "politics.history.socialist",
+          "name": "社会主义基本制度的建立与探索（1949—1978）",
+          "points": [
+            { "code": "politics.history.socialist.establishment", "name": "社会主义基本制度在中国的确立", "weight": 2 },
+            { "code": "politics.history.socialist.exploration", "name": "社会主义建设的艰辛探索", "weight": 2 }
+          ]
+        },
+        {
+          "code": "politics.history.reform",
+          "name": "改革开放与新时代",
+          "points": [
+            { "code": "politics.history.reform.reform", "name": "改革开放和社会主义现代化建设新时期", "weight": 2 },
+            { "code": "politics.history.reform.new-era", "name": "中国特色社会主义进入新时代", "weight": 2 }
+          ]
+        }
+      ]
+    },
+    {
+      "code": "politics.ethics",
+      "name": "思想道德与法治",
+      "score": 16,
+      "chapters": [
+        {
+          "code": "politics.ethics.life",
+          "name": "人生观与理想信念",
+          "points": [
+            { "code": "politics.ethics.life.outlook", "name": "人生观与人生价值", "weight": 2 },
+            { "code": "politics.ethics.life.ideal", "name": "理想信念", "weight": 2 }
+          ]
+        },
+        {
+          "code": "politics.ethics.spirit",
+          "name": "中国精神与核心价值观",
+          "points": [
+            { "code": "politics.ethics.spirit.patriotism", "name": "中国精神：爱国主义与改革创新", "weight": 2 },
+            { "code": "politics.ethics.spirit.values", "name": "社会主义核心价值观", "weight": 2 }
+          ]
+        },
+        {
+          "code": "politics.ethics.morality",
+          "name": "道德",
+          "points": [
+            { "code": "politics.ethics.morality.essence", "name": "道德的本质、功能与传承", "weight": 2 },
+            { "code": "politics.ethics.morality.practice", "name": "社会公德、职业道德、家庭美德与个人品德", "weight": 1 }
+          ]
+        },
+        {
+          "code": "politics.ethics.law",
+          "name": "法治",
+          "points": [
+            { "code": "politics.ethics.law.system", "name": "社会主义法律体系与宪法", "weight": 3 },
+            { "code": "politics.ethics.law.thinking", "name": "法治思维与法律权利义务", "weight": 2 }
+          ]
+        }
+      ]
+    },
+    {
+      "code": "politics.current",
+      "name": "形势与政策以及当代世界经济与政治",
+      "score": 16,
+      "chapters": [
+        {
+          "code": "politics.current.policy",
+          "name": "形势与政策",
+          "points": [
+            { "code": "politics.current.policy.domestic", "name": "国内重大时事与政策", "weight": 3 },
+            { "code": "politics.current.policy.international", "name": "国际形势与中国外交", "weight": 3 }
+          ]
+        },
+        {
+          "code": "politics.current.world",
+          "name": "当代世界经济与政治",
+          "points": [
+            { "code": "politics.current.world.economy", "name": "当代世界经济", "weight": 2 },
+            { "code": "politics.current.world.politics", "name": "当代世界政治与国际格局", "weight": 2 }
+          ]
+        }
+      ]
+    }
+  ]
+}

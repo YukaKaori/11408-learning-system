@@ -154,9 +154,11 @@ per-frame state.
 1. Does it qualify — elevated, transient or premium? If it is a reading surface,
    a form, an editor, a dashboard or a canvas, **the answer is no**. Use
    `--color-surface` and the elevation scale.
-2. Does it need the *primitive*? The displacement budget is **3**, enforced by
-   `glassBudget.spec.ts`. A fourth instance is a deliberate renegotiation with a
-   written justification, not an implementation detail.
+2. Does it need the *primitive*? The displacement budget is **5** logical
+   surfaces (the registry in `experience/__tests__/materialSurfaces.ts`, checked
+   by `glassBudget.spec.ts`). A sixth is a deliberate renegotiation with a
+   written justification, not an implementation detail — the way the app dock
+   (B5) and the landing dock's selection lens (Amendment A1, 2026-10-02) were.
 3. If it sits **on** an existing slab, it needs no primitive at all — use
    `.glass-material` and extend `glass.css` if a control skin is missing.
 
@@ -166,7 +168,9 @@ per-frame state.
   highlight colour in a component. `glassBudget.spec.ts` fails on
   `backdrop-filter` outside the primitive, on the retired token family, and on
   hand-rolled copies of the facet vocabulary.
-- Nest glass inside glass — double refraction reads as a rendering error.
+- Nest glass inside glass — double refraction reads as a rendering error. (The
+  A1 selection lens overlaps the dock as a *sibling*, never inside it, and bends
+  at a third of the bar's strength for exactly this reason.)
 - Put two hero slabs in one view.
 
 ## 9. Roadmap

@@ -4,7 +4,7 @@ This directory holds **schema design documents** (ER diagrams, modeling notes).
 The executable schema lives exclusively in Flyway migrations:
 
 ```
-ai-learning-server/src/main/resources/db/migration/
+server/src/main/resources/db/migration/
 ```
 
 ## Rules

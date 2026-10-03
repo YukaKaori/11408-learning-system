@@ -1,6 +1,6 @@
 # The Constitution — the design language
 
-The law of every translucent surface in the AI Learning Platform. Distilled from
+The law of every translucent surface in the 11408 Learning System. Distilled from
 the GlassSurface and FluidGlass specifications, refined through Phases 8–17 and
 consolidated into one material in Phase 17.2.
 
@@ -108,6 +108,14 @@ in material from the login card built in Phase 9 and the dock built in Phase 12.
 - **Reflections move; objects don't.** The cursor, scroll position, and nearby
   "light sources" steer highlights, sheens, and Fresnel arcs *across* surfaces.
   The surfaces themselves stay planted. Cursor influences light, not geometry.
+  - *Amendment A1 (2026-10-02, the owner's request — "the glass block taller
+    than the bar, like the iPhone"):* exactly one object is exempt — the landing
+    dock's **selection lens** (`navigation.md` §4), a small slab marking the
+    current item. It travels between items and, under the user's own press or
+    drag, lifts — swelling past the bar's edges — then settles. It is bounded in
+    time, caused by the user, damped (no overshoot), transform-only, and absent
+    under reduced motion. Bars and every other slab stay planted; hover-follow
+    deformation stays rejected.
 - **Idle animation must be near-imperceptible.** The optional surface-flow layer
   (travelling highlight + faint caustics) runs on 20–40 second loops at low
   opacity. If a user consciously notices the idle loop, it's too strong.
@@ -141,7 +149,7 @@ in material from the login card built in Phase 9 and the dock built in Phase 12.
 ## 4. Architecture rules
 
 1. **One glass primitive.** `GlassSurface`
-   (`ai-learning-web/src/components/experience/GlassSurface.vue`) is the sole
+   (`web/src/components/experience/GlassSurface.vue`) is the sole
    refracting primitive. New surfaces compose it; they never re-implement
    displacement filters, and never fork a second glass component. (FluidGlass was
    evaluated and rejected — a WebGL demo scene, not portable. Its *ideas* — bar
@@ -151,7 +159,7 @@ in material from the login card built in Phase 9 and the dock built in Phase 12.
    is the glassmorphism this constitution forbids. Only its color methodology was
    adopted; see `color.md`.)
 2. **The material system is CSS.** On-glass control skins live in
-   `ai-learning-web/src/styles/glass.css` under `.glass-material`. New on-glass
+   `web/src/styles/glass.css` under `.glass-material`. New on-glass
    controls extend that file; they don't carry private glass styles.
 3. **CSS variables drive appearance.** All optical state (`--glass-depth`,
    `--glass-density`, `--glass-fresnel`, `--glass-light-*`, `--glass-proximity`,
@@ -263,16 +271,17 @@ Not everything is glass: dense reading surfaces (lesson bodies, tables, code
 editors, long forms) stay solid. Glass marks *elevated, transient, or premium*
 layers — the things floating above the work, never the work itself.
 
-Note the gap between this list and the material budget — **3 logical surfaces**
-shipped (landing dock, sign-in slab, note toolbar), **4** proposed with the app
-dock. The list says what is *eligible*; the budget says what is *mounted*.
-Eligibility is not permission — a new instance is still a budget renegotiation,
-counted in the unit `components.md` §1 defines.
+Note the gap between this list and the material budget — **5 logical surfaces**
+mounted (landing dock, its selection lens, app dock, sign-in slab, note
+toolbar; the lens since Amendment A1). The list says what is *eligible*; the
+budget says what is *mounted*. Eligibility is not permission — a new instance
+is still a budget renegotiation, counted in the unit `components.md` §1 defines.
 
 **Not surfaces at all**, and therefore neither eligible nor budgeted: environment
-layers (wallpaper, shroud, veil, ambient light, the reveal wake) and navigation
-indicators. They are governed by `environment.md` and `navigation.md` §4 and
-never touch the primitive.
+layers (wallpaper, shroud, veil, ambient light, the reveal wake) and the
+navigation indicator *light*. They are governed by `environment.md` and
+`navigation.md` §4 and never touch the primitive. (The A1 selection lens is the
+one marker that is a surface — declared, registered and budgeted as such.)
 
 ## 7. Forbidden patterns
 
@@ -307,7 +316,10 @@ never touch the primitive.
 - ❌ **Browser-brand branches** — any `Safari|Firefox|Chrome|Edg|WebKit|Gecko`
   string outside the one tier resolver.
 - ❌ **A glass indicator** — a second `GlassSurface` or nested material used to
-  mark the current navigation item. The indicator is a light.
+  mark the current navigation item. The indicator is a light. *Sole exception,
+  Amendment A1:* the landing dock's selection lens — a sibling slab of the same
+  `chrome` glass (never nested), with the labels above it, opted into by the
+  host and registered as its own budget surface (`navigation.md` §4).
 
 ## 8. Roadmap integration
 

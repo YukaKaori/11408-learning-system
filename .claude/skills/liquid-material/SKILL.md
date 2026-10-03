@@ -5,7 +5,7 @@ description: The one material system of this project — Apple-style Liquid Glas
 
 # Liquid Material
 
-The single material system of the AI Learning Platform. One skill, eleven
+The single material system of the 11408 Learning System. One skill, eleven
 references: this file decides *whether and what*, the references say *how*.
 
 **Status vocabulary used throughout the skill:** a rule marked **Shipped** describes
@@ -62,7 +62,9 @@ Use it whenever a task involves:
 - Any **environment layer** — a wallpaper, a shroud or veil, ambient light, a
   pointer-reactive reveal, a stage's backdrop declaration (`references/environment.md`)
 - A navigation **indicator** — a light on an existing slab, never a new slab
-  (`references/navigation.md` §4/§6)
+  (`references/navigation.md` §4/§6) — or, on the landing dock only, the
+  **selection lens** (Amendment A1, `navigation.md` §4): a sibling slab that
+  lifts past the bar under the hand
 - AI-state UI (thinking, streaming, complete) on a glass surface
 - **Adding any color token anywhere in the app** — see `references/color.md`
 
@@ -119,11 +121,12 @@ deliberate, documented renegotiation — never a side effect.
    576px spotlight and its shroud stay retired. `styles/__tests__/materialTokens.spec.ts` additionally pins
    each preset to the values its surface shipped with.
    **The budget** is counted in **logical material surfaces** — one per
-   (recipe, host container) that mounts the primitive, visible or not
-   (`references/components.md` §1 defines the unit). Baseline **3**: the landing
-   dock, the sign-in slab, the note selection toolbar. Proposed **4** with the
-   mobile app dock (Contract B5, decision B). Environment layers, indicators,
-   `.glass-material` skins and adaptive states are **never** instances. Note that
+   (recipe, host container, role) that mounts the primitive, visible or not
+   (`references/components.md` §1 defines the unit). **5** today: the landing
+   dock and its selection lens (A1), the mobile app dock (B5), the sign-in slab,
+   the note selection toolbar; at most 3 primitives on one screen (the login
+   stage). Environment layers, the indicator light, `.glass-material` skins and
+   adaptive states are **never** instances. Note that
    the shipped guard counts *files*, not surfaces — a recipe mounted twice is
    invisible to it — so B5 adds a surface registry the guard reads.
 3. **Every surface declares its material.** `GlassSurface`'s `material` prop is
@@ -258,7 +261,8 @@ Before shipping any material work:
       `animation` names `filter`/`backdrop-filter`** anywhere on the stage
 - [ ] No geometry deformation on hover/press; press is a sub-pixel settle; a
       navigation indicator is a light whose width may interpolate — the bar's
-      geometry never changes
+      geometry never changes (sole exception: the A1 selection lens, which
+      lifts by transform, damped, never under reduced motion)
 - [ ] Reduced-motion + coarse-pointer paths verified with the spotlight disabled
       **and the wake unmounted** — the environment must still read as a place
 - [ ] Tiers B and C checked (Gecko/WebKit, `prefers-reduced-transparency`):
