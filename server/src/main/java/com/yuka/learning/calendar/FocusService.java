@@ -121,6 +121,52 @@ public class FocusService {
         return new FocusResultResponse(null, close(running, endsAt));
     }
 
+    /**
+     * Saves the running timer, if there is one — the switch a paper sat in the
+     * app makes as its clock starts, so the same minutes are never counted
+     * twice. A timer past the ceiling is left for the candidate to end: its true
+     * end is unknown, and guessing would record a night as study.
+     *
+     * @return the session written, or null (nothing running, a mis-tap, or past the ceiling)
+     */
+    @Transactional
+    public StudySessionResponse saveRunning(Long userId) {
+        FocusTimer running = find(userId);
+        if (running == null) {
+            return null;
+        }
+        LocalDateTime now = now();
+        if (Duration.between(running.getStartedAt(), now).compareTo(CEILING) > 0) {
+            return null;
+        }
+        return close(running, now);
+    }
+
+    /**
+     * Records a block of study the app timed itself — a paper sat in the app,
+     * whose clock is the paper's. Same honesty rule as the timer: under a
+     * minute is a mis-tap and is dropped.
+     *
+     * @return the session written, or null when shorter than a minute
+     */
+    @Transactional
+    public StudySessionResponse record(Long userId, String nodeCode, String title, LocalDateTime start,
+                                       LocalDateTime end) {
+        LocalDateTime from = start.truncatedTo(ChronoUnit.SECONDS);
+        LocalDateTime to = end.truncatedTo(ChronoUnit.SECONDS);
+        if (Duration.between(from, to).compareTo(MINIMUM) < 0) {
+            return null;
+        }
+        StudySession session = new StudySession();
+        session.setUserId(userId);
+        session.setNodeCode(syllabus.resolve(nodeCode));
+        session.setTitle(title);
+        session.setStartsAt(from);
+        session.setEndsAt(to);
+        sessionMapper.insert(session);
+        return StudySessionResponse.from(session);
+    }
+
     /** Throws the running timer away without recording anything. */
     @Transactional
     public void discard(Long userId) {

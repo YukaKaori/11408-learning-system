@@ -94,9 +94,64 @@ public class SittingService {
 
     public SittingResponse update(Long userId, Long id, SaveSittingRequest request, ZoneId zone) {
         PaperSitting sitting = requireOwned(userId, id);
+        if (sitting.getSessionId() != null) {
+            throw new BusinessException(SittingErrorCode.SITTING_READ_ONLY);
+        }
         apply(sitting, request, LocalDate.now(zone));
         sittingMapper.updateById(sitting);
         return toResponse(sitting);
+    }
+
+    /** The 复盘 note — the one part of any record, app-scored or not, that is written by hand. */
+    public SittingResponse updateNote(Long userId, Long id, String note) {
+        PaperSitting sitting = requireOwned(userId, id);
+        sitting.setNote(note == null || note.isBlank() ? null : note.trim());
+        sittingMapper.updateById(sitting);
+        return toResponse(sitting);
+    }
+
+    /**
+     * What a paper sat in the app hands the record: the sections whose every
+     * question is decided, scored by the sum of their marks. Written through the
+     * same validation as a hand-entered record (printed sections, worth, date).
+     *
+     * @param sections the decided sections, each {@code (code, points)}
+     */
+    public record SessionRecord(String subject, String kind, String title, Integer paperYear, LocalDate satOn,
+                                Integer durationMinutes, List<SaveSittingRequest.SectionScore> sections) {
+    }
+
+    /**
+     * Writes the record of a paper sat in the app, or rewrites it as more of its
+     * sections are scored.
+     *
+     * @param sittingId the record this session wrote before, or null for the first write
+     * @return the record's id; null when the candidate has deleted the earlier
+     *         record — a deleted record is not brought back
+     */
+    public Long recordFromSession(Long userId, Long sittingId, Long sessionId, SessionRecord record, ZoneId zone) {
+        PaperSitting sitting;
+        if (sittingId == null) {
+            sitting = new PaperSitting();
+            sitting.setUserId(userId);
+        } else {
+            sitting = sittingMapper.selectById(sittingId);
+            if (sitting == null || !userId.equals(sitting.getUserId())) {
+                return null;
+            }
+        }
+        boolean pastPaper = SittingKind.PAST_PAPER.wire().equals(record.kind());
+        SaveSittingRequest request = new SaveSittingRequest(record.subject(), record.kind(),
+                pastPaper ? null : record.title(), record.paperYear(), record.satOn(), record.durationMinutes(),
+                record.sections(), null, sitting.getNote());
+        apply(sitting, request, LocalDate.now(zone).isBefore(record.satOn()) ? record.satOn() : LocalDate.now(zone));
+        sitting.setSessionId(sessionId);
+        if (sittingId == null) {
+            sittingMapper.insert(sitting);
+        } else {
+            sittingMapper.updateById(sitting);
+        }
+        return sitting.getId();
     }
 
     public void delete(Long userId, Long id) {
@@ -336,7 +391,8 @@ public class SittingService {
                 sitting.getDurationMinutes(), sectionsOf(sitting), sitting.getScore().doubleValue(),
                 sitting.getFullScore().doubleValue(), isComplete(sitting), sitting.getNote(),
                 sitting.getCreatedAt() == null ? 0
-                        : sitting.getCreatedAt().atZone(ZoneId.systemDefault()).toInstant().toEpochMilli());
+                        : sitting.getCreatedAt().atZone(ZoneId.systemDefault()).toInstant().toEpochMilli(),
+                sitting.getSessionId() == null ? null : String.valueOf(sitting.getSessionId()));
     }
 
     private SittingOverviewResponse.Point toPoint(PaperSitting sitting) {

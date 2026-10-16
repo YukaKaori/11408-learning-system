@@ -48,6 +48,18 @@ public class Question extends BaseEntity {
     @TableField(updateStrategy = FieldStrategy.ALWAYS)
     private String passage;
 
+    /**
+     * Logical FK → question_groups.id when the question reads shared material
+     * (a reading text, a cloze text); the group's passage stands in for
+     * {@link #passage}, which is then null.
+     */
+    @TableField(updateStrategy = FieldStrategy.ALWAYS)
+    private Long groupId;
+
+    /** 1-based position within the group. */
+    @TableField(updateStrategy = FieldStrategy.ALWAYS)
+    private Integer groupSeq;
+
     /** JSON array of option texts in A, B, C… order; null for non-choice types. */
     @TableField(updateStrategy = FieldStrategy.ALWAYS)
     private String options;
@@ -78,8 +90,11 @@ public class Question extends BaseEntity {
     @TableField(updateStrategy = FieldStrategy.ALWAYS)
     private Integer sourceYear;
 
-    /** Stable content-pack id; null for the candidate's own questions. */
+    /** Stable content key of a library question; null for the candidate's own questions. */
     private String packKey;
+
+    /** The content pack a library question ships in ({@code content_packs.pack}). */
+    private String pack;
 
     /** SHA-256 of the pack record, for idempotent re-import. */
     private String contentHash;

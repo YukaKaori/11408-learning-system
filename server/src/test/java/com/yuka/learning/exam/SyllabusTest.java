@@ -106,7 +106,101 @@ class SyllabusTest {
                         e -> assertThat(e.getErrorCode()).isEqualTo(ExamErrorCode.NODE_NOT_FOUND));
     }
 
+    @Test
+    void everySectionCarriesItsSuggestedTimeAndTheSectionsFillThePaper() {
+        for (SyllabusContent.Subject paper : syllabus.subjectDocuments()) {
+            assertThat(paper.sections().stream().mapToInt(SyllabusContent.Section::minutes).sum())
+                    .as(paper.code()).isEqualTo(paper.durationMinutes());
+        }
+        assertThat(syllabus.section("cs408.choice")).get()
+                .extracting(SyllabusContent.Section::minutes).isEqualTo(80);
+        assertThat(syllabus.section("nope")).isEmpty();
+    }
+
+    @Test
+    void theSlotsReproduceTheRealPaperStructure() {
+        // 408 选择: 11 数据结构 · 11 组成原理 · 10 操作系统 · 8 计算机网络.
+        assertThat(syllabus.section("cs408.choice").orElseThrow().slots())
+                .extracting(SyllabusContent.Slot::scope, SyllabusContent.Slot::count)
+                .containsExactly(org.assertj.core.groups.Tuple.tuple("cs408.ds", 11),
+                        org.assertj.core.groups.Tuple.tuple("cs408.co", 11),
+                        org.assertj.core.groups.Tuple.tuple("cs408.os", 10),
+                        org.assertj.core.groups.Tuple.tuple("cs408.cn", 8));
+        // 408 综合: the points per module are the module scores minus the choice questions.
+        assertThat(syllabus.section("cs408.comprehensive").orElseThrow().slots())
+                .extracting(SyllabusContent.Slot::total)
+                .containsExactly(23.0, 23.0, 15.0, 9.0);
+        // English reading is sat as whole texts.
+        assertThat(syllabus.section("english1.reading-a").orElseThrow().slots().getFirst().group()).isEqualTo(5);
+        assertThat(syllabus.section("english1.cloze").orElseThrow().slots().getFirst().group()).isEqualTo(20);
+    }
+
+    @Test
+    void politicsSlotsReproduceTheModuleScoresExactly() {
+        // Single 1 point, multiple 2 points, analysis 10 points per question.
+        SyllabusContent.Subject politics = syllabus.subject(ExamSubject.POLITICS);
+        java.util.Map<String, Double> byModule = new java.util.HashMap<>();
+        for (SyllabusContent.Section section : politics.sections()) {
+            for (SyllabusContent.Slot slot : section.slots()) {
+                byModule.merge(slot.scope(), section.score() * slot.count(), Double::sum);
+            }
+        }
+        for (SyllabusContent.Module module : politics.modules()) {
+            assertThat(byModule.get(module.code())).as(module.code()).isEqualTo((double) module.score());
+        }
+    }
+
+    @Test
+    void positionsFollowTreePreOrder() {
+        assertThat(syllabus.position("cs408.ds")).isLessThan(syllabus.position("cs408.ds.basics.complexity"));
+        assertThat(syllabus.position("cs408.ds.sort.analysis")).isLessThan(syllabus.position("cs408.co"));
+        assertThat(syllabus.position("unknown")).isEqualTo(Integer.MAX_VALUE);
+    }
+
     // --- the rules, on synthetic content -------------------------------------------
+
+    @Test
+    void sectionMinutesThatDoNotFillThePaperFailTheBoot() {
+        List<SyllabusContent.Subject> subjects = withCs408Section(new SyllabusContent.Section("cs408.choice", "单选",
+                "single_choice", 75, 2.0, 150, 120, List.of(new SyllabusContent.Slot("cs408.ds", 75, null, null))));
+        assertThatThrownBy(() -> Syllabus.of(blueprint(), subjects))
+                .isInstanceOf(IllegalStateException.class)
+                .hasMessageContaining("minutes");
+    }
+
+    @Test
+    void slotsThatDoNotHoldTheSectionFailTheBoot() {
+        assertThatThrownBy(() -> Syllabus.of(blueprint(), withCs408Section(
+                choice(List.of(new SyllabusContent.Slot("cs408.ds", 74, null, null))))))
+                .isInstanceOf(IllegalStateException.class)
+                .hasMessageContaining("slots hold 74");
+        assertThatThrownBy(() -> Syllabus.of(blueprint(), withCs408Section(
+                choice(List.of(new SyllabusContent.Slot("politics.m", 75, null, null))))))
+                .isInstanceOf(IllegalStateException.class)
+                .hasMessageContaining("not a module or chapter of cs408");
+        assertThatThrownBy(() -> Syllabus.of(blueprint(), withCs408Section(
+                choice(List.of(new SyllabusContent.Slot("cs408.ds", 75, 100.0, null))))))
+                .isInstanceOf(IllegalStateException.class)
+                .hasMessageContaining("is worth 150");
+        assertThatThrownBy(() -> Syllabus.of(blueprint(), withCs408Section(
+                choice(List.of(new SyllabusContent.Slot("cs408.ds", 75, null, 4))))))
+                .isInstanceOf(IllegalStateException.class)
+                .hasMessageContaining("group size");
+    }
+
+    @Test
+    void variableScoreSlotsMustDeclareTotalsThatFillTheSection() {
+        assertThatThrownBy(() -> Syllabus.of(blueprint(), withCs408Section(new SyllabusContent.Section(
+                "cs408.comprehensive", "综合", "open", 2, null, 150, 180,
+                List.of(new SyllabusContent.Slot("cs408.ds", 2, null, null))))))
+                .isInstanceOf(IllegalStateException.class)
+                .hasMessageContaining("needs a total");
+        assertThatThrownBy(() -> Syllabus.of(blueprint(), withCs408Section(new SyllabusContent.Section(
+                "cs408.comprehensive", "综合", "open", 2, null, 150, 180,
+                List.of(new SyllabusContent.Slot("cs408.ds", 2, 140.0, null))))))
+                .isInstanceOf(IllegalStateException.class)
+                .hasMessageContaining("slots are worth 140");
+    }
 
     @Test
     void aCodeThatIsNotADirectChildFailsTheBoot() {
@@ -128,7 +222,8 @@ class SyllabusTest {
         SyllabusContent.Subject cs = subjects.get(3);
         SyllabusContent.Subject broken = new SyllabusContent.Subject(cs.code(), cs.paperCode(), cs.name(), 149,
                 cs.durationMinutes(), cs.examDay(), cs.startTime(), cs.pastPaperFirstYear(), null,
-                List.of(new SyllabusContent.Section("cs408.choice", "单选", "single_choice", 1, null, 149)),
+                List.of(new SyllabusContent.Section("cs408.choice", "单选", "single_choice", 1, null, 149, 180,
+                        List.of(new SyllabusContent.Slot("cs408.ds", 1, 149.0, null)))),
                 cs.modules());
         List<SyllabusContent.Subject> replaced = List.of(subjects.get(0), subjects.get(1), subjects.get(2), broken);
         assertThatThrownBy(() -> Syllabus.of(blueprint(), replaced))
@@ -178,6 +273,21 @@ class SyllabusTest {
                 .isInstanceOf(IllegalStateException.class);
     }
 
+    /** 408's single section in the minimal fixture: 75 choice questions, the whole 180 minutes. */
+    private static SyllabusContent.Section choice(List<SyllabusContent.Slot> slots) {
+        return new SyllabusContent.Section("cs408.choice", "单选", "single_choice", 75, 2.0, 150, 180, slots);
+    }
+
+    /** The minimal four papers with 408's section replaced. */
+    private static List<SyllabusContent.Subject> withCs408Section(SyllabusContent.Section section) {
+        List<SyllabusContent.Subject> subjects = subjectsWithPoint("cs408.ds.basics.x", 1);
+        SyllabusContent.Subject cs = subjects.get(3);
+        return List.of(subjects.get(0), subjects.get(1), subjects.get(2),
+                new SyllabusContent.Subject(cs.code(), cs.paperCode(), cs.name(), cs.fullScore(),
+                        cs.durationMinutes(), cs.examDay(), cs.startTime(), cs.pastPaperFirstYear(), null,
+                        List.of(section), cs.modules()));
+    }
+
     private static SyllabusContent.Blueprint blueprint() {
         return new SyllabusContent.Blueprint("11408", "t", 2027, List.of("politics", "english1", "math1", "cs408"));
     }
@@ -189,7 +299,7 @@ class SyllabusTest {
                 minimal("english1", "english1.m.c.p", 1),
                 minimal("math1", "math1.m.c.p", 1),
                 new SyllabusContent.Subject("cs408", "408", "408", 150, 180, 2, "14:00", 2009, null,
-                        List.of(new SyllabusContent.Section("cs408.choice", "单选", "single_choice", 75, 2.0, 150)),
+                        List.of(choice(List.of(new SyllabusContent.Slot("cs408.ds", 75, null, null)))),
                         List.of(new SyllabusContent.Module("cs408.ds", "数据结构", 150, List.of(
                                 new SyllabusContent.Chapter("cs408.ds.basics", "基本概念", List.of(
                                         new SyllabusContent.Point(cs408Point, "考点", weight))))))));
@@ -199,7 +309,8 @@ class SyllabusTest {
         String module = point.substring(0, point.indexOf(".c.p"));
         int day = code.equals("politics") || code.equals("english1") ? 1 : 2;
         return new SyllabusContent.Subject(code, "x", code, 100, 180, day, "08:30", 2010, null,
-                List.of(new SyllabusContent.Section(code + ".s", "s", "open", 1, null, 100)),
+                List.of(new SyllabusContent.Section(code + ".s", "s", "open", 1, null, 100, 180,
+                        List.of(new SyllabusContent.Slot(module, 1, 100.0, null)))),
                 List.of(new SyllabusContent.Module(module, "m", 100, List.of(
                         new SyllabusContent.Chapter(module + ".c", "c", List.of(
                                 new SyllabusContent.Point(point, "p", weight)))))));

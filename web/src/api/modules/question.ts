@@ -20,8 +20,10 @@ export interface QuestionDto {
   type: QuestionTypeCode
   /** Markdown + LaTeX. */
   stem: string
-  /** Shared material (a reading passage, a listing), markdown. */
+  /** Shared material (a reading passage, a listing), markdown — the question's own or its group's. */
   passage: string | null
+  /** The question group it belongs to; a group's questions share `passage` and are sat together. */
+  groupId: string | null
   /** Option texts in A, B, C… order; empty for non-choice types. */
   options: string[]
   score: number | null

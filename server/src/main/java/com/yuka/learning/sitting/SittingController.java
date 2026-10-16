@@ -6,10 +6,12 @@ import com.yuka.learning.common.api.ApiResponse;
 import com.yuka.learning.sitting.dto.SaveSittingRequest;
 import com.yuka.learning.sitting.dto.SittingOverviewResponse;
 import com.yuka.learning.sitting.dto.SittingResponse;
+import com.yuka.learning.sitting.dto.UpdateSittingNoteRequest;
 import jakarta.validation.Valid;
 import org.springframework.security.core.annotation.AuthenticationPrincipal;
 import org.springframework.web.bind.annotation.DeleteMapping;
 import org.springframework.web.bind.annotation.GetMapping;
+import org.springframework.web.bind.annotation.PatchMapping;
 import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.PutMapping;
@@ -63,6 +65,14 @@ public class SittingController {
                                                @PathVariable Long id,
                                                @Valid @RequestBody SaveSittingRequest request) {
         return ApiResponse.success(sittingService.update(principal.id(), id, request, ClientZone.resolve(zone)));
+    }
+
+    /** The note alone — the one edit an app-scored record accepts. */
+    @PatchMapping("/{id}/note")
+    public ApiResponse<SittingResponse> updateNote(@AuthenticationPrincipal AuthenticatedUser principal,
+                                                   @PathVariable Long id,
+                                                   @Valid @RequestBody UpdateSittingNoteRequest request) {
+        return ApiResponse.success(sittingService.updateNote(principal.id(), id, request.note()));
     }
 
     @DeleteMapping("/{id}")

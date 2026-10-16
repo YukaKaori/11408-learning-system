@@ -9,9 +9,15 @@
   "pastPaperFirstYear": 1987,
   "scoreApproximate": true,
   "sections": [
-    { "code": "math1.choice", "name": "选择题", "questionType": "single_choice", "count": 10, "score": 5, "total": 50 },
-    { "code": "math1.fill", "name": "填空题", "questionType": "fill_blank", "count": 6, "score": 5, "total": 30 },
-    { "code": "math1.solution", "name": "解答题", "questionType": "open", "count": 6, "score": null, "total": 70 }
+    { "code": "math1.choice", "name": "选择题", "questionType": "single_choice", "count": 10, "score": 5, "total": 50,
+      "minutes": 35,
+      "slots": [{ "scope": "math1.calculus", "count": 6 }, { "scope": "math1.linear", "count": 2 }, { "scope": "math1.probability", "count": 2 }] },
+    { "code": "math1.fill", "name": "填空题", "questionType": "fill_blank", "count": 6, "score": 5, "total": 30,
+      "minutes": 25,
+      "slots": [{ "scope": "math1.calculus", "count": 4 }, { "scope": "math1.linear", "count": 1 }, { "scope": "math1.probability", "count": 1 }] },
+    { "code": "math1.solution", "name": "解答题", "questionType": "open", "count": 6, "score": null, "total": 70,
+      "minutes": 120,
+      "slots": [{ "scope": "math1.calculus", "count": 4, "total": 46 }, { "scope": "math1.linear", "count": 1, "total": 12 }, { "scope": "math1.probability", "count": 1, "total": 12 }] }
   ],
   "modules": [
     {

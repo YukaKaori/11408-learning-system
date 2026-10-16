@@ -49,8 +49,9 @@ code lives in `common/`; framework wiring in `config/`.
   workspace 170000 (reserved — pure façade, composes other modules' errors,
   owns no codes of its own), analytics 180000, ai 190000, preferences 200000,
   exam 210000, question 220000, practice 230000, mistake 240000,
-  sitting 250000 (the plan is a read model and owns none; the focus timer
-  lives in calendar's range).
+  sitting 250000, paper 260000 (the plan is a read model and owns none; the
+  focus timer lives in calendar's range; `content` owns none — invalid content
+  fails the boot, it never reaches a request).
   See § Phase 7 and § 11408 for the per-module code lists. The frontend gives
   actionable codes their own message (`web/src/api/errorKeys.ts` →
   `error.codes.<code>`); every other failure renders the generic message.
@@ -312,12 +313,14 @@ Material system carried over.
 | Package | Owns | Notes |
 | --- | --- | --- |
 | `exam` | `exam_profiles`; the syllabus (content, not tables) | `ExamCalendar` (date estimate, pure), `ExamPhase`, `ExamProfileService`, `syllabus/SyllabusLoader` |
-| `question` | `questions`, `question_points`, `question_attempts` | the bank, `QuestionPackImporter`, `grading/QuestionRules` + `grading/AnswerGrader` |
+| `question` | `questions`, `question_points`, `question_attempts`, `question_groups` (V11) | the bank, `grading/QuestionRules` + `grading/AnswerGrader` |
+| `content` | `content_packs` (V11) | content packs v2: `PackSource` (classpath + `app.content.packs-dir`, highest version wins), `PackValidator` (pure), `ContentImporter` (boot, one transaction), `Coverage`, the offline `ContentCheck` |
+| `paper` | `papers`, `paper_sessions` (V11) | `PaperAssembler` (组卷, pure), `PaperService` (catalog, assembly), `PaperSessionService` (the exam stage's server), `PaperGrading` (pure) |
 | `practice` | `practice_sessions` | drawing sets, the two-step answer protocol, reports |
 | `mistake` | `mistakes` | the mistake book; `MistakeScheduling` (FSRS-6, no sub-day steps, resolve after 3) |
 | `mastery` | nothing — a read-model façade | `MasteryModel`, `MasterySnapshot`, `RecommendationService` |
 | `srs` | nothing — pure scheduling | FSRS-6 (`Fsrs6Scheduler`), shared by `flashcard` and `mistake` |
-| `sitting` | `paper_sittings` (V10) | 真题 by year and 模拟卷 by name, scored by section; `ScoreEstimate` (pure) — the paper estimate and section profile |
+| `sitting` | `paper_sittings` (V10; `session_id` V11) | 真题 by year and 模拟卷 by name, scored by section; `ScoreEstimate` (pure) — the paper estimate and section profile; a record written by a paper session is read-only but for its note |
 | `plan` | nothing — a read model | `PlanModel` (pure) — the day's split per paper, the weekly cadence, the phase timeline; `PlanService` composes it with time spent |
 | `calendar` | + `focus_timers` (V10) | `FocusService` — the study timer; stopping it writes an ordinary `study_sessions` row |
 | `subject` | — | **deleted**; `subjects` table kept (expand/contract), never read |
@@ -345,9 +348,10 @@ Material system carried over.
   `politics` …) were mapped; anything else stays unanchored rather than
   guessed. No data is destroyed by the transition.
 - **Content packs are idempotent.** Library questions ship as JSON packs
-  (`exam/questions/*.json`), imported at boot keyed by `pack_key` with a
-  SHA-256 content hash: unchanged questions are skipped, changed ones updated,
-  removed ones **retired** (never deleted — attempts reference them).
+  (`exam/questions/<paper>/*.json`, format v2 since M2 — see § M2), imported at
+  boot keyed by their stable key with a SHA-256 content hash: unchanged
+  questions are skipped, changed ones updated in place, removed ones
+  **retired** (never deleted — attempts reference them).
 - **Grading is honest.** Choice questions and fill-blanks that match an
   accepted form (after notation-only normalization) are graded by the server.
   Anything it cannot judge — an unmatched fill-blank, every open question —
@@ -430,6 +434,76 @@ resource. M1 adds that outer loop without a second kind of anything.
   in `features/focus/` and reach the sidebar and header through
   `defineAsyncComponent` (`richTextBundle.spec.ts`).
 
+### Papers sat in the app — binding decisions (M2, 2026-10)
+
+M1 made the paper the unit of evidence, but a paper could only be recorded
+after it was sat elsewhere. M2 makes a paper sat in the app an ordinary
+sitting. The reasoning is in [`m2-plan.md`](m2-plan.md); the authoring guide
+for content is [`content/README.md`](../content/README.md).
+
+- **The blueprint is the paper's structure.** Every printed section carries
+  its suggested `minutes` (a paper's sections sum to its duration) and its
+  `slots` — `{scope, count, total?, group?}` — the real paper's spread over
+  modules: 408 选择 11/11/10/8, 综合 23/23/15/9 points; 数学一 6/2/2, 4/1/1 and
+  解答 46/12/12 points; 政治 4/6/2/2/2 单选, 5/7/1/2/2 多选, one 分析题 per module;
+  English texts taken whole (a cloze of 20, reading texts of 5). Validated at
+  boot: counts and worth add up, scopes are the paper's own nodes.
+- **One validator, three runs.** Packs are format v2 (`{pack, title, version,
+  groups[], questions[], papers[]}`; an unknown field fails the pack).
+  `PackValidator` is one pure function behind the boot import, the test suite
+  and the offline `ContentCheck`, and it collects every problem. Beyond
+  `QuestionRules`: permanent, globally unique keys; groups that are whole and
+  consistent — one section, one module for their questions' primary 考点, and
+  in-place markers (`**[n]**`, `**(n)**`) complete, in order and named by their
+  questions; a score on every question of a variable-score section; library
+  papers that match the printed paper exactly. The web suite renders every
+  shipped field through the `RichText` pipeline and fails on a KaTeX error or a
+  stray `$` (`contentPacks.spec.ts`).
+- **Versioning.** Per pack id the highest version among the jar and
+  `app.content.packs-dir` is used; the same version with different content
+  twice is an error; a pack older than the live one (`content_packs`) fails the
+  boot. Rows keep their ids across imports, content that leaves every pack is
+  retired, and a library paper is rewritten when its questions, their worth or
+  its time limit change.
+- **组卷 builds the paper the way the real one is built.** `PaperAssembler`
+  (pure) fills each slot from the questions whose **primary** 考点 lies in its
+  scope — fresh first, then seen in a paper, then answered longest ago, random
+  within a band; uniform slots take `count` questions (or whole texts), variable
+  slots the first combination of `count` whose scores sum to the slot's total
+  (`Combination`, over the 40 most preferred). A slot that cannot be filled
+  makes its section unavailable and is reported — never padded. `Coverage`
+  measures the bank with the same rules.
+- **Time is the server's.** The deadline is fixed at start. Saves are accepted
+  until deadline + 2 min (`PAPER_TIME_UP` after); any read or write of a
+  session past its grace hands it in at the deadline with its last saved
+  sheet. The client counts down against `serverNow` and hands in at zero. One
+  paper at a time (`PAPER_SESSION_ACTIVE`); starting saves a running focus
+  timer.
+- **Nothing is revealed before the hand-in.** In progress a session carries
+  the questions as asked and the candidate's sheet only; marks and solutions
+  exist from submission on. The sheet is saved whole (replaced, never merged),
+  so every save is idempotent.
+- **Grading is the practice grader's.** Choice is right or wrong (多选 all or
+  nothing); a fill-blank matching an accepted form is right, any other answer
+  is scored by the candidate all or nothing; an open answer is scored by the
+  candidate in half points within its worth (`PAPER_SCORE_INVALID` otherwise).
+  A blank scores 0 and writes no attempt.
+- **Evidence is written when it exists.** At the hand-in: one attempt per
+  graded answer (its session id is the paper session) through the mistake
+  book, the 模考 record with every fully decided section, and a study session
+  for the time sat. At completion: the self-scored attempts (full marks →
+  correct, 0 → wrong, else partial) and their mistakes; the record becomes
+  whole. Abandoning keeps only the time sat.
+- **An app-scored record is read-only.** Its scores are its answers':
+  `PUT /sittings/{id}` is refused (`SITTING_READ_ONLY`), `PATCH
+  /sittings/{id}/note` edits the 复盘, and deleting the record withdraws it from
+  the estimate — a later completion does not bring it back. Only whole papers
+  estimate a paper (M1); a section paper feeds the section profile.
+- **Today**: an open paper — in progress, or handed in and awaiting scores —
+  is a `paper` row in the `now` tier.
+- **Content says what it is.** Original samples carry `source` 原创样题 · 非真题;
+  nothing written or generated here carries a past-paper kind or year.
+
 ### Error codes
 
 | Range | Module | Codes |
@@ -438,16 +512,20 @@ resource. M1 adds that outer loop without a second kind of anything.
 | 220000–229999 | `question` | `QUESTION_NOT_FOUND`, `QUESTION_ACCESS_DENIED`, `QUESTION_READ_ONLY`, `QUESTION_INVALID` |
 | 230000–239999 | `practice` | `SESSION_NOT_FOUND`, `SESSION_ACCESS_DENIED`, `SESSION_CLOSED`, `QUESTION_NOT_IN_SESSION`, `ALREADY_ANSWERED`, `NO_QUESTIONS_AVAILABLE`, `MODE_INVALID`, `SCOPE_REQUIRED`, `SELF_GRADE_INVALID` |
 | 240000–249999 | `mistake` | `MISTAKE_NOT_FOUND`, `MISTAKE_ACCESS_DENIED`, `MISTAKE_CAUSE_INVALID`, `MISTAKE_RESULT_INVALID` |
-| 250000–259999 | `sitting` | `SITTING_NOT_FOUND`, `SITTING_ACCESS_DENIED`, `SITTING_KIND_INVALID`, `SITTING_SECTION_INVALID`, `SITTING_SCORE_INVALID`, `SITTING_PAPER_INVALID`, `SITTING_DATE_INVALID` |
+| 250000–259999 | `sitting` | `SITTING_NOT_FOUND`, `SITTING_ACCESS_DENIED`, `SITTING_KIND_INVALID`, `SITTING_SECTION_INVALID`, `SITTING_SCORE_INVALID`, `SITTING_PAPER_INVALID`, `SITTING_DATE_INVALID`, `SITTING_READ_ONLY` |
+| 260000–269999 | `paper` | `PAPER_NOT_FOUND`, `PAPER_ACCESS_DENIED`, `PAPER_SECTION_INVALID`, `PAPER_CONTENT_SHORT`, `PAPER_SESSION_NOT_FOUND`, `PAPER_SESSION_ACCESS_DENIED`, `PAPER_SESSION_ACTIVE`, `PAPER_SESSION_STATE`, `PAPER_TIME_UP`, `PAPER_ANSWER_INVALID`, `PAPER_SCORE_INVALID`, `PAPER_SCORING_INCOMPLETE` |
 | 160004–160006 | `calendar` (focus) | `FOCUS_NOT_RUNNING`, `FOCUS_END_INVALID`, `FOCUS_TOO_LONG` |
 
 ### Migrations
 
 `V8__exam_foundation.sql` (exam profiles, `node_code` on every anchored
 table), `V9__question_bank_practice_mistakes.sql` (questions, tags,
-attempts, practice sessions, mistakes) and `V10__paper_sittings_and_focus.sql`
-(paper sittings, the running focus timer, the 8-hour daily-goal default). The
-H2 test schema mirror (`server/src/test/resources/schema.sql`) tracks V10.
+attempts, practice sessions, mistakes), `V10__paper_sittings_and_focus.sql`
+(paper sittings, the running focus timer, the 8-hour daily-goal default) and
+`V11__question_bank_and_timed_papers.sql` (content packs, question groups,
+papers, paper sessions; `questions.pack/group_id/group_seq`,
+`paper_sittings.session_id`). The H2 test schema mirror
+(`server/src/test/resources/schema.sql`) tracks V11.
 
 ## Phase 7 — Commercial Product Foundation
 

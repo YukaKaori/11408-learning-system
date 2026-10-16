@@ -111,6 +111,9 @@ const dayLine = computed<string>(() => {
   if (plan.length === 0) return ''
 
   const parts: string[] = []
+  const papers = plan.filter((item) => item.kind === 'paper').length
+  if (papers > 0) parts.push(t('today.line.papers', { n: papers }))
+
   const review = plan.find((item) => item.kind === 'review')?.review
   if (review) parts.push(t('today.line.cards', { n: review.total }))
 
@@ -216,10 +219,21 @@ async function refresh(): Promise<void> {
  * - **session** → the calendar. A session has no completion — it is retired by
  *   time passing — so Today hands it over rather than inventing an action, and
  *   owns no timer (that is P21).
+ * - **paper** → back to the exam stage while the clock runs, or to the result
+ *   page while answers await their scores. The paper module owns both.
  */
 function activate(item: PlanItemDto): void {
   actionError.value = null
   switch (item.kind) {
+    case 'paper':
+      if (item.paper) {
+        void router.push(
+          item.paper.status === 'scoring'
+            ? { name: 'paper-result', params: { id: item.paper.sessionId } }
+            : { name: 'paper-exam', params: { id: item.paper.sessionId } },
+        )
+      }
+      return
     case 'review':
       reviewOpen.value = true
       return

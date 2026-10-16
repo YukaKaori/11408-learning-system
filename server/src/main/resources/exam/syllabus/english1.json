@@ -8,12 +8,24 @@
   "startTime": "14:00",
   "pastPaperFirstYear": 2010,
   "sections": [
-    { "code": "english1.cloze", "name": "完形填空", "questionType": "single_choice", "count": 20, "score": 0.5, "total": 10 },
-    { "code": "english1.reading-a", "name": "阅读理解 Part A", "questionType": "single_choice", "count": 20, "score": 2, "total": 40 },
-    { "code": "english1.reading-b", "name": "阅读理解 Part B（新题型）", "questionType": "single_choice", "count": 5, "score": 2, "total": 10 },
-    { "code": "english1.translation", "name": "阅读理解 Part C（翻译）", "questionType": "open", "count": 5, "score": 2, "total": 10 },
-    { "code": "english1.writing-a", "name": "写作 Part A（应用文）", "questionType": "open", "count": 1, "score": 10, "total": 10 },
-    { "code": "english1.writing-b", "name": "写作 Part B（短文写作）", "questionType": "open", "count": 1, "score": 20, "total": 20 }
+    { "code": "english1.cloze", "name": "完形填空", "questionType": "single_choice", "count": 20, "score": 0.5, "total": 10,
+      "minutes": 15,
+      "slots": [{ "scope": "english1.cloze", "count": 20, "group": 20 }] },
+    { "code": "english1.reading-a", "name": "阅读理解 Part A", "questionType": "single_choice", "count": 20, "score": 2, "total": 40,
+      "minutes": 70,
+      "slots": [{ "scope": "english1.reading", "count": 20, "group": 5 }] },
+    { "code": "english1.reading-b", "name": "阅读理解 Part B（新题型）", "questionType": "single_choice", "count": 5, "score": 2, "total": 10,
+      "minutes": 20,
+      "slots": [{ "scope": "english1.new-types", "count": 5, "group": 5 }] },
+    { "code": "english1.translation", "name": "阅读理解 Part C（翻译）", "questionType": "open", "count": 5, "score": 2, "total": 10,
+      "minutes": 20,
+      "slots": [{ "scope": "english1.translation", "count": 5, "group": 5 }] },
+    { "code": "english1.writing-a", "name": "写作 Part A（应用文）", "questionType": "open", "count": 1, "score": 10, "total": 10,
+      "minutes": 15,
+      "slots": [{ "scope": "english1.writing", "count": 1 }] },
+    { "code": "english1.writing-b", "name": "写作 Part B（短文写作）", "questionType": "open", "count": 1, "score": 20, "total": 20,
+      "minutes": 40,
+      "slots": [{ "scope": "english1.writing", "count": 1 }] }
   ],
   "modules": [
     {

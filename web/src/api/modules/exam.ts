@@ -34,6 +34,20 @@ export interface SyllabusModuleDto {
   chapters: SyllabusChapterDto[]
 }
 
+/**
+ * How the real paper spreads a section over the modules: "11 数据结构 questions",
+ * "2 组成原理 questions worth 23", "4 reading texts of 5".
+ */
+export interface SyllabusSlotDto {
+  /** A module (or chapter) of the paper. */
+  scope: string
+  count: number
+  /** What the slot is worth — set in variable-score sections. */
+  total: number | null
+  /** Filled with whole question groups of this size (cloze, reading texts). */
+  group: number | null
+}
+
 /** One part of the paper as printed. `score` is null when questions differ in value. */
 export interface SyllabusSectionDto {
   code: string
@@ -42,6 +56,9 @@ export interface SyllabusSectionDto {
   count: number
   score: number | null
   total: number
+  /** The suggested time; a paper's sections sum to its duration. */
+  minutes: number
+  slots: SyllabusSlotDto[]
 }
 
 export interface SyllabusSubjectDto {

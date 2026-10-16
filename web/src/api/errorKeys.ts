@@ -29,6 +29,16 @@ export const KNOWN_ERROR_CODES: readonly number[] = [
   250004, // SittingErrorCode.SITTING_SCORE_INVALID
   250005, // SittingErrorCode.SITTING_PAPER_INVALID
   250006, // SittingErrorCode.SITTING_DATE_INVALID
+  250007, // SittingErrorCode.SITTING_READ_ONLY
+  260000, // PaperErrorCode.PAPER_NOT_FOUND
+  260002, // PaperErrorCode.PAPER_SECTION_INVALID
+  260003, // PaperErrorCode.PAPER_CONTENT_SHORT
+  260004, // PaperErrorCode.PAPER_SESSION_NOT_FOUND
+  260006, // PaperErrorCode.PAPER_SESSION_ACTIVE
+  260007, // PaperErrorCode.PAPER_SESSION_STATE
+  260008, // PaperErrorCode.PAPER_TIME_UP
+  260010, // PaperErrorCode.PAPER_SCORE_INVALID
+  260011, // PaperErrorCode.PAPER_SCORING_INCOMPLETE
 ]
 
 const KNOWN = new Set(KNOWN_ERROR_CODES)

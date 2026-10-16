@@ -13,12 +13,15 @@ import com.yuka.learning.question.dto.QuestionSolution;
 import com.yuka.learning.question.entity.AttemptResult;
 import com.yuka.learning.question.entity.Question;
 import com.yuka.learning.question.entity.QuestionAttempt;
+import com.yuka.learning.question.entity.QuestionGroup;
 import com.yuka.learning.question.entity.QuestionPoint;
 import com.yuka.learning.question.grading.AnswerGrader;
 import com.yuka.learning.question.grading.QuestionRules;
 import com.yuka.learning.question.mapper.QuestionAttemptMapper;
+import com.yuka.learning.question.mapper.QuestionGroupMapper;
 import com.yuka.learning.question.mapper.QuestionMapper;
 import com.yuka.learning.question.mapper.QuestionPointMapper;
+import com.yuka.learning.question.mapper.SectionQuestionRow;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 import tools.jackson.core.type.TypeReference;
@@ -63,14 +66,17 @@ public class QuestionService {
     private final QuestionMapper questionMapper;
     private final QuestionPointMapper pointMapper;
     private final QuestionAttemptMapper attemptMapper;
+    private final QuestionGroupMapper groupMapper;
     private final Syllabus syllabus;
     private final ObjectMapper objectMapper;
 
     public QuestionService(QuestionMapper questionMapper, QuestionPointMapper pointMapper,
-                           QuestionAttemptMapper attemptMapper, Syllabus syllabus, ObjectMapper objectMapper) {
+                           QuestionAttemptMapper attemptMapper, QuestionGroupMapper groupMapper,
+                           Syllabus syllabus, ObjectMapper objectMapper) {
         this.questionMapper = questionMapper;
         this.pointMapper = pointMapper;
         this.attemptMapper = attemptMapper;
+        this.groupMapper = groupMapper;
         this.syllabus = syllabus;
         this.objectMapper = objectMapper;
     }
@@ -106,11 +112,7 @@ public class QuestionService {
         query.orderByAsc(Question::getPackKey).orderByDesc(Question::getCreatedAt);
 
         Page<Question> result = questionMapper.selectPage(new Page<>(safePage, safeSize), query);
-        Map<Long, List<String>> points = pointsOf(result.getRecords().stream().map(Question::getId).toList());
-        List<QuestionResponse> items = result.getRecords().stream()
-                .map(q -> toResponse(q, points.getOrDefault(q.getId(), List.of()), userId))
-                .toList();
-        return new PageResponse<>(items, result.getTotal(), safePage, safeSize);
+        return new PageResponse<>(toResponses(result.getRecords(), userId), result.getTotal(), safePage, safeSize);
     }
 
     /** One question with its solution and the candidate's record on it. */
@@ -185,6 +187,11 @@ public class QuestionService {
         return questionMapper.findVisibleIdsInScope(userId, scope);
     }
 
+    /** The active questions of one printed section the candidate may practise — paper assembly's pool. */
+    public List<SectionQuestionRow> sectionQuestions(Long userId, String subject, String section) {
+        return questionMapper.findSectionQuestions(userId, subject, section);
+    }
+
     /** Every active question the candidate may practise, with its tags — the bank's shape. */
     public Map<Long, List<String>> visibleTagsByQuestion(Long userId) {
         Map<Long, List<String>> tags = new HashMap<>();
@@ -194,16 +201,45 @@ public class QuestionService {
         return tags;
     }
 
+    /** The groups the given questions read, by id. */
+    public Map<Long, QuestionGroup> groupsOf(Collection<Question> questions) {
+        List<Long> ids = questions.stream().map(Question::getGroupId).filter(java.util.Objects::nonNull)
+                .distinct().toList();
+        if (ids.isEmpty()) {
+            return Map.of();
+        }
+        return groupMapper.selectByIds(ids).stream()
+                .collect(Collectors.toMap(QuestionGroup::getId, Function.identity()));
+    }
+
     // --- mapping + grading -----------------------------------------------------
 
+    /** Questions as asked, in the given order — tags and group passages loaded in two queries. */
+    public List<QuestionResponse> toResponses(List<Question> questions, Long userId) {
+        Map<Long, List<String>> points = pointsOf(questions.stream().map(Question::getId).toList());
+        Map<Long, QuestionGroup> groups = groupsOf(questions);
+        return questions.stream()
+                .map(q -> toResponse(q, points.getOrDefault(q.getId(), List.of()), userId, groups))
+                .toList();
+    }
+
+    /** One question as asked; a grouped question's passage is its group's. */
     public QuestionResponse toResponse(Question question, List<String> points, Long userId) {
+        return toResponse(question, points, userId,
+                question.getGroupId() == null ? Map.of() : groupsOf(List.of(question)));
+    }
+
+    public QuestionResponse toResponse(Question question, List<String> points, Long userId,
+                                       Map<Long, QuestionGroup> groups) {
+        QuestionGroup group = question.getGroupId() == null ? null : groups.get(question.getGroupId());
         return new QuestionResponse(
                 String.valueOf(question.getId()),
                 question.getSubject(),
                 question.getSection(),
                 question.getType(),
                 question.getStem(),
-                question.getPassage(),
+                group != null ? group.getPassage() : question.getPassage(),
+                question.getGroupId() == null ? null : String.valueOf(question.getGroupId()),
                 optionsOf(question),
                 question.getScore() != null ? question.getScore().doubleValue() : null,
                 question.getDifficulty() != null ? question.getDifficulty() : 3,

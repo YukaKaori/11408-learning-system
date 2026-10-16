@@ -31,7 +31,11 @@ public class QuestionAttempt extends BaseEntity {
     /** Exam subject code, denormalized from the question for per-subject aggregation. */
     private String subject;
 
-    /** Logical FK → practice_sessions.id; null for a mistake captured from offline practice. */
+    /**
+     * Logical FK → practice_sessions.id, or paper_sessions.id for an answer given
+     * in a paper sat in the app (snowflake ids never collide); null for a mistake
+     * captured from offline practice.
+     */
     private Long sessionId;
 
     /** What the candidate answered: letters, a value, text, or null. */

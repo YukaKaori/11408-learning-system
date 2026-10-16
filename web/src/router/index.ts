@@ -35,6 +35,15 @@ const router = createRouter({
       meta: { titleKey: 'welcome.title', requiresAuth: true },
     },
     {
+      // A paper sat in the app (M2) — full-bleed like an exam hall: the paper,
+      // the clock and the answer sheet, no navigation to wander off to. The
+      // component lives with its feature; only the route sits outside the shell.
+      path: '/exam/:id',
+      name: 'paper-exam',
+      component: () => import('@/features/papers/PaperExamView.vue'),
+      meta: { titleKey: 'papers.exam.documentTitle', requiresAuth: true },
+    },
+    {
       path: '/',
       component: AppLayout,
       meta: { requiresAuth: true },
@@ -90,6 +99,13 @@ const router = createRouter({
           path: 'sittings',
           name: 'sittings',
           component: () => import('@/features/sittings/SittingsView.vue'),
+          meta: { titleKey: 'nav.sittings' },
+        },
+        {
+          // A paper after its hand-in: the candidate's scoring, then the report.
+          path: 'sittings/papers/:id',
+          name: 'paper-result',
+          component: () => import('@/features/papers/PaperResultView.vue'),
           meta: { titleKey: 'nav.sittings' },
         },
         {

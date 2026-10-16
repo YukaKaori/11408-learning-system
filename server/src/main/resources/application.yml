@@ -46,6 +46,10 @@ app:
       refresh-token-ttl: 14d
     password-policy:
       min-length: 8
+  content:
+    # Optional directory of question content packs read at startup beside the
+    # ones in the jar (per pack id the higher version wins). See content/README.md.
+    packs-dir: ${CONTENT_PACKS_DIR:}
   flashcard:
     # Max brand-new cards introduced per user per day (client-zone). Caps the
     # first review queue of a freshly migrated deck. See Phase 15 / ReviewService.

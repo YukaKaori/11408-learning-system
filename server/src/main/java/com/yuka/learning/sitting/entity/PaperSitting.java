@@ -59,4 +59,11 @@ public class PaperSitting extends BaseEntity {
 
     @TableField(updateStrategy = FieldStrategy.ALWAYS)
     private String note;
+
+    /**
+     * Logical FK → paper_sessions.id when the paper was sat in the app. Such a
+     * record is written by the session — its scores are the sum of its answers —
+     * and only its note is edited by hand.
+     */
+    private Long sessionId;
 }

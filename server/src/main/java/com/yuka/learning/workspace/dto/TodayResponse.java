@@ -17,7 +17,9 @@ import java.util.Locale;
  *
  * <p>Only sources with a <strong>time contract</strong> may enter {@link #plan}
  * — card reviews and mistake redos ({@code due_at}, decided by the FSRS
- * scheduler), tasks ({@code due_at}) and sessions ({@code starts_at}).
+ * scheduler), tasks ({@code due_at}), sessions ({@code starts_at}) and papers
+ * sat in the app (a deadline the server keeps, or a hand-in awaiting its
+ * scores).
  *
  * <p><strong>Recommendations are not commitments.</strong> What to practise
  * next ({@link #focus}) is computed from the mastery model and the exam's
@@ -77,7 +79,7 @@ public record TodayResponse(
 
         /** Tasks whose {@code dueAt} fell before the caller's today began. */
         OVERDUE,
-        /** The review aggregate, the mistake-redo aggregate, a session running now. */
+        /** The review aggregate, the mistake-redo aggregate, a session running now, an open paper. */
         NOW,
         /** Sessions starting later today; tasks due later today. */
         SCHEDULED;
@@ -91,7 +93,8 @@ public record TodayResponse(
     /** What a row is. Declaration order is the within-tier tie-break. */
     public enum PlanKind {
 
-        REVIEW, MISTAKE, SESSION, TASK;
+        /** A paper being sat, or handed in and awaiting the candidate's scores. */
+        PAPER, REVIEW, MISTAKE, SESSION, TASK;
 
         @JsonValue
         public String wire() {
@@ -133,9 +136,11 @@ public record TodayResponse(
 
     /**
      * One commitment. Exactly one of {@code review} / {@code mistake} /
-     * {@code task} / {@code session} is non-null, selected by {@code kind}.
+     * {@code task} / {@code session} / {@code paper} is non-null, selected by
+     * {@code kind}.
      *
-     * @param id      {@code "review"}, {@code "mistake"}, {@code "task:<id>"} or {@code "session:<id>"}
+     * @param id      {@code "review"}, {@code "mistake"}, {@code "task:<id>"}, {@code "session:<id>"}
+     *                or {@code "paper:<id>"}
      * @param sortAt  the instant the ordering actually used (epoch ms)
      */
     public record PlanItem(
@@ -146,23 +151,42 @@ public record TodayResponse(
             ReviewFocus review,
             MistakeFocus mistake,
             TaskResponse task,
-            StudySessionResponse session) {
+            StudySessionResponse session,
+            PaperFocus paper) {
 
         public static PlanItem review(PlanTier tier, long sortAt, ReviewFocus focus) {
-            return new PlanItem("review", PlanKind.REVIEW, tier, sortAt, focus, null, null, null);
+            return new PlanItem("review", PlanKind.REVIEW, tier, sortAt, focus, null, null, null, null);
         }
 
         public static PlanItem mistake(PlanTier tier, long sortAt, MistakeFocus focus) {
-            return new PlanItem("mistake", PlanKind.MISTAKE, tier, sortAt, null, focus, null, null);
+            return new PlanItem("mistake", PlanKind.MISTAKE, tier, sortAt, null, focus, null, null, null);
         }
 
         public static PlanItem task(PlanTier tier, long sortAt, TaskResponse task) {
-            return new PlanItem("task:" + task.id(), PlanKind.TASK, tier, sortAt, null, null, task, null);
+            return new PlanItem("task:" + task.id(), PlanKind.TASK, tier, sortAt, null, null, task, null, null);
         }
 
         public static PlanItem session(PlanTier tier, long sortAt, StudySessionResponse session) {
-            return new PlanItem("session:" + session.id(), PlanKind.SESSION, tier, sortAt, null, null, null, session);
+            return new PlanItem("session:" + session.id(), PlanKind.SESSION, tier, sortAt, null, null, null,
+                    session, null);
         }
+
+        public static PlanItem paper(PlanTier tier, long sortAt, PaperFocus paper) {
+            return new PlanItem("paper:" + paper.sessionId(), PlanKind.PAPER, tier, sortAt, null, null, null, null,
+                    paper);
+        }
+    }
+
+    /**
+     * A paper sat in the app that is not finished: still being sat (the clock
+     * is running against {@code deadlineAt}) or handed in with answers that
+     * await the candidate's scores.
+     *
+     * @param status  {@code in_progress} | {@code scoring}
+     * @param pending answers awaiting a score (scoring only)
+     */
+    public record PaperFocus(String sessionId, String subject, String title, String status, long deadlineAt,
+                             int answered, int total, int pending) {
     }
 
     /**

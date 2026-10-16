@@ -9,9 +9,15 @@
   "pastPaperFirstYear": 2008,
   "scoreApproximate": true,
   "sections": [
-    { "code": "politics.single", "name": "单项选择题", "questionType": "single_choice", "count": 16, "score": 1, "total": 16 },
-    { "code": "politics.multi", "name": "多项选择题", "questionType": "multi_choice", "count": 17, "score": 2, "total": 34 },
-    { "code": "politics.analysis", "name": "分析题", "questionType": "open", "count": 5, "score": 10, "total": 50 }
+    { "code": "politics.single", "name": "单项选择题", "questionType": "single_choice", "count": 16, "score": 1, "total": 16,
+      "minutes": 25,
+      "slots": [{ "scope": "politics.marx", "count": 4 }, { "scope": "politics.mao", "count": 6 }, { "scope": "politics.history", "count": 2 }, { "scope": "politics.ethics", "count": 2 }, { "scope": "politics.current", "count": 2 }] },
+    { "code": "politics.multi", "name": "多项选择题", "questionType": "multi_choice", "count": 17, "score": 2, "total": 34,
+      "minutes": 45,
+      "slots": [{ "scope": "politics.marx", "count": 5 }, { "scope": "politics.mao", "count": 7 }, { "scope": "politics.history", "count": 1 }, { "scope": "politics.ethics", "count": 2 }, { "scope": "politics.current", "count": 2 }] },
+    { "code": "politics.analysis", "name": "分析题", "questionType": "open", "count": 5, "score": 10, "total": 50,
+      "minutes": 110,
+      "slots": [{ "scope": "politics.marx", "count": 1 }, { "scope": "politics.mao", "count": 1 }, { "scope": "politics.history", "count": 1 }, { "scope": "politics.ethics", "count": 1 }, { "scope": "politics.current", "count": 1 }] }
   ],
   "modules": [
     {

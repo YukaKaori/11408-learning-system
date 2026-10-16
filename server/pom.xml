@@ -178,6 +178,17 @@
                     </execution>
                 </executions>
             </plugin>
+            <plugin>
+                <!-- The offline content check: `./mvnw -q compile exec:java` validates every
+                     question pack exactly as the boot import does and prints the coverage
+                     report (see content/README.md). -->
+                <groupId>org.codehaus.mojo</groupId>
+                <artifactId>exec-maven-plugin</artifactId>
+                <version>3.5.1</version>
+                <configuration>
+                    <mainClass>com.yuka.learning.content.ContentCheck</mainClass>
+                </configuration>
+            </plugin>
         </plugins>
     </build>
 

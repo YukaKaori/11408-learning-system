@@ -41,6 +41,8 @@ const DAY = 86_400_000
 const icon = computed<IconName>(() => {
   if (props.item.tier === 'overdue') return 'alert-triangle'
   switch (props.item.kind) {
+    case 'paper':
+      return props.item.paper?.status === 'scoring' ? 'clipboard-check' : 'timer'
     case 'review':
       return 'layers'
     case 'mistake':
@@ -53,7 +55,13 @@ const icon = computed<IconName>(() => {
 })
 
 const title = computed(() => {
-  const { kind, review, mistake, task, session } = props.item
+  const { kind, review, mistake, task, session, paper } = props.item
+  if (kind === 'paper' && paper) {
+    return t(paper.status === 'scoring' ? 'today.plan.paperScoringTitle' : 'today.plan.paperTitle', {
+      paper: t(`exam.papers.${paper.subject}`),
+      title: paper.title,
+    })
+  }
   if (kind === 'review' && review) {
     return t('today.plan.reviewTitle', { n: review.total })
   }
@@ -76,7 +84,13 @@ const title = computed(() => {
  * "overdue 2d" stays stable through the day rather than ticking.
  */
 const when = computed(() => {
-  const { kind, tier, task, session } = props.item
+  const { kind, tier, task, session, paper } = props.item
+  if (kind === 'paper' && paper) {
+    // The deadline, not a ticking countdown: a row says when, it does not tick.
+    return paper.status === 'scoring'
+      ? t('today.plan.paperPending', { n: paper.pending })
+      : t('today.plan.paperUntil', { time: d(paper.deadlineAt, 'time') })
+  }
   if (tier === 'overdue' && task?.dueAt) {
     const days = Math.max(1, Math.floor((Date.now() - task.dueAt) / DAY))
     return t('today.plan.overdueBy', { n: days })
@@ -101,6 +115,8 @@ const when = computed(() => {
  */
 const verb = computed(() => {
   switch (props.item.kind) {
+    case 'paper':
+      return props.item.paper?.status === 'scoring' ? t('today.plan.verb.score') : t('today.plan.verb.resume')
     case 'review':
       return t('today.plan.verb.review')
     case 'mistake':

@@ -28,7 +28,9 @@ That question has two levels, and the product answers both:
   book, spaced repetition and the mastery model (M0).
 - **The paper level** — what would I score, and where does my time go? Whole
   papers sat under time, hours measured per paper, and a plan that divides
-  each day by the gap between estimate and target (M1, "the exam year").
+  each day by the gap between estimate and target (M1, "the exam year") —
+  and, since M2, papers sat *inside* the app on the server's clock, whose
+  result is the same kind of record.
 
 ## The loop
 
@@ -49,7 +51,7 @@ improve ◄── see readiness rise ◄── plan the day ◄── remember (
 | Redo | Today's plan, the mistake book | FSRS-spaced redos; three correct due-day redos resolve a mistake |
 | Remember | 记忆卡片 (flashcards) | FSRS-6 review; decks anchored on 考点; cards generated from note selections by AI |
 | Plan | 规划 (Plan), 今日 (Today) | the day divided among the papers by phase and by the gap to target; whole papers per week; a server-ranked, capped plan of due work plus one suggested 考点 per paper |
-| Sit | 模考 (mock exams & past papers) | whole papers under time, scored by section: the paper estimate, where the points go, the 真题 shelf |
+| Sit | 模考 (mock exams & past papers), the exam stage | a paper sat in the app — a library paper, or one assembled from the bank (组卷, whole or one section) — on the server's clock with autosave and resume, nothing revealed before the hand-in, graded at once where the grader can judge and scored by the candidate where it cannot; or a paper sat on paper and recorded after. Either way: the paper estimate, where the points go, the 真题 shelf |
 | Measure | the focus timer (sidebar, Today, every 考点 page) | study time recorded per paper as it happens — one tap, server-side, a switch saves the running block |
 | Improve | 学习分析 (analytics), the syllabus map, 模考 | score-weighted readiness per paper, weakest 考点, mistake causes; the estimate against the target per paper |
 
@@ -59,16 +61,27 @@ improve ◄── see readiness rise ◄── plan the day ◄── remember (
 The exam (content, versioned with the code — no tables)
   Blueprint 11408
   └─ Paper ×4 ─ Module ─ Chapter ─ 考点 (point, weight 1–3)
-     every node addressed by a hierarchical code: cs408 › cs408.os › cs408.os.process › cs408.os.process.sync
+     │  every node addressed by a hierarchical code: cs408 › cs408.os › cs408.os.process › cs408.os.process.sync
+     └─ printed Section ×n   type, worth, suggested minutes, and slots: how the real paper
+                             spreads it over modules ("11 数据结构", "2 组成原理 worth 23", "texts of 5")
+
+The library (content packs: versioned JSON, validated, imported idempotently at boot)
+  ContentPack (live version per pack: content_packs)
+  ├─ QuestionGroup        a shared text — a reading passage, a cloze — and its ordered questions
+  ├─ Question             library questions (user_id NULL), each with its primary 考点 first
+  └─ Paper                a library paper: printed sections in order, each question with its worth
 
 Candidate (User)
   ├─ ExamProfile          target 考研年份, confirmed exam date (else estimated), target score per paper
-  ├─ Question             own questions (captured from paper); library questions ship as content packs
+  ├─ Question             own questions (captured from paper)
   │    └─ QuestionPoint   1–6 考点 of one paper
   ├─ QuestionAttempt      the answer log — immutable, the evidence behind every figure
   ├─ PracticeSession      a drawn set (topic / weakness / mistakes / random) and its progress
   ├─ Mistake              one per question: status, cause, reflection, FSRS redo state
-  ├─ PaperSitting         a whole paper (or part) sat under time: 真题 year or mock name, score per section
+  ├─ Paper                the candidate's own papers, assembled from the bank (组卷) — kept, so they can be sat again
+  ├─ PaperSession         a paper being sat in the app: the server's deadline, the answer sheet, then the marks
+  ├─ PaperSitting         a whole paper (or part) sat under time: 真题 year or mock name, score per section;
+  │                       written by a PaperSession (scores read-only) or entered after a paper sat on paper
   ├─ FocusTimer           the study timer running now — at most one; stopping it writes a StudySession
   ├─ FlashcardDeck → Flashcard (FSRS-6)
   ├─ Note (wiki links, backlinks)   ├─ LearningMaterial   ├─ LearningTask
@@ -79,7 +92,10 @@ Candidate (User)
 Read models (own no tables, derived per request)
   Mastery          per 考点 mastery + level; per aggregate readiness + coverage
   Recommendations  prioritised 考点 (importance × need × freshness, phase-aware)
-  Today            plan (reviews, due mistakes, tasks, sessions) + focus + progress + exam countdown
+  Today            plan (a paper in progress or awaiting scores, reviews, due mistakes, tasks, sessions)
+                   + focus + progress + exam countdown
+  PaperAssembler   组卷: a paper from the bank, slot by slot as the real paper is built (pure)
+  Coverage         how deep the bank is per 考点, and how many disjoint whole papers it can assemble
   Analytics        readiness per paper, practice trend, mistake causes, weakest 考点, time shares
   Workspace        the Today ledger: practice in flight, recent notes and conversations, the week
   ScoreEstimate    per paper: recency-weighted whole-paper estimate, section profile, trajectory, 真题 shelf
@@ -102,7 +118,9 @@ stored, so no two screens can disagree.
 | Module | Owns | Surface |
 | --- | --- | --- |
 | `exam` | exam profile; the syllabus content | 考纲 map and 考点 pages; Settings › 考试 |
-| `question` | questions, tags, the answer log; content-pack import | question drawer on 考点 pages; capture dialog |
+| `question` | questions, tags, question groups, the answer log | question drawer on 考点 pages; capture dialog |
+| `content` | content packs: loading, validation, versioning, import, coverage | `GET /content/packs`; the offline check (`ContentCheck`) — see `content/README.md` |
+| `paper` | papers (library and 组卷), paper sessions | the 在线模考 panel on 模考; the exam stage (`/exam/:id`); scoring and the report (`/sittings/papers/:id`); Today's paper row |
 | `practice` | practice sessions | 练习 (launcher, recent sets), the practice stage, the report |
 | `mistake` | the mistake book | 错题本 (overview, filters, drawer, capture) |
 | `mastery` | — (read model) | meters on the map, Today's focus, recommendations |
@@ -134,7 +152,9 @@ On compact screens the dock carries the practice loop — **今日 · 考纲 · 
 | 练习 | How do I want to draw today's set? |
 | Practice stage | One question at a time: answer, see the verdict, understand it. |
 | 错题本 | What is due, where do my mistakes cluster, and why did each one happen? |
-| 模考 | What do whole papers yield per paper, where are the points lost, which 真题 are done? |
+| 模考 | What do whole papers yield per paper, where are the points lost, which 真题 are done — and which paper do I sit next? |
+| Exam stage | The paper, the clock and the answer sheet — nothing else, until the hand-in. |
+| Paper result | What could the grader not judge (I score it), and then: what did this paper yield, section by section and 考点 by 考点? |
 | 规划 | How does my day divide among the papers, why, and how is this week going? |
 | 学习分析 | How ready am I per paper, and where is the evidence? |
 | AI 导师 | Anything else — scoped to a 考点 when that helps. |
@@ -143,7 +163,14 @@ On compact screens the dock carries the practice loop — **今日 · 考纲 · 
 
 - **Honest grading.** The system grades what it can judge and asks the
   candidate to grade the rest against the reference answer. It never marks
-  an answer wrong that it could not judge.
+  an answer wrong that it could not judge. On a timed paper a blank scores
+  nothing and is not evidence — running out of time is not "不会".
+- **The clock is the server's.** A paper's deadline is fixed when it starts;
+  closing the tab does not stop it, and a paper found past its time is handed
+  in with its last saved answers.
+- **Content says what it is.** Every question shows its provenance; original
+  samples are labelled 原创样题 · 非真题, and nothing is presented as a past-exam
+  question unless it is one and licensed.
 - **Honest numbers.** Untested is "—", never 0%. Readiness converted to points
   is labelled a conversion, never a predicted score. The paper estimate comes
   only from whole papers sat in the last 90 days and says so. An estimated
@@ -160,8 +187,9 @@ On compact screens the dock carries the practice loop — **今日 · 考纲 · 
 
 ## Not built yet
 
-Papers sat *inside* the app under a timer (today a sitting is recorded after
-it is sat on paper — which is how 真题 are meant to be done), a question bank
-at real scale, retrieval-grounded AI with citations, AI-assisted scoring of
-essays and translations, file upload, registration and password reset. Order
-and rationale: [`roadmap.md`](roadmap.md).
+A question bank at real scale for 政治、英语一 and 数学一 (they have exactly one
+whole paper of content each — original samples that prove the formats; 408 has
+five), licensed past papers, figures in questions, retrieval-grounded AI with
+citations, AI-assisted scoring of essays, translations and analysis answers,
+file upload, registration and password reset. Order and rationale:
+[`roadmap.md`](roadmap.md).

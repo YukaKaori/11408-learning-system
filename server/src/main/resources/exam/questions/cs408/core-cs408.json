@@ -1,6 +1,7 @@
 {
   "pack": "core-cs408",
   "title": "408 核心题库（原创）",
+  "version": 1,
   "questions": [
     {
       "key": "cs408-ds-001",
@@ -59,7 +60,12 @@
       "score": 2,
       "source": "原创 · 核心题库",
       "stem": "循环队列存储在数组 `A[0..n-1]` 中，`front` 指向队头元素，`rear` 指向队尾元素的**下一个**位置。队列中元素的个数为（ ）。",
-      "options": ["`rear - front`", "`(rear - front + n) % n`", "`(rear - front + 1) % n`", "`(front - rear + n) % n`"],
+      "options": [
+        "`rear - front`",
+        "`(rear - front + n) % n`",
+        "`(rear - front + 1) % n`",
+        "`(front - rear + n) % n`"
+      ],
       "answer": "B",
       "analysis": "`rear` 可能已经绕回数组开头而小于 `front`，所以不能直接相减，需加 $n$ 再取模：`(rear - front + n) % n`。\n\n注意本题的约定是 `rear` 指向队尾的下一个位置；若题目约定 `rear` 指向队尾元素本身，公式要相应改为 `(rear - front + 1 + n) % n`。审题时先看清约定。"
     },
@@ -399,12 +405,7 @@
       "score": 2,
       "source": "原创 · 核心题库",
       "stem": "关于 DMA 方式，下列说法中正确的是（ ）。",
-      "options": [
-        "DMA 传送过程中 CPU 必须暂停一切工作",
-        "数据在主存与外设之间直接传送，不需要 CPU 执行程序逐字搬运",
-        "DMA 方式完全不需要中断",
-        "DMA 方式只适用于低速外设"
-      ],
+      "options": ["DMA 传送过程中 CPU 必须暂停一切工作", "数据在主存与外设之间直接传送，不需要 CPU 执行程序逐字搬运", "DMA 方式完全不需要中断", "DMA 方式只适用于低速外设"],
       "answer": "B",
       "analysis": "DMA 由 DMA 控制器接管总线，在主存与外设之间直接成块传送数据，CPU 只在开始时初始化、结束时处理中断。\n\nA：采用周期挪用等方式时，CPU 可继续执行不访存的操作；C：传送结束时 DMA 控制器通常发出中断，请 CPU 做后处理；D：DMA 正是为磁盘等高速外设设计的。"
     },

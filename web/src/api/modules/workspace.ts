@@ -2,7 +2,7 @@ import { api } from '@/api/http'
 import type { ConversationSummaryDto } from './ai'
 import type { ActivityDayDto } from './analytics'
 import type { StudySessionDto } from './calendar'
-import type { ExamPhase } from './exam'
+import type { ExamPhase, ExamSubjectCode } from './exam'
 import type { FocusReason, MasteryLevel } from './mastery'
 import type { PracticeSummaryDto } from './practice'
 import type { TaskDto } from './task'
@@ -64,8 +64,8 @@ export type TodayState = 'planned' | 'complete' | 'clear' | 'empty'
 /** Priority bands. Array order is the server's ordering contract. */
 export type PlanTier = 'overdue' | 'now' | 'scheduled'
 
-/** Which of the four timed sources a row came from. */
-export type PlanKind = 'review' | 'mistake' | 'session' | 'task'
+/** Which of the timed sources a row came from. */
+export type PlanKind = 'paper' | 'review' | 'mistake' | 'session' | 'task'
 
 /** The countdown to exam day one. */
 export interface TodayExamDto {
@@ -104,7 +104,22 @@ export interface MistakeFocusDto {
   due: number
 }
 
-/** One commitment. Exactly one of `review` / `mistake` / `task` / `session` is non-null. */
+/**
+ * A paper sat in the app and not finished: still being sat against
+ * `deadlineAt`, or handed in with answers awaiting the candidate's scores.
+ */
+export interface PaperFocusDto {
+  sessionId: string
+  subject: ExamSubjectCode
+  title: string
+  status: 'in_progress' | 'scoring'
+  deadlineAt: number
+  answered: number
+  total: number
+  pending: number
+}
+
+/** One commitment. Exactly one of `review` / `mistake` / `task` / `session` / `paper` is non-null. */
 export interface PlanItemDto {
   id: string
   kind: PlanKind
@@ -114,6 +129,7 @@ export interface PlanItemDto {
   mistake: MistakeFocusDto | null
   task: TaskDto | null
   session: StudySessionDto | null
+  paper: PaperFocusDto | null
 }
 
 /**

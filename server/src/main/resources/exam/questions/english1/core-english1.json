@@ -1,6 +1,18 @@
 {
   "pack": "core-english1",
   "title": "英语（一）核心题库（原创）",
+  "version": 2,
+  "description": "英语（一）原创核心题：词汇语法基础、阅读理解、翻译与写作。",
+  "groups": [
+    {
+      "key": "english1-reading-g001",
+      "subject": "english1",
+      "section": "english1.reading-a",
+      "title": "Street trees as infrastructure",
+      "passage": "For decades, city planners treated street trees as decoration—pleasant, but optional, and the first item cut when budgets tightened. That view is changing. A growing body of research suggests that urban trees function less like ornaments and more like infrastructure, delivering services that would otherwise require expensive engineering.\n\nThe most measurable of these services is cooling. On a summer afternoon, a street lined with mature trees can be several degrees cooler than a nearby street without them, partly because leaves block sunlight and partly because trees release water vapor as they breathe. In cities where heat waves already kill more people than floods or storms, that difference is not cosmetic. Trees also slow stormwater, allowing rain to soak into the soil instead of overwhelming drains, and they appear to encourage people to walk, which carries its own public-health benefits.\n\nYet the benefits are unevenly shared. In many cities, wealthier neighborhoods have far more canopy than poorer ones, a gap that often reflects decades-old planning decisions rather than recent choices. Critics warn that planting programs can reproduce this inequality if new trees go where residents are best organized to request them, rather than where the need is greatest.\n\nPlanting, moreover, is the easy part. A young tree needs regular watering for its first few years, and many die before they ever provide meaningful shade. Some programs now judge themselves not by how many trees they plant but by how many survive to maturity—a less photogenic figure, but a more honest one. If trees are infrastructure, the argument goes, they deserve an infrastructure budget: one that pays for maintenance, not just for ribbon-cutting.",
+      "source": "原创 · 核心题库"
+    }
+  ],
   "questions": [
     {
       "key": "english1-vocab-001",
@@ -91,13 +103,18 @@
       "subject": "english1",
       "section": "english1.reading-a",
       "type": "single_choice",
+      "group": "english1-reading-g001",
       "points": ["english1.reading.types.detail"],
       "difficulty": 2,
       "score": 2,
       "source": "原创 · 核心题库",
-      "passage": "For decades, city planners treated street trees as decoration—pleasant, but optional, and the first item cut when budgets tightened. That view is changing. A growing body of research suggests that urban trees function less like ornaments and more like infrastructure, delivering services that would otherwise require expensive engineering.\n\nThe most measurable of these services is cooling. On a summer afternoon, a street lined with mature trees can be several degrees cooler than a nearby street without them, partly because leaves block sunlight and partly because trees release water vapor as they breathe. In cities where heat waves already kill more people than floods or storms, that difference is not cosmetic. Trees also slow stormwater, allowing rain to soak into the soil instead of overwhelming drains, and they appear to encourage people to walk, which carries its own public-health benefits.\n\nYet the benefits are unevenly shared. In many cities, wealthier neighborhoods have far more canopy than poorer ones, a gap that often reflects decades-old planning decisions rather than recent choices. Critics warn that planting programs can reproduce this inequality if new trees go where residents are best organized to request them, rather than where the need is greatest.\n\nPlanting, moreover, is the easy part. A young tree needs regular watering for its first few years, and many die before they ever provide meaningful shade. Some programs now judge themselves not by how many trees they plant but by how many survive to maturity—a less photogenic figure, but a more honest one. If trees are infrastructure, the argument goes, they deserve an infrastructure budget: one that pays for maintenance, not just for ribbon-cutting.",
       "stem": "According to Paragraph 1, street trees were traditionally regarded as ______.",
-      "options": ["essential infrastructure", "optional decoration", "a source of public revenue", "an engineering challenge"],
+      "options": [
+        "essential infrastructure",
+        "optional decoration",
+        "a source of public revenue",
+        "an engineering challenge"
+      ],
       "answer": "B",
       "analysis": "定位第一段首句：city planners treated street trees as decoration—pleasant, but optional。B 是对原文的同义改写。\n\nA 是作者认为正在形成的新观点（That view is changing），不是传统看法；C、D 原文未提及。细节题的常见陷阱：把“新观点”当成“旧观点”。"
     },
@@ -106,11 +123,11 @@
       "subject": "english1",
       "section": "english1.reading-a",
       "type": "single_choice",
+      "group": "english1-reading-g001",
       "points": ["english1.reading.types.inference"],
       "difficulty": 3,
       "score": 2,
       "source": "原创 · 核心题库",
-      "passage": "For decades, city planners treated street trees as decoration—pleasant, but optional, and the first item cut when budgets tightened. That view is changing. A growing body of research suggests that urban trees function less like ornaments and more like infrastructure, delivering services that would otherwise require expensive engineering.\n\nThe most measurable of these services is cooling. On a summer afternoon, a street lined with mature trees can be several degrees cooler than a nearby street without them, partly because leaves block sunlight and partly because trees release water vapor as they breathe. In cities where heat waves already kill more people than floods or storms, that difference is not cosmetic. Trees also slow stormwater, allowing rain to soak into the soil instead of overwhelming drains, and they appear to encourage people to walk, which carries its own public-health benefits.\n\nYet the benefits are unevenly shared. In many cities, wealthier neighborhoods have far more canopy than poorer ones, a gap that often reflects decades-old planning decisions rather than recent choices. Critics warn that planting programs can reproduce this inequality if new trees go where residents are best organized to request them, rather than where the need is greatest.\n\nPlanting, moreover, is the easy part. A young tree needs regular watering for its first few years, and many die before they ever provide meaningful shade. Some programs now judge themselves not by how many trees they plant but by how many survive to maturity—a less photogenic figure, but a more honest one. If trees are infrastructure, the argument goes, they deserve an infrastructure budget: one that pays for maintenance, not just for ribbon-cutting.",
       "stem": "The author mentions heat waves in Paragraph 2 in order to ______.",
       "options": [
         "compare different kinds of natural disasters",
@@ -126,11 +143,11 @@
       "subject": "english1",
       "section": "english1.reading-a",
       "type": "single_choice",
+      "group": "english1-reading-g001",
       "points": ["english1.reading.types.detail"],
       "difficulty": 2,
       "score": 2,
       "source": "原创 · 核心题库",
-      "passage": "For decades, city planners treated street trees as decoration—pleasant, but optional, and the first item cut when budgets tightened. That view is changing. A growing body of research suggests that urban trees function less like ornaments and more like infrastructure, delivering services that would otherwise require expensive engineering.\n\nThe most measurable of these services is cooling. On a summer afternoon, a street lined with mature trees can be several degrees cooler than a nearby street without them, partly because leaves block sunlight and partly because trees release water vapor as they breathe. In cities where heat waves already kill more people than floods or storms, that difference is not cosmetic. Trees also slow stormwater, allowing rain to soak into the soil instead of overwhelming drains, and they appear to encourage people to walk, which carries its own public-health benefits.\n\nYet the benefits are unevenly shared. In many cities, wealthier neighborhoods have far more canopy than poorer ones, a gap that often reflects decades-old planning decisions rather than recent choices. Critics warn that planting programs can reproduce this inequality if new trees go where residents are best organized to request them, rather than where the need is greatest.\n\nPlanting, moreover, is the easy part. A young tree needs regular watering for its first few years, and many die before they ever provide meaningful shade. Some programs now judge themselves not by how many trees they plant but by how many survive to maturity—a less photogenic figure, but a more honest one. If trees are infrastructure, the argument goes, they deserve an infrastructure budget: one that pays for maintenance, not just for ribbon-cutting.",
       "stem": "What concern do critics raise about tree-planting programs?",
       "options": [
         "They cost more than traditional engineering solutions.",
@@ -146,11 +163,11 @@
       "subject": "english1",
       "section": "english1.reading-a",
       "type": "single_choice",
+      "group": "english1-reading-g001",
       "points": ["english1.reading.types.meaning"],
       "difficulty": 3,
       "score": 2,
       "source": "原创 · 核心题库",
-      "passage": "For decades, city planners treated street trees as decoration—pleasant, but optional, and the first item cut when budgets tightened. That view is changing. A growing body of research suggests that urban trees function less like ornaments and more like infrastructure, delivering services that would otherwise require expensive engineering.\n\nThe most measurable of these services is cooling. On a summer afternoon, a street lined with mature trees can be several degrees cooler than a nearby street without them, partly because leaves block sunlight and partly because trees release water vapor as they breathe. In cities where heat waves already kill more people than floods or storms, that difference is not cosmetic. Trees also slow stormwater, allowing rain to soak into the soil instead of overwhelming drains, and they appear to encourage people to walk, which carries its own public-health benefits.\n\nYet the benefits are unevenly shared. In many cities, wealthier neighborhoods have far more canopy than poorer ones, a gap that often reflects decades-old planning decisions rather than recent choices. Critics warn that planting programs can reproduce this inequality if new trees go where residents are best organized to request them, rather than where the need is greatest.\n\nPlanting, moreover, is the easy part. A young tree needs regular watering for its first few years, and many die before they ever provide meaningful shade. Some programs now judge themselves not by how many trees they plant but by how many survive to maturity—a less photogenic figure, but a more honest one. If trees are infrastructure, the argument goes, they deserve an infrastructure budget: one that pays for maintenance, not just for ribbon-cutting.",
       "stem": "The phrase \"a less photogenic figure\" (Paragraph 4) most probably refers to ______.",
       "options": [
         "the number of trees planted",
@@ -166,11 +183,11 @@
       "subject": "english1",
       "section": "english1.reading-a",
       "type": "single_choice",
+      "group": "english1-reading-g001",
       "points": ["english1.reading.types.main-idea"],
       "difficulty": 2,
       "score": 2,
       "source": "原创 · 核心题库",
-      "passage": "For decades, city planners treated street trees as decoration—pleasant, but optional, and the first item cut when budgets tightened. That view is changing. A growing body of research suggests that urban trees function less like ornaments and more like infrastructure, delivering services that would otherwise require expensive engineering.\n\nThe most measurable of these services is cooling. On a summer afternoon, a street lined with mature trees can be several degrees cooler than a nearby street without them, partly because leaves block sunlight and partly because trees release water vapor as they breathe. In cities where heat waves already kill more people than floods or storms, that difference is not cosmetic. Trees also slow stormwater, allowing rain to soak into the soil instead of overwhelming drains, and they appear to encourage people to walk, which carries its own public-health benefits.\n\nYet the benefits are unevenly shared. In many cities, wealthier neighborhoods have far more canopy than poorer ones, a gap that often reflects decades-old planning decisions rather than recent choices. Critics warn that planting programs can reproduce this inequality if new trees go where residents are best organized to request them, rather than where the need is greatest.\n\nPlanting, moreover, is the easy part. A young tree needs regular watering for its first few years, and many die before they ever provide meaningful shade. Some programs now judge themselves not by how many trees they plant but by how many survive to maturity—a less photogenic figure, but a more honest one. If trees are infrastructure, the argument goes, they deserve an infrastructure budget: one that pays for maintenance, not just for ribbon-cutting.",
       "stem": "Which of the following would be the best title for the text?",
       "options": [
         "Why Cities Should Stop Planting Trees",

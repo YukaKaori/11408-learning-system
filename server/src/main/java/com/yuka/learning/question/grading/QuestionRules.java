@@ -14,7 +14,7 @@ import java.util.Set;
 /**
  * The rules every question obeys, whoever wrote it — the content team through
  * a pack or a candidate capturing a mistake from a book. One validator, two
- * entry points ({@code QuestionPackImporter}, {@code QuestionService}), so a
+ * entry points ({@code PackValidator}, {@code QuestionService}), so a
  * library question and a captured one can never be graded by different rules.
  *
  * <p>Pure: it reads the syllabus but performs no I/O. Violations raise
@@ -60,11 +60,15 @@ public final class QuestionRules {
         require(type != null, "unknown type '" + draft.type() + "'");
 
         String section = blankToNull(draft.section());
+        SyllabusContent.Section printed = null;
         if (section != null) {
-            boolean known = syllabus.subject(subject).sections().stream()
-                    .map(SyllabusContent.Section::code)
-                    .anyMatch(section::equals);
-            require(known, "section '" + section + "' is not part of " + subject.code());
+            printed = syllabus.subject(subject).sections().stream()
+                    .filter(candidate -> candidate.code().equals(section))
+                    .findFirst()
+                    .orElse(null);
+            require(printed != null, "section '" + section + "' is not part of " + subject.code());
+            require(type.code().equals(printed.questionType()),
+                    section + " holds " + printed.questionType() + " questions, not " + type.code());
         }
 
         List<String> points = draft.points() == null ? List.of() : new ArrayList<>(new LinkedHashSet<>(
@@ -128,6 +132,14 @@ public final class QuestionRules {
         if (draft.score() != null) {
             require(draft.score() > 0 && draft.score() <= 150, "score must be in (0, 150]");
             score = BigDecimal.valueOf(draft.score());
+        }
+        if (printed != null && printed.score() != null) {
+            // A section printed with one value per question fixes the worth:
+            // an omitted score takes it, a different one is a mistake.
+            BigDecimal fixed = BigDecimal.valueOf(printed.score());
+            require(score == null || score.compareTo(fixed) == 0,
+                    "a question in " + section + " is worth " + printed.score());
+            score = fixed;
         }
         if (draft.sourceYear() != null) {
             require(draft.sourceYear() >= 1990 && draft.sourceYear() <= 2100, "source year is out of range");

@@ -96,7 +96,7 @@ class WorkspaceTodayServiceTest {
         for (String table : List.of("learning_materials", "notes", "flashcard_decks",
                 "flashcards", "review_logs", "learning_tasks", "study_sessions", "ai_conversations",
                 "ai_messages", "user_preferences", "exam_profiles", "practice_sessions",
-                "question_attempts", "mistakes")) {
+                "question_attempts", "mistakes", "paper_sessions", "focus_timers")) {
             jdbcTemplate.update("DELETE FROM " + table);
         }
         // Library content stays; only candidates' own questions are test data.

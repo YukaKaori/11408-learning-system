@@ -10,7 +10,19 @@ import java.util.List;
  * Add new settings here instead of scattering {@code @Value} lookups.
  */
 @ConfigurationProperties(prefix = "app")
-public record AppProperties(Cors cors, Security security, Ai ai, Flashcard flashcard) {
+public record AppProperties(Cors cors, Security security, Ai ai, Flashcard flashcard, Content content) {
+
+    /**
+     * Where the question bank's content packs come from besides the jar.
+     *
+     * @param packsDir an optional directory of content packs ({@code *.json},
+     *                 searched recursively), read at startup next to the packs
+     *                 shipped on the classpath. Per pack id the higher version
+     *                 wins, so new content ships without a code release. Blank =
+     *                 classpath only.
+     */
+    public record Content(String packsDir) {
+    }
 
     public record Cors(List<String> allowedOrigins) {
     }

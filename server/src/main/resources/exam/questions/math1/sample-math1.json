@@ -1,0 +1,112 @@
+{
+  "pack": "sample-math1",
+  "title": "数学（一）原创样题 · 题型验证",
+  "version": 1,
+  "description": "原创样题，非真题：补足一套完整试卷所缺的 4 道解答题（微分方程、曲面积分、幂级数、二维随机变量，各 12 分），以及由样题与核心题组成的一套原创样卷，用于验证数学（一）三种题型的在线模考、评分与记录。",
+  "generator": "content/packs/sample-math1.mjs",
+  "questions": [
+    {
+      "key": "math1-sample-ode-01",
+      "subject": "math1",
+      "section": "math1.solution",
+      "type": "open",
+      "points": ["math1.calculus.ode.linear", "math1.calculus.integral.variable-limit"],
+      "difficulty": 3,
+      "score": 12,
+      "source": "原创样题 · 非真题",
+      "stem": "设函数 $f(x)$ 连续，且满足\n\n$$f(x)=\\mathrm{e}^{x}+\\int_{0}^{x}(x-t)\\,f(t)\\,\\mathrm{d}t .$$\n\n（1）证明 $f(x)$ 二阶可导，并求 $f(x)$ 所满足的微分方程及初始条件；\n\n（2）求 $f(x)$。",
+      "answer": "**（1）（5 分）** 先把被积函数中的 $x$ 提到积分号外：\n\n$$f(x)=\\mathrm{e}^{x}+x\\int_0^x f(t)\\,\\mathrm{d}t-\\int_0^x t f(t)\\,\\mathrm{d}t .$$\n\n$f$ 连续，故右端可导，从而 $f$ 可导，且\n\n$$f'(x)=\\mathrm{e}^{x}+\\int_0^x f(t)\\,\\mathrm{d}t+xf(x)-xf(x)=\\mathrm{e}^{x}+\\int_0^x f(t)\\,\\mathrm{d}t .$$\n\n右端仍可导，故 $f$ 二阶可导，$f''(x)=\\mathrm{e}^{x}+f(x)$，即\n\n$$f''(x)-f(x)=\\mathrm{e}^{x}.$$\n\n在原式和 $f'(x)$ 的表达式中令 $x=0$，得初始条件 $f(0)=1$，$f'(0)=1$。\n\n**（2）（7 分）** 特征方程 $r^{2}-1=0$，$r=\\pm1$，齐次方程的通解为 $C_1\\mathrm{e}^{x}+C_2\\mathrm{e}^{-x}$（2 分）。\n\n$\\lambda=1$ 是特征方程的单根，设特解 $y^{*}=Ax\\mathrm{e}^{x}$，则 $y^{*\\prime\\prime}-y^{*}=2A\\mathrm{e}^{x}$，由 $2A=1$ 得 $A=\\tfrac12$（3 分）。\n\n于是 $f(x)=C_1\\mathrm{e}^{x}+C_2\\mathrm{e}^{-x}+\\tfrac12x\\mathrm{e}^{x}$。由 $f(0)=C_1+C_2=1$，$f'(0)=C_1-C_2+\\tfrac12=1$，得 $C_1=\\tfrac34$，$C_2=\\tfrac14$（2 分）。所以\n\n$$f(x)=\\frac34\\mathrm{e}^{x}+\\frac14\\mathrm{e}^{-x}+\\frac12x\\mathrm{e}^{x}.$$",
+      "analysis": "积分方程化微分方程的三步：**拆开含 $x$ 的被积函数 → 逐次求导消去积分 → 从原方程和一阶导数中读出初始条件**。求导之前必须先把 $(x-t)$ 中的 $x$ 提到积分号外，否则不能直接套用变限积分的求导公式。\n\n验算：把结果代回原方程，在 $x=0.5,\\,1,\\,2$ 处数值计算右端积分，与左端一致。\n\n常见失分：没有说明\"由 $f$ 连续推出可导\"；忘记 $f'(0)=1$ 也要从 $f'(x)$ 的表达式得到；把 $\\lambda=1$ 当作非特征根而设 $y^{*}=A\\mathrm{e}^{x}$，代入后无解。"
+    },
+    {
+      "key": "math1-sample-surface-01",
+      "subject": "math1",
+      "section": "math1.solution",
+      "type": "open",
+      "points": ["math1.calculus.multiple-integral.surface"],
+      "difficulty": 3,
+      "score": 12,
+      "source": "原创样题 · 非真题",
+      "stem": "计算曲面积分\n\n$$I=\\iint_{\\Sigma}(x^{2}+1)\\,\\mathrm{d}y\\,\\mathrm{d}z-2y\\,\\mathrm{d}z\\,\\mathrm{d}x+3z\\,\\mathrm{d}x\\,\\mathrm{d}y,$$\n\n其中 $\\Sigma$ 为旋转抛物面 $z=x^{2}+y^{2}$（$0\\le z\\le 1$）的下侧。",
+      "answer": "**补面（2 分）**：$\\Sigma$ 不封闭。补平面 $\\Sigma_1:\\ z=1\\ (x^{2}+y^{2}\\le 1)$，取上侧，则 $\\Sigma$ 与 $\\Sigma_1$ 合起来是区域 $\\Omega=\\{(x,y,z)\\mid x^{2}+y^{2}\\le z\\le 1\\}$ 边界曲面的外侧。\n\n**高斯公式（5 分）**：$\\dfrac{\\partial P}{\\partial x}+\\dfrac{\\partial Q}{\\partial y}+\\dfrac{\\partial R}{\\partial z}=2x-2+3=2x+1$。$\\Omega$ 关于 $yOz$ 面对称，$2x$ 是 $x$ 的奇函数，$\\iiint_{\\Omega}2x\\,\\mathrm{d}V=0$，所以\n\n$$\\iint_{\\Sigma+\\Sigma_1}=\\iiint_{\\Omega}(2x+1)\\,\\mathrm{d}V=\\iiint_{\\Omega}\\mathrm{d}V=\\int_0^1\\pi z\\,\\mathrm{d}z=\\frac{\\pi}{2}.$$\n\n**补面上的积分（3 分）**：$\\Sigma_1$ 垂直于 $z$ 轴，其上 $\\mathrm{d}y\\,\\mathrm{d}z=\\mathrm{d}z\\,\\mathrm{d}x=0$，且 $z=1$，故\n\n$$\\iint_{\\Sigma_1}=\\iint_{x^{2}+y^{2}\\le 1}3\\,\\mathrm{d}x\\,\\mathrm{d}y=3\\pi .$$\n\n**结果（2 分）**：$I=\\dfrac{\\pi}{2}-3\\pi=-\\dfrac{5\\pi}{2}$。",
+      "analysis": "非封闭曲面用高斯公式的标准步骤：**补面使之封闭 → 确认方向是外侧（否则加负号）→ 计算体积分 → 减去补面上的积分**。本题抛物面的下侧恰好是 $\\Omega$ 边界外侧的一部分，所补的顶面必须取上侧。\n\n验算（直接投影）：$\\Sigma$ 取下侧时 $I=\\iint_{D}\\big[P\\,z_x+Q\\,z_y-R\\big]\\mathrm{d}x\\,\\mathrm{d}y$，其中 $D:\\ x^{2}+y^{2}\\le1$，代入得 $\\iint_{D}(2x^{3}+2x-3x^{2}-7y^{2})\\,\\mathrm{d}x\\,\\mathrm{d}y=-\\dfrac{3\\pi}{4}-\\dfrac{7\\pi}{4}=-\\dfrac{5\\pi}{2}$，两种方法一致。\n\n常见失分：补面方向取反；在 $\\Sigma_1$ 上仍计算 $\\mathrm{d}y\\,\\mathrm{d}z$ 项；不用对称性而硬算 $\\iiint 2x\\,\\mathrm{d}V$。"
+    },
+    {
+      "key": "math1-sample-series-01",
+      "subject": "math1",
+      "section": "math1.solution",
+      "type": "open",
+      "points": ["math1.calculus.series.power", "math1.calculus.series.convergence"],
+      "difficulty": 3,
+      "score": 12,
+      "source": "原创样题 · 非真题",
+      "stem": "已知幂级数 $\\displaystyle\\sum_{n=1}^{\\infty}\\frac{x^{n+1}}{n(n+1)}$。\n\n（1）求该幂级数的收敛域；\n\n（2）求它的和函数 $S(x)$；\n\n（3）求数项级数 $\\displaystyle\\sum_{n=1}^{\\infty}\\frac{1}{n(n+1)2^{n}}$ 的和。",
+      "answer": "**（1）（3 分）** $\\displaystyle\\lim_{n\\to\\infty}\\frac{n(n+1)}{(n+1)(n+2)}=1$，收敛半径 $R=1$。$x=\\pm1$ 时通项的绝对值为 $\\dfrac{1}{n(n+1)}$，级数绝对收敛，故收敛域为 $[-1,1]$。\n\n**（2）（6 分）** 在 $(-1,1)$ 内逐项求导：\n\n$$S'(x)=\\sum_{n=1}^{\\infty}\\frac{x^{n}}{n}=-\\ln(1-x),\\qquad S(0)=0,$$\n\n所以\n\n$$S(x)=\\int_0^x\\big[-\\ln(1-t)\\big]\\,\\mathrm{d}t=(1-x)\\ln(1-x)+x,\\quad -1<x<1 .$$\n\n和函数在收敛域上连续：$S(-1)=2\\ln2-1$；$S(1)=\\displaystyle\\lim_{x\\to1^{-}}\\big[(1-x)\\ln(1-x)+x\\big]=1$。于是\n\n$$S(x)=\\begin{cases}(1-x)\\ln(1-x)+x,&-1\\le x<1,\\\\[2pt] 1,&x=1.\\end{cases}$$\n\n**（3）（3 分）** 取 $x=\\tfrac12$：$S\\!\\left(\\tfrac12\\right)=\\displaystyle\\sum_{n=1}^{\\infty}\\frac{1}{n(n+1)2^{n+1}}$，所以\n\n$$\\sum_{n=1}^{\\infty}\\frac{1}{n(n+1)2^{n}}=2S\\!\\left(\\tfrac12\\right)=2\\left(\\tfrac12\\ln\\tfrac12+\\tfrac12\\right)=1-\\ln2 .$$",
+      "analysis": "求和函数的思路：**先求导（或先积分）化成已知级数，求和后再积回来（或导回去）**，并用 $S(0)$ 确定积分常数。收敛的端点要单独说明：和函数在该点的值等于内部表达式的单侧极限。\n\n另解（拆项）：$\\dfrac{1}{n(n+1)}=\\dfrac1n-\\dfrac1{n+1}$，分别对 $\\sum\\dfrac{x^{n+1}}{n}$ 与 $\\sum\\dfrac{x^{n+1}}{n+1}$ 求和，结果相同。\n\n验算：$1-\\ln2\\approx0.30685$，原级数前 20 项之和与之相差不到 $10^{-7}$。\n\n常见失分：收敛域漏掉端点的判断；写出 $S(x)$ 而不写定义区间；第（3）问代入 $x=\\tfrac12$ 时漏乘 2。"
+    },
+    {
+      "key": "math1-sample-joint-01",
+      "subject": "math1",
+      "section": "math1.solution",
+      "type": "open",
+      "points": [
+        "math1.probability.multivariate.joint",
+        "math1.probability.multivariate.function",
+        "math1.probability.moments.covariance"
+      ],
+      "difficulty": 3,
+      "score": 12,
+      "source": "原创样题 · 非真题",
+      "stem": "设二维随机变量 $(X,Y)$ 的概率密度为\n\n$$f(x,y)=\\begin{cases}2,&0<y<x<1,\\\\[2pt] 0,&\\text{其他}.\\end{cases}$$\n\n（1）求 $X$ 与 $Y$ 的边缘概率密度，并判断 $X$ 与 $Y$ 是否相互独立；\n\n（2）求 $Z=X+Y$ 的概率密度 $f_Z(z)$；\n\n（3）求协方差 $\\operatorname{Cov}(X,Y)$。",
+      "answer": "**（1）（4 分）**\n\n$$f_X(x)=\\begin{cases}\\displaystyle\\int_0^x2\\,\\mathrm{d}y=2x,&0<x<1,\\\\ 0,&\\text{其他};\\end{cases}\\qquad f_Y(y)=\\begin{cases}\\displaystyle\\int_y^1 2\\,\\mathrm{d}x=2(1-y),&0<y<1,\\\\ 0,&\\text{其他}.\\end{cases}$$\n\n例如在点 $\\left(\\tfrac12,\\tfrac14\\right)$ 处，$f=2$，而 $f_X\\!\\left(\\tfrac12\\right)f_Y\\!\\left(\\tfrac14\\right)=1\\times\\tfrac32=\\tfrac32$，$f(x,y)\\ne f_X(x)f_Y(y)$，故 $X$ 与 $Y$ 不独立。\n\n**（2）（5 分）** 用分布函数法，$F_Z(z)=P\\{X+Y\\le z\\}$：\n\n- $z<0$ 时 $F_Z(z)=0$；$z\\ge2$ 时 $F_Z(z)=1$；\n- $0\\le z<1$ 时，$F_Z(z)=\\displaystyle\\int_0^{z/2}\\mathrm{d}y\\int_y^{z-y}2\\,\\mathrm{d}x=\\int_0^{z/2}2(z-2y)\\,\\mathrm{d}y=\\frac{z^{2}}{2}$；\n- $1\\le z<2$ 时，$F_Z(z)=1-\\displaystyle\\int_{z/2}^{1}\\mathrm{d}x\\int_{z-x}^{x}2\\,\\mathrm{d}y=1-\\frac{(2-z)^{2}}{2}$。\n\n求导得\n\n$$f_Z(z)=\\begin{cases}z,&0<z<1,\\\\[2pt] 2-z,&1\\le z<2,\\\\[2pt] 0,&\\text{其他}.\\end{cases}$$\n\n**（3）（3 分）** $E(X)=\\displaystyle\\int_0^1 2x^{2}\\,\\mathrm{d}x=\\frac23$，$E(Y)=\\displaystyle\\int_0^1 2y(1-y)\\,\\mathrm{d}y=\\frac13$，$E(XY)=\\displaystyle\\int_0^1\\mathrm{d}x\\int_0^x2xy\\,\\mathrm{d}y=\\int_0^1x^{3}\\,\\mathrm{d}x=\\frac14$，所以\n\n$$\\operatorname{Cov}(X,Y)=E(XY)-E(X)E(Y)=\\frac14-\\frac29=\\frac1{36}.$$",
+      "analysis": "二维连续型的三件套：**边缘密度看积分限，独立性看能否分解，函数的分布用分布函数法分段**。分段点由区域 $0<y<x<1$ 与直线 $x+y=z$ 的相对位置决定：$z=1$ 时直线恰好经过三角形的顶点 $(1,0)$。\n\n验算：$(X,Y)$ 可以看作两个相互独立的 $U(0,1)$ 变量的最大值与最小值，$X+Y$ 就是这两个变量之和，所以 $f_Z$ 恰为熟悉的三角形分布。\n\n常见失分：边缘密度的积分限写成 0 到 1；用卷积公式 $f_Z(z)=\\int f(x,z-x)\\,\\mathrm{d}x$ 时积分限不随 $z$ 分段；协方差算成负数（$X$ 大时 $Y$ 也倾向于大，二者正相关）。"
+    }
+  ],
+  "papers": [
+    {
+      "key": "math1-sample-paper-01",
+      "subject": "math1",
+      "kind": "mock",
+      "title": "数学（一）原创样卷 · 题型验证（非真题）",
+      "sections": [
+        {
+          "code": "math1.choice",
+          "questions": [
+            "math1-limit-002",
+            "math1-limit-003",
+            "math1-derivative-002",
+            "math1-integral-002",
+            "math1-multiple-integral-002",
+            "math1-ode-001",
+            "math1-linear-002",
+            "math1-linear-003",
+            "math1-probability-002",
+            "math1-probability-004"
+          ]
+        },
+        {
+          "code": "math1.fill",
+          "questions": [
+            "math1-limit-001",
+            "math1-derivative-001",
+            "math1-integral-001",
+            "math1-multiple-integral-001",
+            "math1-linear-001",
+            "math1-probability-001"
+          ]
+        },
+        {
+          "code": "math1.solution",
+          "questions": [
+            "math1-multivariable-002",
+            "math1-sample-surface-01",
+            "math1-sample-series-01",
+            "math1-sample-ode-01",
+            "math1-linear-004",
+            "math1-sample-joint-01"
+          ]
+        }
+      ]
+    }
+  ]
+}

@@ -8,6 +8,9 @@ import java.util.List;
  * ({@link QuestionSolution}) and only after an answer has been submitted, so a
  * practice session can never leak it through the payload that renders it.
  *
+ * @param passage the shared material — the question's own, or its group's
+ * @param groupId the question group it belongs to, or null; questions of one
+ *                group share {@code passage} and are sat together
  * @param options option texts in A, B, C… order; empty for non-choice types
  * @param points  the 考点 codes the question tests
  * @param mine    whether the candidate authored it (only their own questions are editable)
@@ -19,6 +22,7 @@ public record QuestionResponse(
         String type,
         String stem,
         String passage,
+        String groupId,
         List<String> options,
         Double score,
         int difficulty,

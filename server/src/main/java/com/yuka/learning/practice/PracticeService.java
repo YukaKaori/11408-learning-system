@@ -21,6 +21,7 @@ import com.yuka.learning.question.dto.QuestionSolution;
 import com.yuka.learning.question.entity.AttemptResult;
 import com.yuka.learning.question.entity.Question;
 import com.yuka.learning.question.entity.QuestionAttempt;
+import com.yuka.learning.question.entity.QuestionGroup;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 import tools.jackson.core.type.TypeReference;
@@ -218,6 +219,7 @@ public class PracticeService {
         List<Long> ids = questionIds(session);
         Map<Long, Question> questions = questionService.loadVisible(userId, ids);
         Map<Long, List<String>> points = questionService.pointsOf(ids);
+        Map<Long, QuestionGroup> groups = questionService.groupsOf(questions.values());
         Map<Long, QuestionAttempt> answered = new HashMap<>();
         for (QuestionAttempt attempt : questionService.attemptsInSessions(userId, List.of(sessionId))) {
             answered.putIfAbsent(attempt.getQuestionId(), attempt);
@@ -233,7 +235,7 @@ public class PracticeService {
                     AttemptResult.of(attempt.getResult()).wire(), attempt.getResponse(),
                     Boolean.TRUE.equals(attempt.getSelfGraded()), questionService.solutionOf(question));
             items.add(new PracticeSessionResponse.Item(
-                    questionService.toResponse(question, points.getOrDefault(id, List.of()), userId), answer));
+                    questionService.toResponse(question, points.getOrDefault(id, List.of()), userId, groups), answer));
         }
         return new PracticeSessionResponse(summary(session, answered.values()), items);
     }

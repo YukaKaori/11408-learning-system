@@ -1,6 +1,6 @@
 -- H2 (MySQL mode) schema for tests — Flyway is disabled on the test profile,
 -- so the tables exercised by the suite are mirrored here. Keep in sync with
--- db/migration/V1__create_user_tables.sql through V10. MEDIUMTEXT is mirrored as
+-- db/migration/V1__create_user_tables.sql through V11. MEDIUMTEXT is mirrored as
 -- TEXT; `subjects` is retired since V8 but still mirrored, like the real schema.
 
 DROP TABLE IF EXISTS users;
@@ -274,6 +274,8 @@ CREATE TABLE questions
     type         VARCHAR(16)   NOT NULL,
     stem         TEXT          NOT NULL,
     passage      TEXT          NULL,
+    group_id     BIGINT        NULL,
+    group_seq    INT           NULL,
     options      TEXT          NULL,
     answer       TEXT          NOT NULL,
     answer_key   VARCHAR(512)  NULL,
@@ -283,6 +285,7 @@ CREATE TABLE questions
     source       VARCHAR(128)  NULL,
     source_year  SMALLINT      NULL,
     pack_key     VARCHAR(64)   NULL,
+    pack         VARCHAR(64)   NULL,
     content_hash CHAR(64)      NULL,
     status       TINYINT       NOT NULL DEFAULT 0,
     created_at   DATETIME      NOT NULL,
@@ -384,6 +387,7 @@ CREATE TABLE paper_sittings
     score            DECIMAL(5, 1) NOT NULL,
     full_score       DECIMAL(5, 1) NOT NULL,
     note             TEXT          NULL,
+    session_id       BIGINT        NULL,
     created_at       DATETIME      NOT NULL,
     updated_at       DATETIME      NOT NULL,
     deleted          TINYINT       NOT NULL DEFAULT 0,
@@ -403,4 +407,99 @@ CREATE TABLE focus_timers
     deleted    TINYINT      NOT NULL DEFAULT 0,
     PRIMARY KEY (id),
     UNIQUE (user_id)
+);
+
+-- V11: the question bank at scale and papers sat in the app.
+DROP TABLE IF EXISTS content_packs;
+CREATE TABLE content_packs
+(
+    id             BIGINT       NOT NULL,
+    pack           VARCHAR(64)  NOT NULL,
+    title          VARCHAR(128) NOT NULL,
+    version        INT          NOT NULL,
+    content_hash   CHAR(64)     NOT NULL,
+    question_count INT          NOT NULL,
+    group_count    INT          NOT NULL,
+    paper_count    INT          NOT NULL,
+    source         VARCHAR(16)  NOT NULL,
+    imported_at    DATETIME     NOT NULL,
+    created_at     DATETIME     NOT NULL,
+    updated_at     DATETIME     NOT NULL,
+    deleted        TINYINT      NOT NULL DEFAULT 0,
+    PRIMARY KEY (id),
+    UNIQUE (pack)
+);
+
+DROP TABLE IF EXISTS question_groups;
+CREATE TABLE question_groups
+(
+    id           BIGINT       NOT NULL,
+    pack         VARCHAR(64)  NOT NULL,
+    group_key    VARCHAR(64)  NOT NULL,
+    subject      VARCHAR(16)  NOT NULL,
+    section      VARCHAR(32)  NOT NULL,
+    title        VARCHAR(128) NULL,
+    passage      TEXT         NOT NULL,
+    source       VARCHAR(128) NULL,
+    content_hash CHAR(64)     NOT NULL,
+    status       TINYINT      NOT NULL DEFAULT 0,
+    created_at   DATETIME     NOT NULL,
+    updated_at   DATETIME     NOT NULL,
+    deleted      TINYINT      NOT NULL DEFAULT 0,
+    PRIMARY KEY (id),
+    UNIQUE (group_key)
+);
+
+DROP TABLE IF EXISTS papers;
+CREATE TABLE papers
+(
+    id               BIGINT        NOT NULL,
+    user_id          BIGINT        NULL,
+    subject          VARCHAR(16)   NOT NULL,
+    kind             VARCHAR(16)   NOT NULL,
+    title            VARCHAR(128)  NOT NULL,
+    paper_year       SMALLINT      NULL,
+    sections         TEXT          NOT NULL,
+    question_count   INT           NOT NULL,
+    full_score       DECIMAL(5, 1) NOT NULL,
+    duration_minutes INT           NOT NULL,
+    whole            TINYINT       NOT NULL,
+    paper_key        VARCHAR(64)   NULL,
+    pack             VARCHAR(64)   NULL,
+    content_hash     CHAR(64)      NULL,
+    status           TINYINT       NOT NULL DEFAULT 0,
+    created_at       DATETIME      NOT NULL,
+    updated_at       DATETIME      NOT NULL,
+    deleted          TINYINT       NOT NULL DEFAULT 0,
+    PRIMARY KEY (id),
+    UNIQUE (paper_key)
+);
+
+DROP TABLE IF EXISTS paper_sessions;
+CREATE TABLE paper_sessions
+(
+    id                 BIGINT        NOT NULL,
+    user_id            BIGINT        NOT NULL,
+    paper_id           BIGINT        NOT NULL,
+    subject            VARCHAR(16)   NOT NULL,
+    kind               VARCHAR(16)   NOT NULL,
+    title              VARCHAR(128)  NOT NULL,
+    paper_year         SMALLINT      NULL,
+    sections           TEXT          NOT NULL,
+    full_score         DECIMAL(5, 1) NOT NULL,
+    whole              TINYINT       NOT NULL,
+    time_limit_minutes INT           NOT NULL,
+    status             TINYINT       NOT NULL DEFAULT 0,
+    started_at         DATETIME      NOT NULL,
+    deadline_at        DATETIME      NOT NULL,
+    submitted_at       DATETIME      NULL,
+    completed_at       DATETIME      NULL,
+    answers            TEXT          NOT NULL,
+    marks              TEXT          NULL,
+    score              DECIMAL(5, 1) NULL,
+    sitting_id         BIGINT        NULL,
+    created_at         DATETIME      NOT NULL,
+    updated_at         DATETIME      NOT NULL,
+    deleted            TINYINT       NOT NULL DEFAULT 0,
+    PRIMARY KEY (id)
 );

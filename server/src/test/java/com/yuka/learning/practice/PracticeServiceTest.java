@@ -61,34 +61,47 @@ class PracticeServiceTest {
 
     @Test
     void choiceAnswersAreGradedAtOnceAndFeedTheMistakeBook() {
-        PracticeSessionResponse session = start("topic", "cs408.ds.basics.complexity", null, 5);
-        assertThat(session.session().total()).isEqualTo(1);
-        PracticeSessionResponse.Item item = session.items().getFirst();
+        // Every question of the scope, so the set is known whatever the bank's depth.
+        PracticeSessionResponse session = start("topic", "cs408.ds.basics.complexity", null, 50);
+        int total = session.session().total();
+        String known = String.valueOf(library("cs408-ds-001").getId()); // answer B
+        PracticeSessionResponse.Item item = session.items().stream()
+                .filter(entry -> entry.question().id().equals(known)).findFirst().orElseThrow();
         assertThat(item.answer()).isNull(); // nothing that reveals the answer before it is given
         assertThat(item.question().points()).containsExactly("cs408.ds.basics.complexity");
 
-        AnswerResponse answer = answer(session, item.question().id(), "A", null);
+        AnswerResponse answer = answer(session, known, "A", null);
 
         assertThat(answer.outcome()).isEqualTo(AnswerResponse.Outcome.GRADED);
         assertThat(answer.result()).isEqualTo("wrong");
         assertThat(answer.solution().answer()).isEqualTo("B");
         assertThat(answer.mistake().change()).isEqualTo(MistakeOutcome.Change.RECORDED);
-        assertThat(answer.progress()).isEqualTo(new AnswerResponse.Progress(1, 0, 1, true));
+        assertThat(answer.progress()).isEqualTo(new AnswerResponse.Progress(1, 0, total, total == 1));
 
+        // Answering the rest completes the set.
+        AnswerResponse last = answer;
+        for (PracticeSessionResponse.Item rest : session.items()) {
+            if (!rest.question().id().equals(known)) {
+                last = answer(session, rest.question().id(), null, "correct");
+            }
+        }
+        assertThat(last.progress().completed()).isTrue();
         PracticeSessionResponse reloaded = practiceService.get(USER, id(session));
         assertThat(reloaded.session().status()).isEqualTo("completed");
-        assertThat(reloaded.items().getFirst().answer().result()).isEqualTo("wrong");
-        assertThat(reloaded.items().getFirst().answer().solution().answer()).isEqualTo("B");
+        PracticeSessionResponse.Item answered = reloaded.items().stream()
+                .filter(entry -> entry.question().id().equals(known)).findFirst().orElseThrow();
+        assertThat(answered.answer().result()).isEqualTo("wrong");
+        assertThat(answered.answer().solution().answer()).isEqualTo("B");
 
-        assertThatThrownBy(() -> answer(session, item.question().id(), "B", null))
+        assertThatThrownBy(() -> answer(session, known, "B", null))
                 .isInstanceOfSatisfying(BusinessException.class,
                         e -> assertThat(e.getErrorCode()).isEqualTo(PracticeErrorCode.SESSION_CLOSED));
     }
 
     @Test
     void openAnswersRecordNothingUntilTheCandidateHasJudgedThem() {
-        PracticeSessionResponse session = start("topic", "cs408.ds.list.application", null, 5);
-        String questionId = session.items().getFirst().question().id();
+        PracticeSessionResponse session = start("topic", "cs408.ds.list.application", null, 50);
+        String questionId = String.valueOf(library("cs408-ds-101").getId()); // the in-place reversal (头插法)
 
         AnswerResponse reveal = answer(session, questionId, "头插法", null);
         assertThat(reveal.outcome()).isEqualTo(AnswerResponse.Outcome.NEEDS_SELF_GRADE);
@@ -102,9 +115,9 @@ class PracticeServiceTest {
         assertThat(graded.result()).isEqualTo("partial");
         // A partly-right answer is still a mistake worth redoing.
         assertThat(graded.mistake().change()).isEqualTo(MistakeOutcome.Change.RECORDED);
-        assertThat(graded.progress().completed()).isTrue();
+        assertThat(graded.progress().answered()).isEqualTo(1);
 
-        PracticeSessionResponse again = start("topic", "cs408.ds.list.application", null, 5);
+        PracticeSessionResponse again = start("topic", "cs408.ds.list.application", null, 50);
         assertThatThrownBy(() -> answer(again, questionId, null, "maybe"))
                 .isInstanceOfSatisfying(BusinessException.class,
                         e -> assertThat(e.getErrorCode()).isEqualTo(PracticeErrorCode.SELF_GRADE_INVALID));
@@ -145,9 +158,18 @@ class PracticeServiceTest {
     void drawingRulesAreEnforced() {
         assertRejected(() -> start("topic", null, null, 5), PracticeErrorCode.SCOPE_REQUIRED);
         assertRejected(() -> start("exam", null, "cs408", 5), PracticeErrorCode.MODE_INVALID);
-        assertRejected(() -> start("topic", "politics.current.policy.domestic", null, 5),
-                PracticeErrorCode.NO_QUESTIONS_AVAILABLE);
         assertRejected(() -> start("mistakes", null, null, 5), PracticeErrorCode.NO_QUESTIONS_AVAILABLE);
+
+        // A 考点 the bank does not cover: withdraw its questions for the moment.
+        String point = "cs408.os.io.ssd";
+        List<Long> covering = jdbcTemplate.queryForList(
+                "SELECT question_id FROM question_points WHERE node_code = ?", Long.class, point);
+        covering.forEach(qid -> jdbcTemplate.update("UPDATE questions SET status = 1 WHERE id = ?", qid));
+        try {
+            assertRejected(() -> start("topic", point, null, 5), PracticeErrorCode.NO_QUESTIONS_AVAILABLE);
+        } finally {
+            covering.forEach(qid -> jdbcTemplate.update("UPDATE questions SET status = 0 WHERE id = ?", qid));
+        }
     }
 
     @Test

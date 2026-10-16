@@ -12,6 +12,10 @@
  * but layout. The estimate is labelled as what it is — a recency-weighted
  * average of recent whole papers — never a prediction.
  *
+ * Papers are sat here too (M2): the 在线模考 panel starts a paper in the app,
+ * and a record that a paper sat in the app wrote opens its result (scoring
+ * and report) rather than the hand-entry dialog — its scores are its answers'.
+ *
  * Solid throughout: scores and records are content (material constitution §1).
  */
 import { computed, onMounted, ref, watch } from 'vue'
@@ -34,6 +38,7 @@ import ScoreTrend from './components/ScoreTrend.vue'
 import SectionProfile from './components/SectionProfile.vue'
 import PastPaperShelf from './components/PastPaperShelf.vue'
 import SittingDialog from './components/SittingDialog.vue'
+import PaperLauncher from '@/features/papers/components/PaperLauncher.vue'
 
 const { t, d } = useI18n()
 const route = useRoute()
@@ -47,7 +52,11 @@ onMounted(() => {
   void syllabusStore.load()
 })
 
-const selected = ref<ExamSubjectCode | null>(null)
+const selected = ref<ExamSubjectCode | null>(
+  typeof route.query.subject === 'string' && PAPERS.includes(route.query.subject as ExamSubjectCode)
+    ? (route.query.subject as ExamSubjectCode)
+    : null,
+)
 
 /** Until the candidate chooses: the paper of the latest record, else the first. */
 watch(records, (list) => {
@@ -96,6 +105,11 @@ function logNew(subject: ExamSubjectCode | null = selected.value, year: number |
 }
 
 function edit(record: SittingDto) {
+  if (record.sessionId) {
+    // Sat in the app: its scores are its answers — open the result instead.
+    void router.push({ name: 'paper-result', params: { id: record.sessionId } })
+    return
+  }
   editing.value = record
   prefill.value = null
   prefillYear.value = null
@@ -224,6 +238,8 @@ async function onDeleted() {
           </div>
         </div>
 
+        <PaperLauncher :subject="paper.subject" />
+
         <div class="grid">
           <article class="panel trend">
             <h2 class="panel-title">{{ t('sittings.trend.title') }}</h2>
@@ -265,7 +281,10 @@ async function onDeleted() {
             <li v-for="record in paperRecords" :key="record.id">
               <button type="button" class="record" @click="edit(record)">
                 <span class="record-main">
-                  <span class="record-title">{{ sittingTitle(t, record) }}</span>
+                  <span class="record-title">
+                    {{ sittingTitle(t, record) }}
+                    <span v-if="record.sessionId" class="record-badge">{{ t('sittings.list.inApp') }}</span>
+                  </span>
                   <span class="record-meta">
                     {{ t(`sittings.kind.${record.kind}`) }} ·
                     {{ d(parseIsoDate(record.satOn), 'short') }}
@@ -339,6 +358,16 @@ async function onDeleted() {
   transition:
     border-color var(--duration-fast) var(--ease-out),
     box-shadow var(--duration-fast) var(--ease-out);
+}
+
+.record-badge {
+  margin-left: var(--space-2);
+  padding: 0 var(--space-2);
+  border-radius: var(--radius-sm);
+  background-color: var(--color-primary-soft);
+  color: var(--color-primary);
+  font-size: var(--text-xs);
+  font-weight: 500;
 }
 
 .paper-card:hover {

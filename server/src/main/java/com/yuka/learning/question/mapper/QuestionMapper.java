@@ -40,4 +40,26 @@ public interface QuestionMapper extends BaseMapper<Question> {
               AND (q.user_id IS NULL OR q.user_id = #{userId})
             """)
     List<QuestionPoint> findVisibleTags(@Param("userId") Long userId);
+
+    /**
+     * The active questions of one printed section that the user may practise,
+     * with what assembling a paper needs: worth, group membership and the
+     * primary 考点 — the first tag, since tags are inserted in authored order
+     * with increasing ids.
+     */
+    @Select("""
+            SELECT q.id AS id, q.score AS score, q.group_id AS group_id, q.group_seq AS group_seq,
+                   (SELECT qp.node_code FROM question_points qp
+                    WHERE qp.question_id = q.id
+                    ORDER BY qp.id
+                    LIMIT 1) AS primary_point
+            FROM questions q
+            WHERE q.deleted = 0
+              AND q.status = 0
+              AND (q.user_id IS NULL OR q.user_id = #{userId})
+              AND q.subject = #{subject}
+              AND q.section = #{section}
+            """)
+    List<SectionQuestionRow> findSectionQuestions(@Param("userId") Long userId, @Param("subject") String subject,
+                                                  @Param("section") String section);
 }

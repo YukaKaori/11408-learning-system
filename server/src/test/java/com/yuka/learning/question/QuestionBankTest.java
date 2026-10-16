@@ -2,7 +2,8 @@ package com.yuka.learning.question;
 
 import com.yuka.learning.common.api.PageResponse;
 import com.yuka.learning.common.exception.BusinessException;
-import com.yuka.learning.question.content.QuestionPack;
+import com.yuka.learning.content.ContentImporter;
+import com.yuka.learning.content.PackSource;
 import com.yuka.learning.question.dto.QuestionDetailResponse;
 import com.yuka.learning.question.dto.QuestionRequest;
 import com.yuka.learning.question.dto.QuestionResponse;
@@ -12,13 +13,10 @@ import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.context.SpringBootTest;
-import org.springframework.core.io.Resource;
-import org.springframework.core.io.support.PathMatchingResourcePatternResolver;
 import org.springframework.jdbc.core.JdbcTemplate;
 import org.springframework.test.context.ActiveProfiles;
 import tools.jackson.databind.ObjectMapper;
 
-import java.io.InputStream;
 import java.time.Instant;
 import java.util.List;
 import java.util.Map;
@@ -42,7 +40,7 @@ class QuestionBankTest {
     @Autowired
     private QuestionService questionService;
     @Autowired
-    private QuestionPackImporter importer;
+    private ContentImporter importer;
     @Autowired
     private ObjectMapper objectMapper;
     @Autowired
@@ -58,13 +56,10 @@ class QuestionBankTest {
     }
 
     @Test
-    void everyPackItemIsInTheLibraryAndActive() throws Exception {
-        int items = 0;
-        for (Resource resource : new PathMatchingResourcePatternResolver().getResources("classpath*:exam/questions/*.json")) {
-            try (InputStream in = resource.getInputStream()) {
-                items += objectMapper.readValue(in, QuestionPack.class).questions().size();
-            }
-        }
+    void everyPackItemIsInTheLibraryAndActive() {
+        int items = PackSource.select(PackSource.loadClasspath(objectMapper)).stream()
+                .mapToInt(loaded -> loaded.pack().questionsOrEmpty().size())
+                .sum();
         Integer library = jdbcTemplate.queryForObject(
                 "SELECT COUNT(*) FROM questions WHERE user_id IS NULL AND status = 0 AND deleted = 0", Integer.class);
         assertThat(items).isGreaterThan(80);
@@ -73,7 +68,7 @@ class QuestionBankTest {
 
     @Test
     void reImportingUnchangedPacksChangesNothing() {
-        QuestionPackImporter.Report report = importer.importAll();
+        ContentImporter.Report report = importer.importAll();
         assertThat(report.inserted()).isZero();
         assertThat(report.updated()).isZero();
         assertThat(report.retired()).isZero();
@@ -85,7 +80,7 @@ class QuestionBankTest {
         Long id = jdbcTemplate.queryForObject("SELECT id FROM questions WHERE pack_key = 'cs408-ds-001'", Long.class);
         jdbcTemplate.update("UPDATE questions SET content_hash = 'stale', stem = 'edited' WHERE id = ?", id);
 
-        QuestionPackImporter.Report report = importer.importAll();
+        ContentImporter.Report report = importer.importAll();
 
         assertThat(report.updated()).isEqualTo(1);
         Question restored = questionService.requireVisible(USER, id);
@@ -100,7 +95,7 @@ class QuestionBankTest {
                 VALUES (777, NULL, 'cs408', 'open', 'gone', 'x', 3, 'cs408-withdrawn-001', 'h', 0,
                         CURRENT_TIMESTAMP, CURRENT_TIMESTAMP, 0)""");
 
-        QuestionPackImporter.Report report = importer.importAll();
+        ContentImporter.Report report = importer.importAll();
 
         assertThat(report.retired()).isEqualTo(1);
         assertThat(jdbcTemplate.queryForObject("SELECT status FROM questions WHERE id = 777", Integer.class))
@@ -150,10 +145,11 @@ class QuestionBankTest {
         PageResponse<QuestionResponse> os = questionService.list(USER, "cs408.os", "library", 1, 5);
         assertThat(os.items()).hasSize(5);
         assertThat(os.total()).isGreaterThan(5);
-        assertThat(os.items()).allSatisfy(q -> assertThat(q.points()).allMatch(p -> p.startsWith("cs408.os.")));
+        // Every listed question is tagged somewhere inside the scope (it may test other 考点 too).
+        assertThat(os.items()).allSatisfy(q -> assertThat(q.points()).anyMatch(p -> p.startsWith("cs408.os.")));
 
         PageResponse<QuestionResponse> nothing = questionService.list(USER, "politics.current.policy.domestic",
-                null, 1, 20);
+                "mine", 1, 20);
         assertThat(nothing.items()).isEmpty();
     }
 

@@ -8,8 +8,12 @@
   "startTime": "14:00",
   "pastPaperFirstYear": 2009,
   "sections": [
-    { "code": "cs408.choice", "name": "单项选择题", "questionType": "single_choice", "count": 40, "score": 2, "total": 80 },
-    { "code": "cs408.comprehensive", "name": "综合应用题", "questionType": "open", "count": 7, "score": null, "total": 70 }
+    { "code": "cs408.choice", "name": "单项选择题", "questionType": "single_choice", "count": 40, "score": 2, "total": 80,
+      "minutes": 80,
+      "slots": [{ "scope": "cs408.ds", "count": 11 }, { "scope": "cs408.co", "count": 11 }, { "scope": "cs408.os", "count": 10 }, { "scope": "cs408.cn", "count": 8 }] },
+    { "code": "cs408.comprehensive", "name": "综合应用题", "questionType": "open", "count": 7, "score": null, "total": 70,
+      "minutes": 100,
+      "slots": [{ "scope": "cs408.ds", "count": 2, "total": 23 }, { "scope": "cs408.co", "count": 2, "total": 23 }, { "scope": "cs408.os", "count": 2, "total": 15 }, { "scope": "cs408.cn", "count": 1, "total": 9 }] }
   ],
   "modules": [
     {

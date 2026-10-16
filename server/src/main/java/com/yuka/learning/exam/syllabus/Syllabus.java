@@ -9,6 +9,7 @@ import java.util.ArrayList;
 import java.util.Collection;
 import java.util.Collections;
 import java.util.EnumMap;
+import java.util.HashMap;
 import java.util.HashSet;
 import java.util.LinkedHashMap;
 import java.util.List;
@@ -53,6 +54,8 @@ public final class Syllabus {
     private final Map<ExamSubject, SyllabusContent.Subject> subjects;
     private final Map<String, KnowledgeNode> nodes;
     private final Map<String, List<String>> pointsUnder;
+    private final Map<String, Integer> order;
+    private final Map<String, SyllabusContent.Section> sections;
 
     private Syllabus(SyllabusContent.Blueprint blueprint, Map<ExamSubject, SyllabusContent.Subject> subjects,
                      Map<String, KnowledgeNode> nodes, Map<String, List<String>> pointsUnder) {
@@ -60,6 +63,14 @@ public final class Syllabus {
         this.subjects = subjects;
         this.nodes = nodes;
         this.pointsUnder = pointsUnder;
+        Map<String, Integer> positions = new HashMap<>();
+        for (String code : nodes.keySet()) {
+            positions.put(code, positions.size());
+        }
+        this.order = Collections.unmodifiableMap(positions);
+        Map<String, SyllabusContent.Section> byCode = new LinkedHashMap<>();
+        subjects.values().forEach(doc -> doc.sections().forEach(section -> byCode.put(section.code(), section)));
+        this.sections = Collections.unmodifiableMap(byCode);
     }
 
     // --- construction + validation ------------------------------------------
@@ -92,6 +103,7 @@ public final class Syllabus {
             validateSections(doc, sectionCodes);
             subjects.put(subject, doc);
             addSubject(subject, doc, nodes);
+            validateSlots(doc, nodes);
         }
 
         Map<String, List<String>> pointsUnder = new LinkedHashMap<>();
@@ -130,6 +142,7 @@ public final class Syllabus {
             throw invalid(doc.code() + " declares no paper sections");
         }
         double total = 0;
+        int minutes = 0;
         for (SyllabusContent.Section section : doc.sections()) {
             requireChildCode(doc.code(), section.code());
             if (!sectionCodes.add(section.code())) {
@@ -145,10 +158,66 @@ public final class Syllabus {
                     && Math.abs(section.score() * section.count() - section.total()) > SCORE_TOLERANCE) {
                 throw invalid(section.code() + ": score × count must equal total");
             }
+            if (section.minutes() <= 0) {
+                throw invalid(section.code() + " needs its suggested minutes");
+            }
             total += section.total();
+            minutes += section.minutes();
         }
         if (Math.abs(total - doc.fullScore()) > SCORE_TOLERANCE) {
             throw invalid(doc.code() + ": section totals sum to " + total + ", paper is " + doc.fullScore());
+        }
+        if (minutes != doc.durationMinutes()) {
+            throw invalid(doc.code() + ": section minutes sum to " + minutes + ", the paper takes "
+                    + doc.durationMinutes());
+        }
+    }
+
+    /**
+     * The assembly blueprint: every section is laid out as slots over the
+     * paper's own modules, holding exactly the section's questions and worth.
+     * Checked once the paper's nodes exist, since scopes are node codes.
+     */
+    private static void validateSlots(SyllabusContent.Subject doc, Map<String, KnowledgeNode> nodes) {
+        for (SyllabusContent.Section section : doc.sections()) {
+            if (section.slots() == null || section.slots().isEmpty()) {
+                throw invalid(section.code() + " declares no slots");
+            }
+            int count = 0;
+            double worth = 0;
+            for (SyllabusContent.Slot slot : section.slots()) {
+                KnowledgeNode scope = slot.scope() == null ? null : nodes.get(slot.scope());
+                if (scope == null || !within(scope.code(), doc.code())
+                        || (scope.kind() != NodeKind.MODULE && scope.kind() != NodeKind.CHAPTER)) {
+                    throw invalid(section.code() + ": slot scope '" + slot.scope()
+                            + "' is not a module or chapter of " + doc.code());
+                }
+                if (slot.count() <= 0) {
+                    throw invalid(section.code() + ": a slot must hold at least one question");
+                }
+                if (slot.group() != null && (slot.group() < 2 || slot.count() % slot.group() != 0)) {
+                    throw invalid(section.code() + ": a slot's group size must be at least 2 and divide its count");
+                }
+                if (section.score() != null) {
+                    double implied = section.score() * slot.count();
+                    if (slot.total() != null && Math.abs(slot.total() - implied) > SCORE_TOLERANCE) {
+                        throw invalid(section.code() + ": a slot of " + slot.count() + " is worth " + implied);
+                    }
+                    worth += implied;
+                } else {
+                    if (slot.total() == null || slot.total() <= 0) {
+                        throw invalid(section.code() + ": every slot of a variable-score section needs a total");
+                    }
+                    worth += slot.total();
+                }
+                count += slot.count();
+            }
+            if (count != section.count()) {
+                throw invalid(section.code() + ": slots hold " + count + " questions, the section " + section.count());
+            }
+            if (Math.abs(worth - section.total()) > SCORE_TOLERANCE) {
+                throw invalid(section.code() + ": slots are worth " + worth + ", the section " + section.total());
+            }
         }
     }
 
@@ -258,6 +327,20 @@ public final class Syllabus {
 
     public SyllabusContent.Subject subject(ExamSubject subject) {
         return subjects.get(subject);
+    }
+
+    /** A printed section by its code, across all four papers. */
+    public Optional<SyllabusContent.Section> section(String code) {
+        return code == null ? Optional.empty() : Optional.ofNullable(sections.get(code));
+    }
+
+    /**
+     * A node's position in tree pre-order — the order a paper walks its
+     * content in. Unknown codes sort last.
+     */
+    public int position(String code) {
+        Integer position = code == null ? null : order.get(code);
+        return position == null ? Integer.MAX_VALUE : position;
     }
 
     public Optional<KnowledgeNode> find(String code) {

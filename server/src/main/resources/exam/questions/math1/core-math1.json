@@ -1,6 +1,7 @@
 {
   "pack": "core-math1",
   "title": "数学（一）核心题库（原创）",
+  "version": 2,
   "questions": [
     {
       "key": "math1-limit-001",
@@ -121,7 +122,16 @@
       "source": "原创 · 核心题库",
       "stem": "设 $F(x)=\\displaystyle\\int_{0}^{x^{2}}\\sin t\\,dt$，则 $F'(x)=$ ______。",
       "answer": "$2x\\sin(x^{2})$",
-      "accept": ["2x\\sin(x^{2})", "2x\\sin(x^2)", "2x\\sinx^2", "2x\\sinx^{2}", "2xsin(x^2)", "2xsinx^2", "2xsin(x²)", "2xsinx²"],
+      "accept": [
+        "2x\\sin(x^{2})",
+        "2x\\sin(x^2)",
+        "2x\\sinx^2",
+        "2x\\sinx^{2}",
+        "2xsin(x^2)",
+        "2xsinx^2",
+        "2xsin(x²)",
+        "2xsinx²"
+      ],
       "analysis": "变上限积分求导（上限为复合函数时乘以上限的导数）：$F'(x)=\\sin(x^{2})\\cdot(x^{2})'=2x\\sin(x^{2})$。\n\n一般公式：$\\dfrac{d}{dx}\\displaystyle\\int_{a}^{\\varphi(x)}f(t)\\,dt=f(\\varphi(x))\\varphi'(x)$。"
     },
     {
@@ -275,10 +285,10 @@
       "type": "open",
       "points": ["math1.linear.eigen.eigen", "math1.linear.eigen.similar"],
       "difficulty": 3,
-      "score": 11,
+      "score": 12,
       "source": "原创 · 核心题库",
       "stem": "设矩阵 $A=\\begin{pmatrix}2&0&0\\\\0&1&1\\\\0&1&1\\end{pmatrix}$。\n\n(1) 求 $A$ 的特征值与特征向量；\n\n(2) 判断 $A$ 能否相似对角化，若能，写出可逆矩阵 $P$ 使 $P^{-1}AP$ 为对角矩阵。",
-      "answer": "**(1) 特征值（3 分）**：$|\\lambda E-A|=(\\lambda-2)\\left[(\\lambda-1)^{2}-1\\right]=\\lambda(\\lambda-2)^{2}$，特征值为 $\\lambda_1=0$，$\\lambda_2=\\lambda_3=2$。\n\n**特征向量（4 分）**：\n\n- $\\lambda=0$：解 $Ax=0$ 得 $\\xi_1=(0,1,-1)^{T}$，特征向量为 $k_1\\xi_1\\ (k_1\\ne0)$；\n- $\\lambda=2$：$A-2E=\\begin{pmatrix}0&0&0\\\\0&-1&1\\\\0&1&-1\\end{pmatrix}$，秩为 1，得 $\\xi_2=(1,0,0)^{T}$，$\\xi_3=(0,1,1)^{T}$，特征向量为 $k_2\\xi_2+k_3\\xi_3$（$k_2,k_3$ 不全为 0）。\n\n**(2)（4 分）**：二重特征值 2 对应 2 个线性无关的特征向量，共 3 个线性无关的特征向量，故可相似对角化。取 $P=(\\xi_1,\\xi_2,\\xi_3)$，则 $P^{-1}AP=\\mathrm{diag}(0,2,2)$。",
+      "answer": "**(1) 特征值（3 分）**：$|\\lambda E-A|=(\\lambda-2)\\left[(\\lambda-1)^{2}-1\\right]=\\lambda(\\lambda-2)^{2}$，特征值为 $\\lambda_1=0$，$\\lambda_2=\\lambda_3=2$。\n\n**特征向量（5 分）**：\n\n- $\\lambda=0$（2 分）：解 $Ax=0$ 得 $\\xi_1=(0,1,-1)^{T}$，特征向量为 $k_1\\xi_1\\ (k_1\\ne0)$；\n- $\\lambda=2$（3 分）：$A-2E=\\begin{pmatrix}0&0&0\\\\0&-1&1\\\\0&1&-1\\end{pmatrix}$，秩为 1，得 $\\xi_2=(1,0,0)^{T}$，$\\xi_3=(0,1,1)^{T}$，特征向量为 $k_2\\xi_2+k_3\\xi_3$（$k_2,k_3$ 不全为 0）。\n\n**(2)（4 分）**：二重特征值 2 对应 2 个线性无关的特征向量，共 3 个线性无关的特征向量，故可相似对角化。取 $P=(\\xi_1,\\xi_2,\\xi_3)$，则 $P^{-1}AP=\\mathrm{diag}(0,2,2)$。",
       "analysis": "判定能否对角化的关键：每个 $k$ 重特征值是否恰有 $k$ 个线性无关的特征向量，即 $n-r(\\lambda E-A)=k$。本题中 $3-r(2E-A)=3-1=2$ ✓。\n\n另解：$A$ 是实对称矩阵，必可（正交）相似对角化；若要求正交矩阵，还需把各特征向量单位化（本题 $\\xi_1,\\xi_2,\\xi_3$ 已两两正交）。"
     },
     {

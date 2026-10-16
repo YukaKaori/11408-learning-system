@@ -20,6 +20,8 @@ import com.yuka.learning.mastery.RecommendationService;
 import com.yuka.learning.mistake.MistakeService;
 import com.yuka.learning.note.entity.Note;
 import com.yuka.learning.note.mapper.NoteMapper;
+import com.yuka.learning.paper.PaperSessionService;
+import com.yuka.learning.paper.dto.PaperSessionSummaryResponse;
 import com.yuka.learning.practice.PracticeService;
 import com.yuka.learning.practice.dto.PracticeSummaryResponse;
 import com.yuka.learning.preference.PreferenceService;
@@ -80,6 +82,7 @@ public class WorkspaceService {
     private final ExamProfileService profileService;
     private final MistakeService mistakeService;
     private final PracticeService practiceService;
+    private final PaperSessionService paperSessionService;
     private final QuestionService questionService;
     private final MasteryService masteryService;
     private final RecommendationService recommendationService;
@@ -92,6 +95,7 @@ public class WorkspaceService {
     public WorkspaceService(AnalyticsService analyticsService, ReviewService reviewService,
                             PreferenceService preferenceService, ExamProfileService profileService,
                             MistakeService mistakeService, PracticeService practiceService,
+                            PaperSessionService paperSessionService,
                             QuestionService questionService, MasteryService masteryService,
                             RecommendationService recommendationService, NoteMapper noteMapper,
                             FlashcardMapper cardMapper, LearningTaskMapper taskMapper,
@@ -102,6 +106,7 @@ public class WorkspaceService {
         this.profileService = profileService;
         this.mistakeService = mistakeService;
         this.practiceService = practiceService;
+        this.paperSessionService = paperSessionService;
         this.questionService = questionService;
         this.masteryService = masteryService;
         this.recommendationService = recommendationService;
@@ -208,6 +213,7 @@ public class WorkspaceService {
         LocalDateTime now = LocalDateTime.now();
 
         List<Ranked> candidates = new ArrayList<>();
+        addPapers(candidates, userId, zone);
         ReviewSummaryResponse reviews = reviewService.summary(userId, zone);
         addReview(candidates, userId, zone, now, reviews);
         addMistakes(candidates, userId, zone, now);
@@ -258,6 +264,24 @@ public class WorkspaceService {
                 plan,
                 Math.max(0, candidates.size() - PLAN_LIMIT),
                 focus);
+    }
+
+    /**
+     * Papers sat in the app that are not finished, one {@code now} row each,
+     * ordered by when they began (a paper started this morning comes before a
+     * hand-in awaiting scores from yesterday's). A paper past its time is handed
+     * in by the clock while this is read, so it arrives here as awaiting scores
+     * or not at all.
+     */
+    private void addPapers(List<Ranked> candidates, Long userId, ZoneId zone) {
+        for (PaperSessionSummaryResponse paper : paperSessionService.open(userId, zone)) {
+            long sortAt = "in_progress".equals(paper.status()) ? paper.startedAt()
+                    : paper.submittedAt() == null ? paper.startedAt() : paper.submittedAt();
+            candidates.add(new Ranked(TodayResponse.PlanItem.paper(TodayResponse.PlanTier.NOW, sortAt,
+                    new TodayResponse.PaperFocus(paper.id(), paper.subject(), paper.title(), paper.status(),
+                            paper.deadlineAt(), paper.answered(), paper.total(), paper.pending())),
+                    Long.parseLong(paper.id())));
+        }
     }
 
     /**

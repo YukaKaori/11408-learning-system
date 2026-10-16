@@ -1,6 +1,6 @@
 # Roadmap — 11408 Learning System
 
-**Canonical as of 2026-10-03.** This replaces the general-purpose "AI Learning
+**Canonical as of 2026-10-03; M2 updated 2026-10-16.** This replaces the general-purpose "AI Learning
 Platform" roadmap (Phases 15–28), archived at
 [`archive/roadmap-ai-learning-platform.md`](archive/roadmap-ai-learning-platform.md).
 Historical documents that cite "`docs/roadmap.md` § Phase N" refer to that
@@ -73,29 +73,46 @@ go, and a plan that reaches the exam date.
   (default 8 h, edited in hours); the AI tutor knows the paper estimates and,
   for general questions, the day's plan.
 
-## M2 — Content at scale, and papers sat in the app (next)
+## M2 — Question bank & timed papers ✅ (2026-10)
 
-**Why next:** M1 made the paper the unit of evidence; the bank is still too
-thin to sit papers inside the product, and M0 ships 110 original questions
-(408: 53 · 数学一: 24 · 政治: 18 · 英语一: 15) — enough to prove the loop, far too
-few for a year: sets repeat within days and mastery rests on a handful of
-answers per 考点.
+The system for content at scale, and every paper sat in the app. Plan:
+[`m2-plan.md`](m2-plan.md); binding decisions: `architecture.md` § M2; handoff:
+[`m2-handoff.md`](m2-handoff.md).
 
-- A content pipeline: the pack authoring format documented, a validation
-  command that runs `QuestionRules` and the syllabus checks offline, and pack
-  versioning so content ships independently of code releases.
-- Bank depth: at least 30–50 questions per high-yield (weight 3) 考点 in
-  数学一 and 408, English reading passages grouped as sets, politics sets per
-  module — authored or licensed, never scraped.
-- Papers sat inside the app: an exam stage built from the blueprint's
-  sections — a countdown, a section navigator, flags, no verdicts until
-  submission, self-grading of open questions against scoring points — whose
-  result is an ordinary sitting. The first sections the bank can already fill:
-  408 单项选择题 (40) and 数学一 选择 + 填空 (16).
-- Past papers as ordered sets where licensing allows: a paper-year pack
-  format that preserves the printed order and sections.
-- Images in questions (figures for 408 and 数学) — needs object storage (M4)
-  or packs that embed vetted assets.
+- **The content pipeline.** Packs format v2 (groups, questions, library
+  papers), one pure validator behind the boot, the tests and an offline check
+  that also prints coverage; integer pack versions with the live version
+  recorded and older content refused; content shipped in the jar or from a
+  packs directory without a code release; seeded generators for computed
+  408 families; the authoring guide (`content/README.md`).
+- **The blueprint as structure.** Suggested minutes per printed section and
+  the real paper's slots, so 组卷 assembles a paper — whole or one section —
+  module by module as it is printed, preferring what the candidate has not
+  seen, and says plainly which slot the bank cannot fill.
+- **Papers sat in the app**, all four, every printed section: library papers
+  and assembled ones; the server's clock with autosave, resume after a closed
+  tab and hand-in at zero; flags and a section navigator; English texts beside
+  their questions with the open blank lit; no verdicts before the hand-in;
+  automatic grading where the grader can judge (多选 all or nothing, fill-blanks
+  by their accepted forms) and the candidate's own scoring of the rest against
+  the reference and its 得分点; a report by section, by time and by 考点; an
+  ordinary, read-only 模考 record that feeds the estimate, the plan, mastery,
+  analytics and the mistake book; Today's paper row.
+- **Content today: 716 questions.** 408 has 586 (five disjoint whole papers);
+  政治、英语一 and 数学一 have exactly one whole paper each, completed with
+  **original samples labelled 原创样题 · 非真题** that exist to prove every format
+  works end to end, plus one sample library paper each.
+
+Not met, carried forward:
+
+- **Bank depth.** The targets stand — 30–50 questions per weight-3 考点 in
+  数学一 and 408, several papers' worth of English texts and politics sets —
+  and are now content work: the content owner writes or licenses packs and
+  publishes them through the pipeline (`content/COVERAGE.md` shows the gaps).
+- **Licensed past papers.** The library-paper format preserves printed order
+  and sections and takes `kind: past_paper` with its year; no 真题 is shipped.
+- **Figures in questions** (408, 数学) — still needs object storage (M4) or
+  packs that embed vetted assets.
 
 ## M3 — Grounded AI, the next step
 
@@ -122,6 +139,9 @@ answers per 考点.
 
 - Live verification with a real DeepSeek key of the three tutoring streams and
   of the two new context lines.
+- Two unexplained native crashes of the dev backend (`0xC0000005`, no JVM
+  crash report) under `mvnw spring-boot:run` during M2 verification; not
+  reproduced afterwards — see `m2-handoff.md` § Open.
 - Liquid Material: B5.2/B5.3 and Gecko/WebKit checks remain open
   (`docs/liquid-material-global-reassessment.md`).
 - The local folder rename to `11408-Learning-System` (it cannot be renamed

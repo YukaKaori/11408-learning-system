@@ -31,6 +31,12 @@ export interface SittingDto {
   complete: boolean
   note: string | null
   createdAt: number
+  /**
+   * The paper session that wrote it when the paper was sat in the app — its
+   * scores are then read-only (only the note is edited). Null for a record
+   * entered by hand.
+   */
+  sessionId: string | null
 }
 
 /**
@@ -122,6 +128,11 @@ export function createSitting(payload: SaveSittingPayload) {
 
 export function updateSitting(id: string, payload: SaveSittingPayload) {
   return api.put<SittingDto>(`/v1/sittings/${id}`, payload)
+}
+
+/** The 复盘 note alone — the one edit an app-scored record accepts. */
+export function updateSittingNote(id: string, note: string | null) {
+  return api.patch<SittingDto>(`/v1/sittings/${id}/note`, { note })
 }
 
 export function deleteSitting(id: string) {

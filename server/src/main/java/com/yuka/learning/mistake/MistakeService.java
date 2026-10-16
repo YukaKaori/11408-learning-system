@@ -19,6 +19,7 @@ import com.yuka.learning.question.QuestionService;
 import com.yuka.learning.question.entity.AttemptResult;
 import com.yuka.learning.question.entity.Question;
 import com.yuka.learning.question.entity.QuestionAttempt;
+import com.yuka.learning.question.entity.QuestionGroup;
 import com.yuka.learning.question.grading.QuestionRules;
 import com.yuka.learning.srs.ReviewState;
 import com.yuka.learning.srs.SchedulingState;
@@ -365,6 +366,7 @@ public class MistakeService {
         Set<Long> questionIds = mistakes.stream().map(Mistake::getQuestionId).collect(Collectors.toSet());
         Map<Long, Question> questions = questionService.loadVisible(userId, questionIds);
         Map<Long, List<String>> points = questionService.pointsOf(questionIds);
+        Map<Long, QuestionGroup> groups = questionService.groupsOf(questions.values());
         List<MistakeResponse> responses = new ArrayList<>(mistakes.size());
         for (Mistake mistake : mistakes) {
             Question question = questions.get(mistake.getQuestionId());
@@ -373,7 +375,8 @@ public class MistakeService {
             }
             responses.add(new MistakeResponse(
                     String.valueOf(mistake.getId()),
-                    questionService.toResponse(question, points.getOrDefault(question.getId(), List.of()), userId),
+                    questionService.toResponse(question, points.getOrDefault(question.getId(), List.of()), userId,
+                            groups),
                     mistake.getStatus() == RESOLVED ? "resolved" : "active",
                     mistake.getCause(),
                     mistake.getNote(),

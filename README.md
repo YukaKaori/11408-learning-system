@@ -32,7 +32,7 @@ candidate's own answers, sittings and timed hours, and nothing is mocked.
 | **今日 Today** | The exam countdown; today's hours per paper with one tap to start timing; a server-ranked, completable plan of due cards, due mistake redos, tasks and sessions; one suggested 考点 per paper. |
 | **考纲 Syllabus** | The 11408 syllabus as a map — four papers, modules, chapters and 考点 weighted by exam score, each coloured by mastery, any node practisable in one click; a page per 考点 with its questions, notes, materials, an AI explanation and a focus timer. |
 | **练习 Practice** | Topic, weak-point, mistake-redo and random sets; honest grading (what the system cannot judge, the candidate grades against the reference answer); 解析 and an AI walk-through per question; a per-考点 report. |
-| **模考 Mock exams** | 真题 by year and 模拟卷 by name, scored section by section: a recency-weighted estimate per paper (whole papers only, never a "prediction"), the trajectory against the target, where the points are lost, and the 真题 shelf. |
+| **模考 Mock exams** | Papers sat **in the app** — library papers or 组卷 from the bank, whole or one section — on the server's clock: autosave, resume after a closed tab, flags, a section navigator, passages beside their questions, hand-in at zero; nothing revealed before the hand-in, then instant grading of what can be judged and self-scoring of the rest against the reference and its 得分点. Papers sat on paper are recorded by section. Either way: a recency-weighted estimate per paper (whole papers only, never a "prediction"), the trajectory against the target, where the points are lost, and the 真题 shelf. |
 | **错题本 Mistake book** | Wrong answers filed automatically, redos spaced by FSRS, resolved after three correct due-day redos; causes, reflections, AI diagnosis, capture of mistakes made on paper. |
 | **记忆卡片 Flashcards** | FSRS-6 spaced repetition; decks anchored on 考点; AI-generated cards from notes. |
 | **笔记 Notes** | A markdown knowledge workspace with wiki links and backlinks, anchored on the syllabus, with an AI selection toolbar. |
@@ -52,6 +52,7 @@ roadmap: [`docs/roadmap.md`](docs/roadmap.md).
 11408-learning-system/
 ├── server/     # Backend  · Spring Boot 4 · Java 22 · MyBatis-Plus · MySQL · Flyway
 │   └── src/main/resources/exam/   # the syllabus and question packs (versioned content)
+├── content/    # Pack sources: hand-written packs, computed generators, the authoring guide
 ├── web/        # Frontend · Vue 3 · TypeScript · Vite · Pinia · Element Plus · KaTeX
 ├── docs/       # Architecture, domain, roadmap, design system
 ├── database/   # Schema conventions (migrations live in the server module)
@@ -104,6 +105,7 @@ On the dev profile a seed account is created automatically:
 | `DB_URL`, `DB_USERNAME`, `DB_PASSWORD` | Database connection |
 | `JWT_SECRET` | HMAC-SHA256 signing key, **at least 32 bytes** (required in prod) |
 | `DEEPSEEK_API_KEY` | Enables the AI tutor; without it AI actions report "not configured" and everything else works |
+| `CONTENT_PACKS_DIR` | Optional directory of question packs read at startup beside the bundled ones (per pack the higher version wins) — new content without a code release |
 
 Authentication is stateless JWT (access + rotating refresh token); the
 security architecture is documented in
@@ -117,16 +119,28 @@ security architecture is documented in
 | Frontend lint | `cd web && npm run lint` |
 | Frontend type-check + build | `cd web && npm run build` |
 | Frontend unit tests | `cd web && npm run test:unit` |
+| Content packs (offline) | `cd server && ./mvnw -q compile exec:java` — validates every pack as the boot does and prints coverage |
+| Generated packs current | `node content/generate.mjs --check` |
 
 ## Content
 
 The syllabus (`server/src/main/resources/exam/syllabus/*.json`) and the
-question packs (`…/exam/questions/*.json`) are content, versioned with the
-code and validated at boot — a malformed 考点 code, an answer that names a
-missing option, or a paper on the wrong exam day stops the server rather than
-reaching a candidate. The bundled questions are original practice items
-written for this project; past papers are recorded by the candidate, not
-shipped.
+question packs (`…/exam/questions/<paper>/*.json`) are content, versioned with
+the code and validated at boot — a malformed 考点 code, an answer that names a
+missing option, a reading text whose blanks are misnumbered, or a library paper
+that does not match the printed paper stops the server rather than reaching a
+candidate. Each pack carries a version; the live versions are recorded, an
+older pack never replaces a newer one, and content that leaves every pack is
+retired, never deleted. The authoring guide is
+[`content/README.md`](content/README.md); the bank's depth is in
+[`content/COVERAGE.md`](content/COVERAGE.md).
+
+The bundled questions are original items written for this project, labelled
+with their provenance: the core bank, computed families (408), and — for
+政治、英语一 and 数学一 — **original samples (原创样题 · 非真题)** that give each of
+those papers exactly one whole paper's worth of content, enough to sit and
+score every printed section in the app. No past-exam question is shipped;
+past papers sat on paper are recorded by the candidate.
 
 ## Repository
 

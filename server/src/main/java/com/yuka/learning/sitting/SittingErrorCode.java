@@ -15,7 +15,9 @@ public enum SittingErrorCode implements ErrorCode {
     SITTING_SCORE_INVALID(250004, "Score is outside what the paper or section is worth", HttpStatus.BAD_REQUEST),
     /** A 真题 needs a year that exists for this paper; a mock paper needs a name. */
     SITTING_PAPER_INVALID(250005, "A past paper needs a valid year; a mock paper needs a name", HttpStatus.BAD_REQUEST),
-    SITTING_DATE_INVALID(250006, "A sitting cannot be dated in the future", HttpStatus.BAD_REQUEST);
+    SITTING_DATE_INVALID(250006, "A sitting cannot be dated in the future", HttpStatus.BAD_REQUEST),
+    /** A record written by a paper sat in the app: its scores are its answers' — only the note is edited. */
+    SITTING_READ_ONLY(250007, "This record was scored by the app; only its note can be edited", HttpStatus.CONFLICT);
 
     private final int code;
     private final String message;

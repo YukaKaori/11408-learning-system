@@ -46,13 +46,35 @@ public final class SyllabusContent {
     }
 
     /**
-     * One part of the paper as it is printed: its question type and scoring.
+     * One part of the paper as it is printed: its question type and scoring,
+     * the time a candidate should give it, and how the real paper spreads it
+     * over the modules.
      *
-     * @param score per-question score; {@code null} when questions in the section
-     *              carry different scores (408 综合应用题, 数学解答题)
-     * @param total the section's total score
+     * @param score   per-question score; {@code null} when questions in the section
+     *                carry different scores (408 综合应用题, 数学解答题)
+     * @param total   the section's total score
+     * @param minutes the suggested time; a paper's sections sum to its duration,
+     *                and a paper made of some sections is timed by their sum
+     * @param slots   the assembly blueprint — which modules the section's
+     *                questions come from, in printed order (see {@link Slot})
      */
-    public record Section(String code, String name, String questionType, int count, Double score, double total) {
+    public record Section(String code, String name, String questionType, int count, Double score, double total,
+                          int minutes, List<Slot> slots) {
+    }
+
+    /**
+     * One run of a section as the real paper prints it — "11 数据结构 questions",
+     * "2 组成原理 questions worth 23 points", "one reading text of 5".
+     *
+     * @param scope a module (or chapter) of the paper; a question belongs to the
+     *              slot when its primary 考点 lies beneath it
+     * @param count how many questions the slot holds
+     * @param total what they are worth together — required in a variable-score
+     *              section, implied ({@code count × score}) in a uniform one
+     * @param group when set, the slot is filled with whole question groups of
+     *              exactly this size (a cloze text of 20, reading texts of 5)
+     */
+    public record Slot(String scope, int count, Double total, Integer group) {
     }
 
     /** A course within a paper and the exam score it carries (0 for foundations such as 词汇与语法). */
