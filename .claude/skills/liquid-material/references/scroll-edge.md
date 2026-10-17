@@ -182,14 +182,16 @@ Two further requirements:
   navigation target stays hittable, focusable, and ≥44px, in every state and
   every tier.
 
-## 7. Where this stands in the project — the recipe, Contract (B5)
+## 7. Where this stands in the project — the recipe
 
-`GlassDock` is a fixed bottom bar with content passing behind it and **no scroll
-edge treatment at all** — recorded as a gap in `docs/liquid-glass-apple-audit.md`
-§2.6. **Shipped:** nothing. **Contract (B5):** every floating chrome surface
-obligates its scroll container to the treatment below; the first two owners
-are `.content` in `AppLayout` (under the app dock) and the landing's Product
-room (under the landing dock).
+`GlassDock` is a fixed bottom bar with content passing behind it; until B5.2 it
+had **no scroll edge treatment at all** — recorded as a gap in
+`docs/liquid-glass-apple-audit.md` §2.6. Every floating chrome surface obligates
+its scroll container to the treatment below. **Shipped (B5.2, 2026-10-17):**
+`.content` in `AppLayout`, under the app dock (≤768px) — `useScrollEdge` +
+the mask in the shell's compact media block, `--scroll-edge-band` 48px,
+`--scroll-edge-depth` .9. **Contract:** the landing's Product room (under the
+landing dock), its other owner, is not built.
 
 **Responsibility:** the *scroll container* owns the edge, never the bar. The
 bar declares nothing about it; the container knows the bar's height and inset.
@@ -210,6 +212,17 @@ bar declares nothing about it; the container knows the bar's height and inset.
   motion.
 - Never a shadow under the bar, never a hairline, never a change to the bar's
   declared preset, never a `filter`.
+- **A trace stays** (B5.2): at full strength the band takes `--scroll-edge-depth`
+  (.9) of the content's presence, not all of it — the page visibly continues
+  under the glass, which is the point of a transmitting bar. Measured under the
+  app dock: the residue reads 1.25:1 against the slab, below any label's
+  competition.
+- **A view's pinned foot is the content's own boundary** (B5.2): sticky
+  positioning honours the dock's padding, so a `position: sticky; bottom: 0`
+  foot rests exactly on the bar's top edge — where the band would dissolve its
+  controls. A view that pins a foot marks it `data-scroll-edge="pinned"`; while
+  it is there the band moves below it, under the glass. One view does so today
+  (the scoring bar of a handed-in paper).
 
 ## 8. Anti-patterns
 

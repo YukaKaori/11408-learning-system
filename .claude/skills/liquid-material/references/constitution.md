@@ -250,8 +250,8 @@ Surfaces that should be built from this system (existing and future):
 
 - Dock / navigation bar (exists: GlassDock — clear water-glass bar on the landing)
 - **App dock** — the same recipe, mounted once in the authenticated shell as a
-  floating bottom bar on mobile; content passes under it (Contract B5,
-  `navigation.md` §4)
+  floating bottom bar on mobile; content passes under it and dissolves before
+  it (shipped B5.1–B5.3, `navigation.md` §4)
 - Auth and smoked-glass cards (exists: login card)
 - Sidebar — a *summoned* drawer over the workspace may qualify; a docked rail
   that displaces content does not and stays solid (`navigation.md` §4)

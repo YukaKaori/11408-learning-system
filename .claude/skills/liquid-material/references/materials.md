@@ -112,6 +112,17 @@ The split is automatically largest where displacement is largest — the rim.
 House defaults: `redOffset 0 / greenOffset 10 / blueOffset 20`. Keep it a
 whisper; loud aberration reads as a rendering bug.
 
+**Over a light backdrop the split is off — Shipped (B5.3).** Wherever a
+displaced channel samples past the captured backdrop (the viewport's edge, the
+slab's own bounds), its two siblings land on real pixels and it does not: over a
+dark scene the gap is dark on dark and invisible, over a white page it is a
+saturated blue or yellow line along the rim. Measured on the light app dock and
+the daylight rooms' dock and lens — exactly the aberration this rule forbids. So
+the primitive carries a second, one-pass filter (`--filter-id-mono`: the map →
+one `feDisplacementMap` at the middle channel's scale → the recipe's output
+blur), and tier A uses it under `[data-material-backdrop='light']`. The bend is
+unchanged; only the split is gone. Dark backdrops keep the three-channel chain.
+
 ### Fresnel rim arc
 
 Glass reflects most at grazing angles, so only the light-facing rim glows:
@@ -184,6 +195,7 @@ it in `tokens.css` or the preset, never at a component.
 | `--glass-inner-glow` | 0.55 | Base opacity of the permanent inner glow |
 | `--glass-edge-glow` | 0.5 | Base opacity of the permanent edge highlight |
 | `--glass-proximity` | 0 | 0..1 nearby-light factor — lifts glows, thins frost |
+| `--glass-rim-polarity` | 0 | 0..1 — light rims (0) or ink rims (1, drawn in `--material-rim-ink`) on the front rim, the back rim and the edge ring; the specular lip stays light. Set only by `glass.css` from the declared backdrop and the rank (B5.3) |
 | `--glass-light-x/y` | 50% | Surface-local light position |
 | `--glass-light-radius` | 360px | Light radius |
 | `--glass-light-strength` | 0 | 0..1 presence of the travelling light |
@@ -209,7 +221,7 @@ Three token families the presets do not yet carry. Each is a **stage** or
 | Token | Phase | Meaning |
 |---|---|---|
 | `data-material-backdrop="dark \| light"` on the stage → `--material-backdrop` → the primitive's `color-scheme` (its `light-dark()` pairs follow the backdrop, not the theme); `light` flips the chrome rank's on-glass labels/indicator to ink | **shipped B4** | the environmental contract (`environment.md` §1 E5, `adaptive-material.md` §6) |
-| `[data-material-backdrop='light']` remaps density (up, inside a declared band) and rim polarity (light rims → dark ink) per rank | B5 (contract, decision L-A) | the light-backdrop optics, tuned against the shell content the app dock crosses |
+| `[data-material-backdrop='light']` remaps per rank: `chrome` → `--glass-rim-polarity: 1` (density unchanged); `floating` → `--material-density-regular-light` (.86); tier A → the one-pass filter; tier C → `--material-density-dense-floor-light` (.86), dusk labels and light rims kept | **shipped B5.3** (decision L-A) | the light-backdrop optics, measured against the shell content the app dock and the toolbar cross (`adaptive-material.md` §6) |
 | `--material-radius-chrome` / `-hero` / `-floating` (30 / 28 / 16px) → each preset's `--glass-radius`, read by the primitive for its map and its corners | **shipped B1** | a slab's radius belongs to its recipe (`components.md` §7); the `borderRadius` prop is now an override, not the source |
 | `--material-inset` (the primitive's content padding, `0.5rem`) | **shipped B1** | the contributor to every nested inset; concentricity is derived from it |
 | `--material-diffusion` (10px) · `--material-density-dense-floor` (.72) | **shipped B1** | the two dials of tiers B and C (§8) |

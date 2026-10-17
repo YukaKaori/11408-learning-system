@@ -142,7 +142,12 @@ Not met, carried forward:
 - Two unexplained native crashes of the dev backend (`0xC0000005`, no JVM
   crash report) under `mvnw spring-boot:run` during M2 verification; not
   reproduced afterwards — see `m2-handoff.md` § Open.
-- Liquid Material: B5.2/B5.3 and Gecko/WebKit checks remain open
+- Liquid Material: B5.2 (the scroll edge under the app dock) and B5.3 (the
+  light-backdrop optics) landed in the 2026-10-17 visual pass, with the
+  English-locale follow-up: the note toolbar sizes to its actions and goes
+  icon-only where they cannot fit, and the dock's stacked labels use their
+  whole cell. Still open: the Product room's scroll edge, the Gecko/WebKit
+  checks, and English dock labels at 320px, which still ellipsize
   (`docs/liquid-material-global-reassessment.md`).
 - The local folder rename to `11408-Learning-System` (it cannot be renamed
   while an editor or Claude Code holds it open) and the hosted repository

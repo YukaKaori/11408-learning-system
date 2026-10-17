@@ -419,24 +419,36 @@ live bug class in an SPA, which is why they apply now.*
   gate is `v-if` on a mounted-time media-query result, so there is no canvas to
   hydrate.
 
-## 14. The scroll-edge mechanism — Contract (B5)
+## 14. The scroll-edge mechanism — Shipped (B5.2)
 
 The recipe for `scroll-edge.md` §7. Content-side, position-driven, continuous,
-symmetric, stateless:
+symmetric, stateless. Shipped as `composables/useScrollEdge.ts`
+(`scrollEdgeStrength` is the pure model, unit-tested) bound in `AppLayout` to
+`.content` while the app dock exists; the Product room is still Contract.
 
 ```
-owner        the scroll container that has floating chrome over it (.content in AppLayout; the Product room)
-input        remaining = scrollHeight − scrollTop − clientHeight   (one passive scroll listener, rects cached)
-output       one custom property, e.g. --scroll-edge: clamp(0, remaining / BAND, 1)   (BAND ≈ 48px)
-paint        mask-image: linear-gradient(to bottom, #000 calc(100% − BAND − BAR), rgba(0,0,0, 1 − var(--scroll-edge)) calc(100% − BAR))
-             — the band dissolves in proportion to how much content continues under the bar
+owner        the scroll container that has floating chrome over it (.content in AppLayout; the Product room — not built)
+input        remaining = scrollHeight − scrollTop − clientHeight   (one passive scroll listener; extents cached,
+             re-read by a ResizeObserver on the container and its children, re-attached by a MutationObserver
+             as the router swaps the route's root)
+output       --scroll-edge = clamp(0, remaining / BAND, 1) to three decimals, written only when it changes
+             (BAND = --scroll-edge-band, 48px, the same length as SCROLL_EDGE_BAND)
+paint        mask-image: linear-gradient(to bottom,
+               black calc(100% − BAR − BAND),
+               color-mix(in srgb, black calc((1 − var(--scroll-edge, 0) × DEPTH) × 100%), transparent) calc(100% − BAR))
+             BAR = --app-dock-space, DEPTH = --scroll-edge-depth (.9 — a trace still passes under the glass)
 rest         remaining = 0 → band fully open (nothing left to dissolve); the page's last row is readable
-reachability scroll-padding-bottom: BAR + gap so the last row is reachable above the bar
+reachability scroll-padding-bottom: BAR so the last row is reachable above the bar
+pinned foot  .content:has([data-scroll-edge='pinned']) moves the band below the bar's top edge (scroll-edge.md §7)
+inactive     desktop (no dock): no listener, no property, no mask
 ```
 
 No threshold, no duration, allowed under reduced motion, never a shadow under
 the bar, never a change to the bar's material. Writing `--scroll-edge` through
-the variable channel keeps Vue out of it.
+the variable channel keeps Vue out of it. Verified on `/syllabus` (390px): a
+full 1879px sweep in 40px steps followed by a 1px walk through the last 70px
+wrote the property 50 times — only where its value changed; reduced and full
+motion paint identical values at identical positions.
 
 ## 15. The indicator composable — Shipped (B2)
 

@@ -8,6 +8,7 @@ import AppDrawer from '@/components/AppDrawer.vue'
 import GlassDock, { type DockItem } from '@/components/experience/GlassDock.vue'
 import type { IconName } from '@/components'
 import type { MaterialBackdrop } from '@/components/experience/materials'
+import { useScrollEdge } from '@/composables/useScrollEdge'
 import { useAppStore } from '@/stores/app'
 import { useFocusStore } from '@/stores/focus'
 
@@ -69,6 +70,17 @@ onBeforeUnmount(() => {
   compactQuery?.removeEventListener('change', evaluateCompact)
   compactQuery = null
 })
+
+/*
+ * The scroll edge (Phase B5.2, `scroll-edge.md` §7) — the obligation the dock
+ * puts on its scroll container. The container owns it, never the bar: content
+ * dissolves across a band just above the dock instead of arriving at the glass
+ * and being cut in half under its labels. `useScrollEdge` writes one property,
+ * `--scroll-edge`, from the scroll position alone; the mask that reads it is in
+ * the style block. Only while the dock exists — desktop has no floating chrome.
+ */
+const contentRef = ref<HTMLElement | null>(null)
+useScrollEdge(contentRef, { active: () => isCompact.value })
 
 /**
  * The five primary destinations — the practice loop: plan (Today), map
@@ -167,7 +179,7 @@ watch(mobileNavOpen, (open, wasOpen) => {
         <AppSidebar @navigate="mobileNavOpen = false" />
       </AppDrawer>
 
-      <main class="content">
+      <main ref="contentRef" class="content">
         <RouterView />
       </main>
     </div>
@@ -237,7 +249,7 @@ watch(mobileNavOpen, (open, wasOpen) => {
  * itself optically; a tinted rectangle under glass destroys the transmission it
  * exists for (`navigation.md` §7). The graduated boundary that dissolves
  * content as it approaches is the scroll edge, and it belongs to the scroll
- * container in a later step of this phase — not to this anchor.
+ * container (`.content`, below) — not to this anchor.
  */
 .app-dock-anchor {
   position: fixed;
@@ -274,6 +286,48 @@ watch(mobileNavOpen, (open, wasOpen) => {
   .content {
     padding-bottom: var(--app-dock-space);
     scroll-padding-bottom: var(--app-dock-space);
+    /*
+     * The scroll edge (Phase B5.2). A mask on the scroll container itself, so
+     * the band stays put while the page moves through it: content keeps its
+     * full presence down to `--scroll-edge-band` above the bar, then dissolves
+     * across the band toward 1 − depth, the trace that passes under the glass.
+     * `--scroll-edge` (written by useScrollEdge) scales it: 1 while the page
+     * continues, 0 at the end of the document, where nothing is left to
+     * dissolve and the last row must read. A position, never a transition —
+     * and never a shadow, a hairline or a change to the bar.
+     */
+    mask-image: linear-gradient(
+      to bottom,
+      black calc(100% - var(--app-dock-space) - var(--scroll-edge-band)),
+      color-mix(
+          in srgb,
+          black calc((1 - var(--scroll-edge, 0) * var(--scroll-edge-depth)) * 100%),
+          transparent
+        )
+        calc(100% - var(--app-dock-space))
+    );
+  }
+
+  /*
+   * A view that pins its own foot to the bottom of the scroll container (the
+   * scoring bar of a handed-in paper) stands exactly where the band would be —
+   * sticky positioning honours the dock's padding, so the foot rests on the
+   * bar's top edge. Its controls are the one thing the edge must never
+   * dissolve. While it is there the band moves below it: the solid foot is the
+   * content's boundary, and what passes on beneath it dissolves under the
+   * glass instead.
+   */
+  .content:has([data-scroll-edge='pinned']) {
+    mask-image: linear-gradient(
+      to bottom,
+      black calc(100% - var(--app-dock-space)),
+      color-mix(
+          in srgb,
+          black calc((1 - var(--scroll-edge, 0) * var(--scroll-edge-depth)) * 100%),
+          transparent
+        )
+        calc(100% - var(--app-dock-space) + var(--scroll-edge-band) / 2)
+    );
   }
 }
 </style>

@@ -136,6 +136,40 @@
   --material-backdrop: light;
 }
 
+/* ------------------------------------------------------------------ */
+/* Light-backdrop optics (Phase B5.3) — what a bright page asks of each */
+/* rank, measured against the shell content the glass actually crosses  */
+/* ------------------------------------------------------------------ */
+
+/*
+ * Decision L-A, `adaptive-material.md` §3. Adaptation moves the whole scale,
+ * never the rank order:
+ *
+ *   chrome    the Clear dock keeps its density — its labels are ink, and more
+ *             smoke would only dim them. Its rim polarity flips: on paper the
+ *             far edge of a clear slab reads darker than the page, so the
+ *             front and back rims are drawn in ink (`--glass-rim-polarity`,
+ *             read by the primitive). The specular top lip stays light.
+ *   floating  the Regular toolbar keeps its dusk labels, so its body rises to
+ *             unmistakably dark smoke over white note paper. Its rims stay
+ *             light: they are seen against its own dark body.
+ *
+ * The polarity flip holds only while the slab transmits (tiers A and B). In
+ * tier C the body is smoke whatever the page, so the light rims — and, below,
+ * the dusk labels — return.
+ */
+html:not([data-glass-tier='dense']) [data-material-backdrop='light'] [data-material='chrome'] {
+  --glass-rim-polarity: 1;
+}
+
+[data-material-backdrop='light'] [data-material='floating'] {
+  --glass-density: var(--material-density-regular-light);
+}
+
+html[data-glass-tier='dense'] [data-material-backdrop='light'] {
+  --material-density-dense-floor: var(--material-density-dense-floor-light);
+}
+
 .glass-material {
   /* Fixed dusk on-glass palette */
   --on-glass-text: rgba(240, 238, 250, 0.94);
@@ -191,10 +225,18 @@
  * the Regular toolbar carries dusk labels on its own dense body whatever the
  * backdrop. `.glass-material` declares these variables on itself, so the
  * override lands on that element.
+ *
+ * Not in tier C (Phase B5.3): there the body is near-opaque smoke on every
+ * page, so the bright room never reaches the labels — ink on that smoke was
+ * the one illegible state of the app dock (reduced transparency, light theme).
+ * The dusk palette, the one tuned for smoke, stays.
  */
-[data-material-backdrop='light'] [data-material='chrome'] .glass-material {
+html:not([data-glass-tier='dense']) [data-material-backdrop='light'] [data-material='chrome'] .glass-material {
   --on-glass-text: rgba(33, 28, 68, 0.92);
-  --on-glass-text-dim: rgba(33, 28, 68, 0.6);
+  /* .6 until Phase B5.3: the idle labels of the app dock measured 3.7:1 over
+     the light shell. At .7 they clear AA (≈5:1) and still read a clear step
+     below the current item, which also carries the indicator. */
+  --on-glass-text-dim: rgba(33, 28, 68, 0.7);
   --on-glass-text-faint: rgba(33, 28, 68, 0.4);
   --on-glass-halo: rgba(255, 255, 255, 0.7);
   --on-glass-halo-active: rgba(120, 90, 255, 0.4);

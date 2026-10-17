@@ -317,7 +317,9 @@ async function saveNote(): Promise<void> {
           />
         </div>
 
-        <footer class="scoring-foot">
+        <!-- Pinned to the scroll container's bottom: on phones the shell's
+             scroll edge moves its band below it (`AppLayout`). -->
+        <footer class="scoring-foot" data-scroll-edge="pinned">
           <p v-if="scoreError" class="error" role="alert">{{ t(scoreError) }}</p>
           <span class="save-state">{{ savingScores ? t('papers.scoring.saving') : t('papers.scoring.autosaved') }}</span>
           <AppButton :disabled="!allScored" :loading="completing" icon-right="arrow-right" @click="complete">

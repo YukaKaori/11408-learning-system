@@ -6,7 +6,7 @@ the reason it can be a single material rather than a family of them.
 
 Ours does not sample, **by decision, not by oversight** — the mechanism is a
 **stage-declared backdrop** (declaration shipped B4, light-backdrop optics
-Contract B5, §6) and a **boot-resolved material tier** (shipped B1,
+shipped B5.3, §6) and a **boot-resolved material tier** (shipped B1,
 `materials.md` §8).
 This document records what adaptation means, what the inputs are, why the
 project postponed the mechanism, and why it will be declared, never sampled.
@@ -132,8 +132,10 @@ is exactly this behavior, discovered empirically before there was a name for it.
 Since B4 the flip is no longer a private override in `LoginView`: the Product
 room declares `light` and `glass.css` flips the chrome dock's labels, halo and
 indicator to dark ink under `[data-material-backdrop='light']`, values unchanged.
-The optical half — density up inside a declared band per rank, rims to dark ink —
-is Contract (B5), measured against the shell content it exists for (decision L-A).
+The optical half shipped in B5.3, measured against the shell content it exists for
+(decision L-A) — and the measurement corrected the prediction for one rank: the
+clear dock needed ink rims, not more smoke, because its labels are ink and smoke
+dims ink (§6).
 
 ### Dark backdrop
 
@@ -215,11 +217,26 @@ resolved before B4. Under `light` the chrome dock's labels, halo and indicator
 flip to dark ink (the Phase 12 values, moved unchanged). The token guard pins
 all of it. Nothing samples.
 
-**The light-backdrop optics — Contract (B5).** Under `[data-material-backdrop
-='light']`, per rank: density (up, inside a declared band) and rim polarity
-(light rims → dark ink). Decision L-A deferred these to B5 so they are tuned
-against `/today` and `/notes`, the backdrops the app dock will actually cross,
-rather than against the Product room, whose ink labels a denser body would dim.
+**The light-backdrop optics — Shipped (B5.3, 2026-10-17).** Decision L-A deferred
+these to B5 so they would be tuned against `/today`, `/mistakes` and `/notes`, the
+backdrops the shell's glass actually crosses, rather than against the Product room.
+The contract said "density up and rims to ink, per rank"; measuring it turned that
+into one answer per rank:
+
+| Rank over a light backdrop | What it gets | Why |
+|---|---|---|
+| `chrome` (the docks) | density **unchanged** (.16); **rim polarity 1** — front and back rims in ink (`--material-rim-ink`), the specular top lip stays light | its labels are ink: more smoke would *lower* their contrast. The far edge of a clear slab on paper reads darker than the paper, so the rim that proves the slab exists is ink |
+| `floating` (the toolbar) | density **.62 → .86** (`--material-density-regular-light`); rims stay light | its labels are dusk, and dusk is only legible on unmistakably dark glass; its rims are seen against its own dark body |
+| `hero` | nothing — it never stands on a light stage | |
+| every rank, tier A | refraction in **one pass** (`--filter-id-mono`): the bend without the per-channel split | over white, a displaced channel that reaches past the captured backdrop leaves a saturated line along the rim — loud aberration (`materials.md` §4) |
+| every rank, tier C | the dusk palette and light rims return (the ink flip and the polarity are gated off `dense`); the dense floor rises .72 → .86 | the body is near-opaque smoke whatever the page; ink on it was illegible (1.6:1) |
+
+The idle dock labels also needed one value: `--on-glass-text-dim` under the ink
+flip went .6 → .7 (3.7:1 → 5.0:1). Measured label contrast after B5.3 (minimum
+over `/today`, `/syllabus`, `/mistakes` scrolled, refract / diffuse / dense): light
+theme dock idle 4.96 / 4.96 / 5.36, dock current 8.53 / 8.48 / 8.13; toolbar 6.51 /
+6.92 / 14.77 (light), 15.21 / 14.49 / 15.42 (dark); dark-theme dock idle ≥ 6.93.
+The token guard pins every value (`materialTokens.spec.ts`, "B5.3").
 
 Who declares:
 

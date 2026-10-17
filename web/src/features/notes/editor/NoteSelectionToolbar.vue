@@ -1,5 +1,5 @@
 <script setup lang="ts">
-import { computed, onBeforeUnmount, ref, watch } from 'vue'
+import { computed, nextTick, onBeforeUnmount, ref, watch } from 'vue'
 import { useI18n } from 'vue-i18n'
 import type { Editor } from '@tiptap/core'
 import { AppButton, AppIcon, GlassSurface } from '@/components'
@@ -14,6 +14,7 @@ import {
   normalizeAiResult,
   type InlineAiAction,
 } from './inlineAi'
+import { barLayout, COMPACT_ACTION, panelWidth } from './toolbarLayout'
 import { mapRange, type EditorSelection } from './useEditorSelection'
 
 /**
@@ -49,7 +50,7 @@ const props = defineProps<{
 
 const emit = defineEmits<{ 'view-flashcards': [] }>()
 
-const { t } = useI18n()
+const { t, locale } = useI18n()
 
 type RunStatus = 'streaming' | 'ready' | 'error' | 'deck'
 
@@ -63,6 +64,8 @@ interface Run {
   errorMessage: string | null
   deck: { name: string; cardCount: number } | null
 }
+
+const actions = INLINE_AI_ACTIONS
 
 const run = ref<Run | null>(null)
 let controller: AbortController | null = null
@@ -90,23 +93,83 @@ const anchor = computed(() => {
   return props.selection ? shellAnchor(props.selection) : { left: 0, top: 0, bottom: 0 }
 })
 
+// --- Sizing --------------------------------------------------------------
+// The bar is as wide as its labelled actions need, inside the shell it floats
+// in; where that cannot fit (English on a phone) the actions go icon-only
+// (`toolbarLayout.ts`). The shell's width is observed, not read per render, so
+// a rotation or a window resize re-lays the bar out while it is showing.
+const shellWidth = ref(0)
+let shellObserver: ResizeObserver | null = null
+
+watch(
+  () => props.shell,
+  (shell) => {
+    shellObserver?.disconnect()
+    shellObserver = null
+    shellWidth.value = shell?.clientWidth ?? 0
+    if (!shell) return
+    shellObserver = new ResizeObserver(() => {
+      shellWidth.value = shell.clientWidth
+    })
+    shellObserver.observe(shell)
+  },
+  { immediate: true },
+)
+
+/** The room the shell gives the bar — unbounded until the shell has a width. */
+const room = computed(() => (shellWidth.value > 0 ? shellWidth.value : Number.POSITIVE_INFINITY))
+
+/**
+ * The labelled actions' span per locale, measured once from the rendered
+ * buttons (the labels are the only part that varies). Absent until then, so
+ * the first render is the labelled bar that gets measured.
+ */
+const labelledActions = ref<Record<string, number>>({})
+const actionBarRef = ref<HTMLElement | null>(null)
+const panelRef = ref<HTMLElement | null>(null)
+
+const layout = computed(() => barLayout(labelledActions.value[locale.value], actions.length, room.value))
+const compact = computed(() => !expanded.value && layout.value.compact)
+
+function measureLabelledActions() {
+  const buttons = actionBarRef.value?.querySelectorAll<HTMLElement>(':scope > .app-button')
+  if (!buttons || buttons.length === 0) return
+  const first = buttons[0]!.getBoundingClientRect()
+  const last = buttons[buttons.length - 1]!.getBoundingClientRect()
+  labelledActions.value = { ...labelledActions.value, [locale.value]: Math.ceil(last.right - first.left) }
+}
+
+// After the DOM settles and before the browser paints: a bar shown for the
+// first time in a locale is measured while it still carries its labels, and
+// switches to icons in the same frame if they do not fit — never seen clipped.
+watch(
+  [() => visible.value && !expanded.value, locale],
+  ([showing]) => {
+    if (showing && labelledActions.value[locale.value] === undefined) measureLabelledActions()
+  },
+  { flush: 'post', immediate: true },
+)
+
 /**
  * Above the selection, horizontally centred, clamped inside the shell — and
  * flipped *below* when there isn't room above. Glass must never cover the text
  * it is acting on: the material reveals content, it never hides it.
  */
 const toolbarStyle = computed(() => {
-  const width = expanded.value ? PANEL_WIDTH : BAR_WIDTH
+  const width = expanded.value ? panelWidth(room.value) : layout.value.width
   const height = expanded.value ? PANEL_HEIGHT : BAR_HEIGHT
-  const shellWidth = props.shell?.clientWidth ?? width
-  const left = Math.min(Math.max(anchor.value.left - width / 2, 0), Math.max(shellWidth - width, 0))
+  const shell = Number.isFinite(room.value) ? room.value : width
+  const left = Math.min(Math.max(anchor.value.left - width / 2, 0), Math.max(shell - width, 0))
   const above = anchor.value.top - height - GAP
   const top = above >= 0 ? above : anchor.value.bottom + GAP
-  return { left: `${left}px`, top: `${top}px`, width: `${width}px` }
+  return {
+    left: `${left}px`,
+    top: `${top}px`,
+    width: `${width}px`,
+    '--toolbar-compact-action': `${COMPACT_ACTION}px`,
+  }
 })
 
-const BAR_WIDTH = 320
-const PANEL_WIDTH = 420
 const BAR_HEIGHT = 48
 const PANEL_HEIGHT = 200
 const GAP = 10
@@ -124,6 +187,10 @@ function start(action: InlineAiAction) {
   if (!props.editor || !selection || !selection.text.trim()) return
 
   stopStream()
+  // Focus is inside the bar only on the keyboard path (a press or a tap keeps
+  // it in the editor — the bar prevents mousedown). That bar is about to be
+  // replaced by the proposal, so the keyboard follows the action into it.
+  const fromKeyboard = actionBarRef.value?.contains(document.activeElement) ?? false
   frozenAnchor.value = shellAnchor(selection)
   run.value = {
     action,
@@ -135,6 +202,9 @@ function start(action: InlineAiAction) {
     deck: null,
   }
   void execute(run.value)
+  if (fromKeyboard) {
+    void nextTick(() => panelRef.value?.querySelector<HTMLElement>('.result-actions button')?.focus())
+  }
 }
 
 function execute(current: Run) {
@@ -254,6 +324,8 @@ function onTransaction({ transaction }: { transaction: { docChanged: boolean; ma
 onBeforeUnmount(() => {
   stopStream()
   props.editor?.off('transaction', onTransaction)
+  shellObserver?.disconnect()
+  shellObserver = null
 })
 
 // --- Optics --------------------------------------------------------------
@@ -268,12 +340,14 @@ useGlassSpotlight(stageRef, {
   radius: 240,
   facets: { root: stageRef, selector: '.app-button' },
 })
-
-const actions = INLINE_AI_ACTIONS
 </script>
 
 <template>
   <div v-if="visible" ref="stageRef" class="selection-toolbar" :style="toolbarStyle">
+    <!-- Regular glass over a page of text diffuses what it transmits (the
+         layer stack's diffusion, `materials.md` §1): the line under the bar
+         reaches it as a soft haze, never as a second line of type beside the
+         labels. Restrained — the rim still bends the page. -->
     <GlassSurface
       ref="surfaceRef"
       class="toolbar-slab"
@@ -283,7 +357,7 @@ const actions = INLINE_AI_ACTIONS
       :border-width="0.06"
       :blur="9"
       :opacity="0.94"
-      :displace="0.3"
+      :displace="3"
       :background-opacity="0"
       :saturation="1.1"
       :distortion-scale="-70"
@@ -291,29 +365,37 @@ const actions = INLINE_AI_ACTIONS
       :green-offset="4"
       :blue-offset="8"
     >
-      <div class="toolbar-body glass-material">
-        <!-- Collapsed: the action bar -->
+      <div class="toolbar-body glass-material" :class="{ 'is-compact': compact }">
+        <!-- Collapsed: the action bar. Labelled wherever the labels fit;
+             icon-only where they cannot (`toolbarLayout.ts`), each action
+             keeping its name for assistive technology and a pointer's tooltip. -->
         <div
           v-if="!expanded"
+          ref="actionBarRef"
           class="action-bar"
+          :class="{ 'is-compact': compact }"
           role="toolbar"
           :aria-label="t('notes.ai.toolbar')"
           @mousedown.prevent
         >
-          <AppButton
-            v-for="action in actions"
-            :key="action.key"
-            variant="ghost"
-            size="sm"
-            :icon-left="action.icon"
-            @click="start(action)"
-          >
-            {{ t(`notes.ai.${action.key}`) }}
-          </AppButton>
+          <template v-for="action in actions" :key="action.key">
+            <AppButton
+              v-if="compact"
+              variant="ghost"
+              size="sm"
+              :icon-left="action.icon"
+              :aria-label="t(`notes.ai.${action.key}`)"
+              :title="t(`notes.ai.${action.key}`)"
+              @click="start(action)"
+            />
+            <AppButton v-else variant="ghost" size="sm" :icon-left="action.icon" @click="start(action)">
+              {{ t(`notes.ai.${action.key}`) }}
+            </AppButton>
+          </template>
         </div>
 
         <!-- Expanded: the proposal. Glass frame, solid content inset. -->
-        <div v-else class="result-panel">
+        <div v-else ref="panelRef" class="result-panel">
           <header class="result-head">
             <AppIcon name="sparkles" size="sm" />
             <span class="result-title">{{ t(`notes.ai.${run!.action.key}`) }}</span>
@@ -371,6 +453,9 @@ const actions = INLINE_AI_ACTIONS
  * The dials come from `material="floating"` (styles/glass.css) — the Regular
  * variant, because nothing dims the reading canvas behind this slab and the
  * material must carry legibility on its own. Nothing optical is declared here.
+ * Over the light theme's white paper the preset's body rises to near-opaque
+ * smoke (the light-backdrop band, Phase B5.3), so the dusk labels keep their
+ * contrast in both themes.
  */
 .selection-toolbar {
   position: absolute;
@@ -400,8 +485,12 @@ const actions = INLINE_AI_ACTIONS
   /* Legibility beats hierarchy on a small transient slab: the note text
      transmitting through the glass competes with dimmed labels, so on-glass
      secondary text is lifted to the full dusk value. Scoped to this surface —
-     the shared `.glass-material` contract is untouched. */
+     the shared `.glass-material` contract is untouched. The ghost buttons'
+     on-glass skin reads the dim step directly (glass.css), so both names are
+     lifted: with only the first, the action labels stayed at the dim step —
+     3.8:1 over white paper (Phase B5.3 measurement). */
   --color-text-secondary: var(--on-glass-text);
+  --on-glass-text-dim: var(--on-glass-text);
 }
 
 .action-bar {
@@ -409,6 +498,24 @@ const actions = INLINE_AI_ACTIONS
   align-items: center;
   gap: var(--space-1);
   justify-content: center;
+}
+
+/*
+ * Icon-only actions — where the labelled bar cannot fit the shell (English on
+ * a phone). Each target is a square at the touch floor; the body gives its
+ * padding to them, so the bar keeps its height (60px either way) and its
+ * position above the selection. Hover, press and focus are the on-glass ghost
+ * skin's, unchanged: light pools under the pointer, a press settles, keyboard
+ * focus draws the ring and lifts the slab's edge.
+ */
+.toolbar-body.is-compact {
+  padding: 0;
+}
+
+.action-bar.is-compact .app-button {
+  width: var(--toolbar-compact-action);
+  height: var(--toolbar-compact-action);
+  padding: 0;
 }
 
 .result-panel {

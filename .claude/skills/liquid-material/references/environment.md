@@ -121,8 +121,10 @@ chrome dock's labels go to dark ink. No surface reads its own pixels.
   material follows the declaration.
 - **Status: Shipped (B4, 2026-09-17).** `LoginView` declares per gallery, `AppLayout`
   from the theme; undeclared stages fall back to the theme (`tokens.css`). The
-  hand-rolled `.is-on-light` flip is gone. The light-backdrop density band and rim
-  polarity are **Contract (B5)** (decision L-A).
+  hand-rolled `.is-on-light` flip is gone. The light-backdrop optics (decision L-A)
+  **shipped in B5.3** — per rank, measured against the shell: ink rims for the clear
+  dock, a denser body for the Regular toolbar, one-pass refraction over a light
+  page (`adaptive-material.md` §6).
 
 ## 2. The two environments this product has
 

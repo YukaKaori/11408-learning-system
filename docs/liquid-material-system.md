@@ -185,6 +185,16 @@ per-frame state.
 > `color-scheme`. The Login stage declares per gallery and `AppLayout` declares
 > from the theme. The density/rim remap for light backdrops was moved to B5
 > (decision L-A).
+>
+> **2026-10-17:** P1 is complete. B5.3 shipped the light-backdrop optics,
+> measured against the shell's real content: the clear dock keeps its density
+> and flips its rims to ink (`--glass-rim-polarity`), the Regular toolbar's body
+> rises to .86, tier A refracts in one pass over a light page (the per-channel
+> split drew saturated lines along the rim there), and tier C keeps the dusk
+> labels. B5.2 shipped the scroll edge under the app dock (`useScrollEdge` on
+> `.content`). Every glass label in the shell now measures ≥ 4.5:1 in both themes
+> and all three tiers. Details: `.claude/skills/liquid-material/references/adaptive-material.md`
+> §6 and `scroll-edge.md` §7.
 
 Phase 17.2 delivers material *coherence*. What it deliberately does not do:
 

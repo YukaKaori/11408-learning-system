@@ -117,7 +117,7 @@ app dock, sign-in slab, note toolbar.
   gallery and `glass.css` flips the chrome rank's on-glass tokens; the private
   override in `LoginView` is gone.
 
-### App dock — Contract (B5), the one new surface
+### App dock — Shipped (B5.1 the dock, B5.2 the scroll edge, B5.3 the light-backdrop optics)
 
 - **Role:** the authenticated shell's chrome on mobile (≤768px). The same
   `GlassDock` recipe with items as data, mounted **once** in `AppLayout`,
@@ -127,17 +127,20 @@ app dock, sign-in slab, note toolbar.
   bounded region. It restores identity on every mobile screen with the *same
   object* as the landing.
 - **Material:** `chrome` (Clear) under the stage's backdrop declaration: dark
-  theme → the Clear band by construction; light theme → the remapped denser
-  body with dark-ink rims. If measured label contrast in the light theme
-  cannot reach AA: deepen the remap → `floating` (Regular) for the light
-  backdrop only → solid. **Never whiten.**
+  theme → the Clear band by construction; light theme → measured in B5.3: the
+  body keeps its density (more smoke would dim the ink labels), the rims flip
+  to ink, the refraction runs in one pass, and the idle labels' ink rose .6 → .7
+  so they clear AA (4.96:1; current 8.5:1). The escape hatch was not needed —
+  had AA failed: deepen the remap → `floating` (Regular) for the light backdrop
+  only → solid. **Never whiten.**
 - **Items:** five destinations (Today, Subjects, Notes, Flashcards, Tutor) +
   **More**, which opens the existing drawer (Calendar, Analytics, Settings,
   Profile, theme, locale, logout). The drawer stays **solid** — two glass
   surfaces a summon apart are one badly-cut sheet (`components.md` §7).
-- **Obligations on the host:** the scroll edge (`scroll-edge.md` §7) and
-  `scroll-padding-bottom` on the scroll container; the mobile header loses the
-  brand name (branding belongs to content) and keeps the menu control.
+- **Obligations on the host:** the scroll edge (`scroll-edge.md` §7, shipped
+  B5.2: `useScrollEdge` on `.content`) and `scroll-padding-bottom` on the scroll
+  container; the mobile header loses the brand name (branding belongs to
+  content) and keeps the menu control.
 - **No travelling light** in the shell: no `useGlassSpotlight` under
   `layouts/`; the dock stands statically (that is its mobile appearance anyway).
 - **Desktop:** the docked rail stays solid; the P19 palette is the desktop

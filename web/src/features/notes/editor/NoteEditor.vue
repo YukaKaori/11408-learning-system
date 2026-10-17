@@ -206,16 +206,31 @@ watch(rows, (list) => {
 
 // --- Inline AI ------------------------------------------------------------
 // The glass selection toolbar is suppressed whenever another anchored surface
-// owns the caret, or the editor isn't focused — it must never float over a
-// selection the user has already left behind.
+// owns the caret, or focus has left the editor — it must never float over a
+// selection the user has already left behind. Focus moving from the editor
+// into its own toolbar (Tab from a selection) has not left it: "the editor"
+// is the shell, the text and the surfaces anchored to it. Tracked with the
+// bubbling focusin/focusout on the shell element — the editor's own blur
+// fires first, and alone it would unmount the button taking focus.
 const { selection } = useEditorSelection(editor)
-const toolbarSuppressed = computed(() => !focused.value || popupOpen.value)
+const focusWithin = ref(false)
+
+function onShellFocusIn() {
+  focusWithin.value = true
+}
+
+function onShellFocusOut(event: FocusEvent) {
+  const next = event.relatedTarget
+  focusWithin.value = next instanceof Node && wrapper.value?.contains(next) === true
+}
+
+const toolbarSuppressed = computed(() => !focusWithin.value || popupOpen.value)
 
 defineExpose({ editor })
 </script>
 
 <template>
-  <div ref="wrapper" class="note-editor-shell">
+  <div ref="wrapper" class="note-editor-shell" @focusin="onShellFocusIn" @focusout="onShellFocusOut">
     <EditorContent class="note-editor" :editor="editor" />
     <WikiLinkSuggestions
       v-if="popupOpen"

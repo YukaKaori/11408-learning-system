@@ -650,7 +650,11 @@ defineExpose({ focusItem })
   /* ≥44px touch target at every viewport — this overrides the 640px step
      above, which tightens a three-label bar that has room to spare. */
   height: var(--app-dock-item);
-  padding-inline: var(--space-1);
+  /* The label may use its whole cell: the 4px a side this once reserved cut
+     the English "Syllabus" and "Mistakes" short at 390px. The cells, their
+     gaps, the indicator and the targets keep their geometry, and a label that
+     fits stays centred where it was — the Chinese set is unchanged. */
+  padding-inline: 0;
   letter-spacing: normal;
 }
 

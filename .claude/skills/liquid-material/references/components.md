@@ -127,11 +127,21 @@ never a new refraction implementation. Optical dials refer to `materials.md` §7
 - **Rules:** transient = its justification; it must never linger as permanent
   chrome. Higher edge energy than a sidebar (it floats over work), but small
   and light-handed.
+- **Responsive width (2026-10-17):** the slab is as wide as its labelled actions
+  need — never narrower than its shipped 320px, never wider than the shell it
+  floats in (`features/notes/editor/toolbarLayout.ts`, measured once per locale).
+  Where the labels cannot fit (English on a phone) the actions go icon-only:
+  44px targets, each keeping its name as `aria-label` and tooltip, the bar's
+  height unchanged. The expanded panel never exceeds the shell either.
+- **Keyboard:** Tab from a selection reaches the actions — focus moving into the
+  toolbar does not count as leaving the selection (the editor tracks focus
+  within its shell) — and an action activated from the keyboard carries focus
+  into the proposal.
 
 ### `GlassNavigation.vue` (exists as `GlassDock.vue` — the pattern, one recipe, two hosts)
 
 - **Role:** persistent primary navigation (dock/bar). Shipped on the landing
-  (three galleries). **Contract (B5):** the same component, items as data,
+  (three galleries) and, since B5.1, as the same component with items as data,
   mounted once in `AppLayout` as the floating bottom **app dock** on mobile —
   two budget instances of one recipe.
 - **Recipe:** clear water glass (`chrome`) — density near 0, high transmission,
@@ -143,9 +153,11 @@ never a new refraction implementation. Optical dials refer to `materials.md` §7
   scene shows through it, it never competes with content. On bright backdrops
   it flips to dark-ink labels — driven by the stage's
   `data-material-backdrop` declaration (shipped B4), not per-frame sampling
-  and not a private override; its light-backdrop density and rims are
-  Contract B5. When it floats over scrolling content the
-  container owes it a scroll edge (`scroll-edge.md` §7).
+  and not a private override; its light-backdrop optics shipped in B5.3 — the
+  density stays, the rims flip to ink, the refraction runs in one pass
+  (`adaptive-material.md` §6). When it floats over scrolling content the
+  container owes it a scroll edge (`scroll-edge.md` §7, shipped B5.2 under the
+  app dock).
 
 ### Other sanctioned surfaces (same rules apply)
 

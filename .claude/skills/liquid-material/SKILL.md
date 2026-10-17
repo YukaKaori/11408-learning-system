@@ -169,8 +169,14 @@ legibility is carried by the stage's backdrop declaration
 (`data-material-backdrop`, `references/adaptive-material.md` §6), never by
 whitening the slab. **Shipped (B4):** the declaration and its routing — the slab's
 `color-scheme` follows the backdrop, not the theme, and the chrome dock's labels
-flip to dark ink under `light`. **Contract (B5):** the light-backdrop optics
-(denser body, dark-ink rims), tuned against the real shell content.
+flip to dark ink under `light`. **Shipped (B5.3):** the light-backdrop optics,
+measured against the real shell content — per rank, `references/adaptive-material.md`
+§6: the clear dock keeps its density and draws its rims in ink
+(`--glass-rim-polarity`); the Regular toolbar's body rises to `.86` under its dusk
+labels; tier A refracts in one pass (no channel split) over a light backdrop; tier
+C keeps the dusk palette. Floating chrome over scrolling content also owes its
+container the scroll edge (`references/scroll-edge.md`, shipped B5.2 under the app
+dock).
 
 **Every engine.** The material is delivered in three tiers decided **once at boot
 by capability, never by browser brand** (`references/materials.md` §8): A `refract`

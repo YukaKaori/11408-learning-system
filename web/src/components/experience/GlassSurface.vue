@@ -57,6 +57,15 @@ import { createDisplacementMapCache, createSettledMeasure } from './displacement
  *   --glass-radius          the slab's corner radius, set by its preset from
  *                           `--material-radius-*` (Phase B1); the optional
  *                           `borderRadius` prop overrides it
+ *   --glass-rim-polarity    0..1 — light rims (0, the default) or ink rims (1):
+ *                           a clear slab on a bright page reads by a darker
+ *                           edge. Set by glass.css from the stage's declared
+ *                           backdrop and the rank (Phase B5.3), never at a
+ *                           call site; the specular lip stays light either way
+ *
+ * Over a declared light backdrop, tier A refracts through a second, one-pass
+ * filter — the bend without the per-channel split (Phase B5.3, see the style
+ * block). Both filters share the one map; only the referenced one runs.
  *
  * The optional `surfaceFlow` prop renders a slow travelling highlight and
  * faint internal caustics (20–40s loops, transform/opacity only).
@@ -146,6 +155,8 @@ const DEFAULT_RADIUS = 20
 
 const uniqueId = useId().replace(/:/g, '-')
 const filterId = `glass-filter-${uniqueId}`
+/** The same refraction in one pass, for a bright backdrop (Phase B5.3 — see the style block). */
+const monoFilterId = `glass-filter-mono-${uniqueId}`
 const redGradId = `red-grad-${uniqueId}`
 const blueGradId = `blue-grad-${uniqueId}`
 
@@ -182,6 +193,7 @@ const containerStyle = computed(() => ({
   '--glass-frost': String(props.backgroundOpacity),
   '--glass-saturation': String(props.saturation),
   '--filter-id': `url(#${filterId})`,
+  '--filter-id-mono': `url(#${monoFilterId})`,
 }))
 
 let resizeObserver: ResizeObserver | null = null
@@ -296,6 +308,35 @@ defineExpose({ element: containerRef })
           <feBlend in="rg" in2="blue" mode="screen" result="output" />
           <feGaussianBlur in="output" :stdDeviation="displace" />
         </filter>
+
+        <!-- One pass at the middle channel's scale: the bend without the split. -->
+        <filter
+          :id="monoFilterId"
+          color-interpolation-filters="sRGB"
+          x="0%"
+          y="0%"
+          width="100%"
+          height="100%"
+        >
+          <feImage
+            :href="displacementMap"
+            x="0"
+            y="0"
+            width="100%"
+            height="100%"
+            preserveAspectRatio="none"
+            result="map"
+          />
+          <feDisplacementMap
+            in="SourceGraphic"
+            in2="map"
+            :scale="distortionScale + greenOffset"
+            :xChannelSelector="xChannel"
+            :yChannelSelector="yChannel"
+            result="output"
+          />
+          <feGaussianBlur in="output" :stdDeviation="displace" />
+        </filter>
       </defs>
     </svg>
 
@@ -379,6 +420,18 @@ html[data-glass-tier='refract'] .glass-surface {
 }
 
 /*
+ * Tier A on a bright backdrop (Phase B5.3) — the same bend in one pass. Over a
+ * dark scene the three-channel split is the whisper `materials.md` §4 asks for;
+ * over a white page, wherever a displaced channel reaches past the captured
+ * backdrop (the viewport's edge, the slab's own bounds) the missing channels
+ * leave a saturated line along the rim — loud aberration, which reads as a
+ * rendering fault. The declaration says which case this is; nothing samples.
+ */
+html[data-glass-tier='refract'] [data-material-backdrop='light'] .glass-surface {
+  backdrop-filter: var(--filter-id-mono) saturate(var(--glass-saturation, 1));
+}
+
+/*
  * Tier C `dense` — no backdrop work at all. The body rises toward opaque from
  * a floor, in rank order (chrome < hero < floating), by smoke rather than by
  * whitening; every rim, depth and light layer below still paints. Reduced
@@ -432,7 +485,12 @@ html[data-glass-tier='dense'] .glass-surface {
 }
 
 /* Edge glow — the physical rim of the sheet catching light. Nearby light
-   makes the bevel read brighter, like tilting real glass toward a lamp. */
+   makes the bevel read brighter, like tilting real glass toward a lamp.
+   Rim polarity (Phase B5.3): with `--glass-rim-polarity` at 1 (a clear slab on
+   a bright page, set by glass.css) the 1px ring is drawn in ink instead of
+   light — still the edge that strengthens under a press — while the specular
+   top lip and the inner glow stay light. At the default 0 the ink layer is
+   transparent and the ring is exactly its shipped value. */
 .glass-surface::after {
   content: '';
   position: absolute;
@@ -441,7 +499,15 @@ html[data-glass-tier='dense'] .glass-surface {
   border-radius: inherit;
   pointer-events: none;
   box-shadow:
-    inset 0 0 0 1px light-dark(rgba(255, 255, 255, 0.34), rgba(255, 255, 255, 0.2)),
+    inset 0 0 0 1px
+      color-mix(
+        in srgb,
+        light-dark(rgba(255, 255, 255, 0.34), rgba(255, 255, 255, 0.2))
+          calc((1 - var(--glass-rim-polarity, 0)) * 100%),
+        transparent
+      ),
+    inset 0 0 0 1px
+      color-mix(in oklch, var(--material-rim-ink) calc(var(--glass-rim-polarity, 0) * 18%), transparent),
     inset 0 1px 0 light-dark(rgba(255, 255, 255, 0.5), rgba(216, 210, 255, 0.32)),
     inset 0 0 22px -8px light-dark(rgba(255, 255, 255, 0.5), rgba(190, 182, 255, 0.34));
   opacity: calc(
@@ -507,13 +573,27 @@ html[data-glass-tier='dense'] .glass-surface {
         transparent
       )
     );
-  box-shadow: inset 0 0 0 1px
-    color-mix(in srgb, light-dark(#ffffff, #e7e3ff) calc(var(--glass-depth, 0) * 34%), transparent);
+  /* The front rim; drawn in ink instead of light as the rim polarity rises
+     (Phase B5.3 — see the edge glow). */
+  box-shadow:
+    inset 0 0 0 1px
+      color-mix(
+        in srgb,
+        light-dark(#ffffff, #e7e3ff) calc(var(--glass-depth, 0) * 34% * (1 - var(--glass-rim-polarity, 0))),
+        transparent
+      ),
+    inset 0 0 0 1px
+      color-mix(
+        in oklch,
+        var(--material-rim-ink) calc(var(--glass-depth, 0) * var(--glass-rim-polarity, 0) * 16%),
+        transparent
+      );
 }
 
 /* Inner (back) rim — a second contour a few px inside the front edge, biased
    1px downward: the far edge of a thick slab seen through its own body. This
-   double edge is the strongest single "heavy glass" cue. */
+   double edge is the strongest single "heavy glass" cue. On a bright page it
+   is the darker contour (rim polarity, Phase B5.3). */
 .glass-surface__depth::before {
   content: '';
   position: absolute;
@@ -522,9 +602,23 @@ html[data-glass-tier='dense'] .glass-surface {
   transform: translateY(1px);
   box-shadow:
     inset 0 0 0 1px
-      color-mix(in srgb, light-dark(#ffffff, #d8d2ff) calc(var(--glass-depth, 0) * 13%), transparent),
+      color-mix(
+        in srgb,
+        light-dark(#ffffff, #d8d2ff) calc(var(--glass-depth, 0) * 13% * (1 - var(--glass-rim-polarity, 0))),
+        transparent
+      ),
     inset 0 -1px 0
-      color-mix(in srgb, light-dark(#ffffff, #d8d2ff) calc(var(--glass-depth, 0) * 8%), transparent);
+      color-mix(
+        in srgb,
+        light-dark(#ffffff, #d8d2ff) calc(var(--glass-depth, 0) * 8% * (1 - var(--glass-rim-polarity, 0))),
+        transparent
+      ),
+    inset 0 0 0 1px
+      color-mix(
+        in oklch,
+        var(--material-rim-ink) calc(var(--glass-depth, 0) * var(--glass-rim-polarity, 0) * 7%),
+        transparent
+      );
 }
 
 /* Internal scattering — light entering the slab diffuses inside the body.

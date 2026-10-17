@@ -198,6 +198,26 @@
   --material-diffusion: 10px;
   --material-density-dense-floor: 0.72;
 
+  /* Light-backdrop optics (Phase B5.3, decision L-A, `adaptive-material.md`
+     §3). Measured against the shell content the app dock and the note toolbar
+     actually cross (/today, /mistakes, /notes), not against the Product room.
+       regular-light  the Regular body over a bright page. Its labels stay
+                      dusk, and dusk is only legible on unmistakably dark
+                      glass; the note text behind must read as a haze, not as
+                      a second line of type. (The Clear dock keeps .16: its
+                      labels are ink, so a denser body would only dim them —
+                      the scroll edge is what it needed.)
+       floor-light    tier C over a bright page: the same smoke lets more of
+                      a white page through than of a dark one, so the floor
+                      the body rises from is higher (rank order unchanged)
+       rim-ink        the ink a light-backdrop rim is drawn in — the brand
+                      anchor's hue at near-zero chroma (`color.md` §3), the
+                      same derivation as the daylight rooms' ink. The far
+                      edge of a clear slab on paper is darker than the paper. */
+  --material-density-regular-light: 0.86;
+  --material-density-dense-floor-light: 0.86;
+  --material-rim-ink: oklch(0.22 0.018 275);
+
   /* Geometry (Phase B1, `components.md` §7). A slab's radius belongs to its
      recipe; the primitive's own content inset is part of every nested radius
      derivation. Derived control radii are authored here, once, as
@@ -372,6 +392,16 @@
   --app-dock-space: calc(
     var(--app-dock-height) + var(--app-dock-gutter) + env(safe-area-inset-bottom, 0px)
   );
+
+  /* The scroll edge under the app dock (Phase B5.2, `scroll-edge.md` §7):
+     content dissolves across a band just above the bar instead of colliding
+     with it. A position, never a duration.
+       band   the band's height — `useScrollEdge` reads the same value
+       depth  how much of the content's presence the band takes at full
+              strength; what is left (1 − depth) still passes under the bar,
+              so the user can see the page continues */
+  --scroll-edge-band: 48px;
+  --scroll-edge-depth: 0.9;
 
   color-scheme: light;
 }

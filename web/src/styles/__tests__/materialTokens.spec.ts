@@ -239,10 +239,14 @@ describe('liquid material tokens', () => {
     'layouts/AppLayout.vue': 'derived from the theme',
   } as const
 
-  /** The Product-room ink flip, moved byte-for-byte out of LoginView. */
+  /**
+   * The Product-room ink flip, moved byte-for-byte out of LoginView — with one
+   * measured change since: Phase B5.3 raised the dim step .6 → .7, because the
+   * app dock's idle labels read 3.7:1 over the light shell (AA needs 4.5).
+   */
   const LIGHT_INK = {
     '--on-glass-text': 'rgba(33, 28, 68, 0.92)',
-    '--on-glass-text-dim': 'rgba(33, 28, 68, 0.6)',
+    '--on-glass-text-dim': 'rgba(33, 28, 68, 0.7)',
     '--on-glass-text-faint': 'rgba(33, 28, 68, 0.4)',
     '--on-glass-halo': 'rgba(255, 255, 255, 0.7)',
     '--on-glass-halo-active': 'rgba(120, 90, 255, 0.4)',
@@ -298,14 +302,110 @@ describe('liquid material tokens', () => {
     expect(read('layouts/AppLayout.vue')).toContain(`appStore.isDark ? 'dark' : 'light'`)
   })
 
-  it('L-A: the light backdrop only moves the shipped ink flip — values unchanged, chrome rank only', () => {
-    const ink = block(glass, `[data-material-backdrop='light'] [data-material='chrome'] .glass-material`)
+  /** The chrome rank's ink flip — gated off tier C since Phase B5.3. */
+  const INK_FLIP = `html:not([data-glass-tier='dense']) [data-material-backdrop='light'] [data-material='chrome'] .glass-material`
+
+  it('L-A: the light backdrop moves the shipped ink flip — values unchanged, chrome rank only', () => {
+    const ink = block(glass, INK_FLIP)
     const declared = Object.fromEntries(
       [...ink.matchAll(/(--[\w-]+):\s*([^;]+);/g)].map((m) => [m[1], m[2]!.trim()]),
     )
     expect(declared).toEqual(LIGHT_INK)
-    // no optical dial rides on the declaration in B4 (density/rims are B5's measurement)
-    expect(glass).not.toMatch(/\[data-material-backdrop='light'\][^{]*\{[^}]*--(glass-|material-(?!backdrop:))/)
+    // the flip is the chrome rank's alone: the Regular toolbar keeps dusk labels
+    expect(glass).not.toMatch(/\[data-material-backdrop='light'\] \[data-material='(hero|floating)'\] \.glass-material/)
+  })
+
+  // ---- Phase B5.3: the light-backdrop optics (decision L-A) -----------------
+
+  /** Every rule whose selector names the light backdrop, as [selector, body]. */
+  const lightRules = () =>
+    [...glass.matchAll(/(?:^|\n)([^{}\n]*\[data-material-backdrop='light'\][^{}\n]*)\{([^}]*)\}/g)].map(
+      (m) => [m[1]!.trim(), m[2]!] as const,
+    )
+  const dialsOf = (body: string) =>
+    Object.fromEntries([...body.matchAll(/(--[\w-]+):\s*([^;]+);/g)].map((m) => [m[1], m[2]!.trim()]))
+
+  it('B5.3: exactly the measured light-backdrop optics ride on the declaration', () => {
+    const optics = Object.fromEntries(
+      lightRules()
+        .filter(([selector]) => !selector.endsWith('.glass-material') && selector !== `[data-material-backdrop='light']`)
+        .map(([selector, body]) => [selector, dialsOf(body)]),
+    )
+    expect(optics).toEqual({
+      // a clear slab on paper reads by a darker edge — only while it transmits
+      [`html:not([data-glass-tier='dense']) [data-material-backdrop='light'] [data-material='chrome']`]: {
+        '--glass-rim-polarity': '1',
+      },
+      // the Regular body rises to dark smoke under its dusk labels
+      [`[data-material-backdrop='light'] [data-material='floating']`]: {
+        '--glass-density': 'var(--material-density-regular-light)',
+      },
+      // tier C over a bright page starts from a higher floor
+      [`html[data-glass-tier='dense'] [data-material-backdrop='light']`]: {
+        '--material-density-dense-floor': 'var(--material-density-dense-floor-light)',
+      },
+    })
+  })
+
+  it('B5.3: the measured values — the dock keeps .16, the toolbar rises, the dense floor rises', () => {
+    const value = (name: string) => resolveToken(tokens, `var(${name})`)
+    // the Clear dock's density is untouched by the light backdrop: its labels
+    // are ink, and the scroll edge — not smoke — is what it needed
+    expect(lightRules().some(([selector, body]) => selector.includes(`'chrome'`) && /--glass-density/.test(body))).toBe(false)
+    expect(value('--material-density-clear')).toBe('0.16')
+    // the Regular body over white paper: denser than over a dark page, short of opaque
+    const regularLight = parseFloat(value('--material-density-regular-light'))
+    expect(regularLight).toBe(0.86)
+    expect(regularLight).toBeGreaterThan(parseFloat(value('--material-density-regular')))
+    // tier C keeps rank order on a bright page: chrome < floating, both short of opaque
+    const floor = parseFloat(value('--material-density-dense-floor-light'))
+    expect(floor).toBeGreaterThan(parseFloat(value('--material-density-dense-floor')))
+    const dense = (density: number) => floor + (1 - floor) * density
+    expect(dense(0.16)).toBeLessThan(dense(regularLight))
+    expect(dense(regularLight)).toBeLessThan(1)
+  })
+
+  it('B5.3: the rim ink is derived in OKLCH, and nothing per-frame rides on a backdrop', () => {
+    expect(tokens).toMatch(/--material-rim-ink:\s*oklch\(0\.22 0\.018 275\);/)
+    for (const [selector, body] of lightRules()) {
+      expect(body, selector).not.toMatch(/--glass-(light-|proximity|press|focus)/)
+    }
+    // the hero slab never stands on a light stage, so it has no light remap
+    expect(glass).not.toMatch(/\[data-material-backdrop='light'\] \[data-material='hero'\]/)
+  })
+
+  it('B5.3: the primitive reads the rim polarity with an inert default — exactly its shipped rims at 0', () => {
+    const primitive = read('components/experience/GlassSurface.vue')
+    // the three rim layers each fade their light rim by (1 − polarity) …
+    expect(primitive.match(/\(1 - var\(--glass-rim-polarity, 0\)\)/g)).toHaveLength(4)
+    // … and draw the ink rim at polarity × alpha, transparent at the default 0
+    expect(primitive.match(/var\(--material-rim-ink\) calc\([^;]*var\(--glass-rim-polarity, 0\)/g)).toHaveLength(3)
+    // the specular top lip is never part of the flip
+    expect(primitive).toContain('inset 0 1px 0 light-dark(rgba(255, 255, 255, 0.5), rgba(216, 210, 255, 0.32))')
+    // no call site may set the polarity — the preset layer owns it
+    for (const file of Object.keys(SURFACES)) {
+      expect(read(file), file).not.toContain('--glass-rim-polarity')
+    }
+  })
+
+  it('B5.3: tier A refracts in one pass over a light backdrop, three channels over a dark one', () => {
+    const primitive = read('components/experience/GlassSurface.vue')
+    expect(primitive).toMatch(
+      /html\[data-glass-tier='refract'\] \.glass-surface \{\s*backdrop-filter: var\(--filter-id\) /,
+    )
+    expect(primitive).toMatch(
+      /html\[data-glass-tier='refract'\] \[data-material-backdrop='light'\] \.glass-surface \{\s*backdrop-filter: var\(--filter-id-mono\) /,
+    )
+    const filters = [...primitive.matchAll(/<filter\s[\s\S]*?<\/filter>/g)].map((m) => m[0])
+    expect(filters).toHaveLength(2)
+    const mono = filters.find((filter) => filter.includes(':id="monoFilterId"')) ?? ''
+    expect(mono.match(/<feDisplacementMap/g)).toHaveLength(1)
+    expect(mono).not.toContain('feColorMatrix')
+    // both share the one map and the recipe's own output diffusion
+    expect(mono).toContain(':href="displacementMap"')
+    expect(mono).toContain(':stdDeviation="displace"')
+    const chain = filters.find((filter) => filter.includes(':id="filterId"')) ?? ''
+    expect(chain.match(/<feDisplacementMap/g)).toHaveLength(3)
   })
 
   // ---- Phase B5.1: the app dock's authored geometry ------------------------
