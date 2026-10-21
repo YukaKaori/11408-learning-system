@@ -244,7 +244,7 @@ capability probes → one tier, at boot, on <html> (data-glass-tier) → the mat
 |---|---|---|---|
 | **A** | `refract` | SVG-in-`backdrop-filter` renders (Blink) | refraction + all five other layers — unchanged |
 | **B** | `diffuse` | `backdrop-filter: blur()` available (WebKit, Gecko) | **the same slab, same preset dials, minus layer 1.** ND body, double rim, back-face, Fresnel arc and edge glow survive verbatim; diffusion carries what the bent edge used to. A rim-masked diffusion band may stand in for edge-weighted bend — only in tier B, only if measured on real Gecko/WebKit |
-| **C** | `dense` | no `backdrop-filter`, **or** `prefers-reduced-transparency`, **or** `prefers-contrast: more` | transmission down, density up toward opaque; every rim and depth cue kept. A designed state (Apple treats Reduce Transparency as a material state, not a degradation) |
+| **C** | `dense` | no `backdrop-filter`, **or** `prefers-reduced-transparency`, **or** `prefers-contrast: more`, **or** `forced-colors: active` (since 2026-10-21) | transmission down, density up toward opaque; every rim and depth cue kept. A designed state (Apple treats Reduce Transparency as a material state, not a degradation). Under forced colours the system palette also replaces the body and drops every shadow, so the primitive draws an opaque `Canvas` body with a 1px `CanvasText` edge and hides its optical layers, and a current item is marked with `Highlight` |
 
 Rules:
 
@@ -270,3 +270,12 @@ gone; `materialTier.spec.ts` keeps it out. Verified at the real surface in
 Chrome, Edge and bundled Chromium (all `refract`; `diffuse`/`dense` forced via
 the root attribute and via emulated reduced transparency). Gecko and WebKit
 were **not** executed — that row belongs to the release gate (decision F).
+
+**Forced colours — Shipped (2026-10-21).** Windows High Contrast does not imply
+`prefers-contrast: more` (a custom palette reports `custom`), so the resolver
+asks `(forced-colors: active)` on its own and lands on tier C. Before, the
+slabs stayed in tier A under forced colours: a 10 %-alpha `Canvas` body over a
+live refraction, no edge (box-shadows are dropped), forced text over whatever
+the glass bent, and no marker on the current dock item. Verified with
+Chromium's forced-colours emulation in both system palettes; real Windows High
+Contrast was not run.

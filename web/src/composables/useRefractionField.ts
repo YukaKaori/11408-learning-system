@@ -14,9 +14,9 @@ import { MAP_SETTLE_DELAY } from '@/components/experience/displacementMap'
  * half a second, and when the hand rests the lens under it relaxes too.
  *
  * Nothing is lit, brightened, dimmed or revealed: every pixel this layer draws
- * is a wallpaper pixel taken from somewhere nearby. Over the open field (one
- * flat colour) a lens has nothing to bend and is next to invisible; over a
- * lotus the petals' hairlines visibly bend. That is the whole effect.
+ * is a wallpaper pixel taken from somewhere nearby. Over open sky (near-flat
+ * colour) a lens has little to bend and is next to invisible; over a petal, a
+ * droplet or the ribbon, their edges visibly bend. That is the whole effect.
  *
  * Environment, never material: no GlassSurface, no backdrop-filter, no SVG
  * filter, no budget instance, no pointer listener of its own. The optics are
@@ -832,6 +832,11 @@ export interface PlateLayer {
   image: CanvasImageSource
   /** the untransformed layout box, stage px */
   box: Box
+  /**
+   * the part of the image shown in the box, natural image px — set when CSS
+   * fits the image with `object-fit: cover`; absent, the whole image fills it
+   */
+  source?: Box
   /** the CSS transform as a 2D matrix [a, b, c, d, e, f], about `origin` */
   matrix: readonly [number, number, number, number, number, number]
   /** transform-origin, px within the box */
@@ -876,7 +881,20 @@ export function buildPlate(canvas: HTMLCanvasElement, input: PlateInput): Plate 
     ctx.translate(layer.box.x + layer.origin.x, layer.box.y + layer.origin.y)
     ctx.transform(a, b, c, d, e, f)
     ctx.translate(-layer.origin.x, -layer.origin.y)
-    ctx.drawImage(layer.image, 0, 0, layer.box.width, layer.box.height)
+    const s = layer.source
+    if (s)
+      ctx.drawImage(
+        layer.image,
+        s.x,
+        s.y,
+        s.width,
+        s.height,
+        0,
+        0,
+        layer.box.width,
+        layer.box.height,
+      )
+    else ctx.drawImage(layer.image, 0, 0, layer.box.width, layer.box.height)
     ctx.restore()
   }
   const pixels = ctx.getImageData(0, 0, canvas.width, canvas.height)
@@ -897,6 +915,38 @@ export function blendOperation(mode: string): GlobalCompositeOperation {
   return (!mode || mode === 'normal' ? 'source-over' : mode) as GlobalCompositeOperation
 }
 
+/**
+ * Where one axis of a computed `object-position` puts the image: `free` is the
+ * box's length minus the drawn image's (≤ 0 under `cover`). A percentage takes
+ * that share of it, a length is an offset as it stands; anything else (a
+ * `calc()`) falls back to the centre.
+ */
+function positionOffset(term: string | undefined, free: number): number {
+  const value = parseFloat(term ?? '')
+  if (!Number.isFinite(value)) return free / 2
+  if (term!.endsWith('%')) return (free * value) / 100
+  if (term!.endsWith('px')) return value
+  return free / 2
+}
+
+/**
+ * The part of an image that `object-fit: cover` shows in a box, in natural
+ * image px: the image is scaled to cover the box and placed by the computed
+ * `object-position` (`"10% 80%"`, `"0px 12px"`). The plate draws exactly this
+ * rectangle into the box, so a lens bends the crop the stage shows.
+ */
+export function coverSource(
+  natural: { width: number; height: number },
+  box: { width: number; height: number },
+  position: string,
+): Box {
+  const scale = Math.max(box.width / natural.width, box.height / natural.height)
+  const [px, py] = position.trim().split(/\s+/)
+  const x = positionOffset(px, box.width - natural.width * scale)
+  const y = positionOffset(py, box.height - natural.height * scale)
+  return { x: -x / scale, y: -y / scale, width: box.width / scale, height: box.height / scale }
+}
+
 /** The working resolution: the device's, capped, and stepped down for very large stages. */
 export function workingDpr(deviceRatio: number, width: number, height: number): number {
   const capped = Math.min(deviceRatio || 1, WAKE.dprCap)
@@ -908,14 +958,23 @@ export function workingDpr(deviceRatio: number, width: number, height: number): 
 // Lifecycle — the component-facing composable
 // ---------------------------------------------------------------------------
 
-/** The gate: a fine hovering pointer and no reduced-motion preference. */
+/**
+ * The gate: a fine hovering pointer and no reduced-motion preference — the
+ * spotlight's two questions — and a wallpaper to bend: under forced colours
+ * the stage hides it (`LoginView`), so there is nothing for a lens to re-draw.
+ */
 export const WAKE_QUERIES = {
   pointer: '(hover: hover) and (pointer: fine)',
   reducedMotion: '(prefers-reduced-motion: reduce)',
+  forcedColors: '(forced-colors: active)',
 } as const
 
 export function wakeQualifies(matches: (query: string) => boolean): boolean {
-  return matches(WAKE_QUERIES.pointer) && !matches(WAKE_QUERIES.reducedMotion)
+  return (
+    matches(WAKE_QUERIES.pointer) &&
+    !matches(WAKE_QUERIES.reducedMotion) &&
+    !matches(WAKE_QUERIES.forcedColors)
+  )
 }
 
 export interface RefractionFieldSources {
@@ -927,8 +986,9 @@ export interface RefractionFieldSources {
   stage: () => HTMLElement | null
   /**
    * The wallpaper's image layers. Each image fills an untransformed frame (its
-   * parent, which carries the layer's blend and opacity) and may carry its own
-   * transform; the plate re-draws them the same way.
+   * parent, which carries the layer's blend and opacity), may be fitted to it
+   * with `object-fit: cover`, and may carry its own transform; the plate
+   * re-draws them the same way.
    */
   layers: () => ReadonlyArray<HTMLImageElement | null>
   /** Glass slabs a lens fades out under. */
@@ -949,9 +1009,18 @@ function plateLayer(img: HTMLImageElement | null, stageRect: DOMRect): PlateLaye
   const style = getComputedStyle(img)
   const frameStyle = getComputedStyle(frame)
   const [ox, oy] = style.transformOrigin.split(/\s+/).map((part) => parseFloat(part))
+  const box = relativeBox(frame, stageRect)
   return {
     image: img,
-    box: relativeBox(frame, stageRect),
+    box,
+    source:
+      style.objectFit === 'cover'
+        ? coverSource(
+            { width: img.naturalWidth, height: img.naturalHeight },
+            box,
+            style.objectPosition,
+          )
+        : undefined,
     matrix: parseTransform(style.transform),
     origin: { x: ox ?? 0, y: oy ?? 0 },
     blend: blendOperation(frameStyle.mixBlendMode),

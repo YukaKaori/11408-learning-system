@@ -90,6 +90,10 @@ states**, not as degradations. So should we:
   `docs/liquid-material-system.md` §7).
 - `prefers-contrast: more` — the same tier C: labels and edges strengthen,
   optics recede.
+- `forced-colors: active` — tier C as well (it does not imply more contrast),
+  and the system palette owns every colour: the slab draws an opaque `Canvas`
+  body with a `CanvasText` edge, and a current item takes `Highlight`.
+  **Shipped 2026-10-21.**
 - `prefers-reduced-motion` — already zero-by-construction. The light variables
   default to 0 and the gates never enable them (`SKILL.md` §5).
 - Coarse pointer — not an accessibility preference but the same shape of input:
@@ -227,9 +231,19 @@ into one answer per rank:
 |---|---|---|
 | `chrome` (the docks) | density **unchanged** (.16); **rim polarity 1** — front and back rims in ink (`--material-rim-ink`), the specular top lip stays light | its labels are ink: more smoke would *lower* their contrast. The far edge of a clear slab on paper reads darker than the paper, so the rim that proves the slab exists is ink |
 | `floating` (the toolbar) | density **.62 → .86** (`--material-density-regular-light`); rims stay light | its labels are dusk, and dusk is only legible on unmistakably dark glass; its rims are seen against its own dark body |
-| `hero` | nothing — it never stands on a light stage | |
+| `hero` (since 2026-10-21, the daylight sign-in room) | density **.34 → .16** (`--material-density-clear`, the dock's value — equal, never below, so the order holds); **rim polarity 1**; the dock's ink palette, plus its own remap — hairlines and hover pools in ink, the brand at the daylight ladder's ink step (`--landing-accent-ink`), the error line at `--material-danger-ink`, a secondary step at 93 % of its primary ink, and ink-polarity skins for its inputs, checkbox and links | its text goes to ink beside an ink dock: the stage-tuned smoke existed to carry dusk text over bright petals, and under ink it would only grey the slab and dim the text. A dark hero beside a clear dock would be two materials on one stage (`components.md` §7). Rank stays in its depth, Fresnel and edge energy |
 | every rank, tier A | refraction in **one pass** (`--filter-id-mono`): the bend without the per-channel split | over white, a displaced channel that reaches past the captured backdrop leaves a saturated line along the rim — loud aberration (`materials.md` §4) |
 | every rank, tier C | the dusk palette and light rims return (the ink flip and the polarity are gated off `dense`); the dense floor rises .72 → .86 | the body is near-opaque smoke whatever the page; ink on it was illegible (1.6:1) |
+
+**Over a picture, not paper (2026-10-21).** B5.3 tuned the ink against the shell's white
+pages. The daylight sign-in room puts clear glass over a photograph — petals, droplets and a
+ribbon — and the measurement moved again: the ink's idle step went **.7 → .8** for both Clear
+ranks, ink dock labels gained a tight near halo (`--on-glass-halo-near`, transparent for dusk
+labels, so the dark-theme app dock is pixel-identical), and the hero's own secondary step went
+to 93 % of its primary ink. Measured over the picture (worst 5 % of pixels under each text, both
+themes and locales, 320–1440 px): subtitle ≥ 5.5, field labels ≥ 5.5, "remember me" ≥ 4.5,
+"forgot password" ≥ 4.9, dock labels ≥ 4.7, colophon ≥ 9.9; input icons ≥ 3.5 (non-text). The
+light-shell app dock gains the darker idle step too (it measured 4.96 at .7).
 
 The idle dock labels also needed one value: `--on-glass-text-dim` under the ink
 flip went .6 → .7 (3.7:1 → 5.0:1). Measured label contrast after B5.3 (minimum
@@ -243,7 +257,7 @@ Who declares:
 | Stage | Source of the declaration |
 |---|---|
 | the authenticated shell (`AppLayout`) | derived from the theme (`isDark`) — the shell's backdrop *is* the theme, which is why P1 was unblocked. (`isDark` tracks the OS preference live since the B4 store fix; before it, `system` mode went stale on an OS flip.) |
-| the login stage | authored per gallery: `dark` for the sign-in room in both themes; `light` for the Product and Sponsor rooms in both (the Sponsor room joined them when both became daylight pages, 2026-09-30) |
+| the login stage | authored for the stage: `light` for all three rooms in both themes since the sign-in room became a daylight room (2026-10-21); before, `dark` for the sign-in room and `light` for the Product and Sponsor rooms (the Sponsor room joined them when both became daylight pages, 2026-09-30) |
 | a future stage | whoever owns the stage, at author time |
 
 **Theme ≠ backdrop.** Before B4 the tint tokens and the primitive's rims

@@ -27,8 +27,12 @@ M   GLASS CHROME       GlassSurface recipes (budgeted — components.md §1)
 C   CONTENT            solid
 ```
 
-Every stage that mounts Clear glass (`chrome`, `hero`) must own E2 and E5. E1, E3 and E4
-are optional and are what make a stage a *place* rather than a void.
+Every stage that mounts Clear glass (`chrome`, `hero`) must own E5, and a **dark** stage must
+own E2 as well: there the dimming is what makes Clear legal. A stage that declares `light` and
+whose glass answers in ink (the clear-slab optics, `adaptive-material.md` §6) needs no E2 — an
+atmosphere could only dim a bright picture to slate or whiten it (forbidden); the Login stage
+has been such a daylight room since 2026-10-21. E1, E3 and E4 are optional and are what make a
+stage a *place* rather than a void.
 
 ### E1 — Wallpaper
 
@@ -112,9 +116,10 @@ chrome dock's labels go to dark ink. No surface reads its own pixels.
 
 - The declaration is **stage-owned**. In the authenticated shell its *source* is the theme
   (`AppLayout` derives it from `isDark`, `stores/app.ts`). On the landing it is **authored
-  per gallery**: the sign-in room is `dark` in both themes; the two daylight galleries —
-  the Product and Sponsor rooms (light and solid since 2026-09-30, `--landing-*` tokens) —
-  are `light` in both. **Theme ≠ backdrop**; the theme is only one stage's way of knowing.
+  for the stage**: since 2026-10-21 all three rooms — the sign-in room (the supplied
+  photograph), the Product and Sponsor rooms (light and solid since 2026-09-30,
+  `--landing-*` tokens) — are `light` in both themes (the sign-in room was `dark` before).
+  **Theme ≠ backdrop**; the theme is only one stage's way of knowing.
 - Near-static: changes on theme flip or gallery change, never on scroll or per frame.
 - Declared, never sampled — `adaptive-material.md` §7 gives the six reasons.
 - The environment layers themselves (E1–E4) keep following the **theme**; only the
@@ -128,21 +133,40 @@ chrome dock's labels go to dark ink. No surface reads its own pixels.
 
 ## 2. The two environments this product has
 
-### The Login stage (unauthenticated installation)
+### The Login stage (unauthenticated installation) — the daylight room
 
 ```
-E1  wallpaper (decision W: the rose)  at rest, cover-fit, NOT breathing (the wake re-draws it)
-E2  atmosphere: graded dusk + slab pool  --environment-atmosphere, per theme, deeper under reduced transparency
-    secondary: the lotus drawing     screen-blended on the shadowed wall, faint at rest, opacity glow only
-E4  RevealField (the wake)            desktop fine-pointer only, never mounted otherwise
-E3  ambient pools stage-wide          slow drifting light the dock and slab refract
-E5  dark (login) / light (product and sponsor rooms), in both themes — data-material-backdrop (B4)
-M   GlassDock (chrome) · sign-in slab (hero)
+E1  wallpaper: the supplied artwork   public/images/welcome-bg.png (+ its WebP twin), one picture,
+                                      cover-fit, cropped per stage shape, shown as it is (no opacity,
+                                      blend, filter or loop — the wake re-draws it)
+E4  RefractionField (the wake)        desktop fine-pointer only; never under reduced motion or forced
+                                      colours; the plate reads the picture's object-fit / -position
+E5  light, in all three rooms and both themes — data-material-backdrop
+M   GlassDock (chrome) · sign-in slab (hero) — both in their ink polarity (adaptive-material.md §6)
 ```
 
-**Status: Shipped (B3, 2026-09-16).** Replaced: the lotus *object* on black, the `.95` shroud,
-the card aperture and the 576 px radial reveal. The welcome hero shares E1 + E2 (no wake: it
-owns no spotlight).
+No E2 and no E3: the picture is high-key and meant to be seen at full exposure. A dusk
+atmosphere turned it to slate; a light one would wash it out and is forbidden anyway; drifting
+pools behind three refracting slabs re-ran their filters every frame for no visible gain (the
+stage drew ~6× the idle frame time at rest in the harness). Legibility comes from the glass's
+polarity, measured over the real picture: every text on the slab, the dock and the colophon at
+≥ 4.5 : 1 (worst 5 % of pixels) from 320 px phones to 1440 px, in both themes and locales.
+
+The crop is authored because the art is landscape, its peonies at the far left and right:
+centred on wide and landscape stages (a peony either side of the slab), the left edge at
+`10% 80%` on portrait tablets (the large peony in the open band under the slab), the left edge
+whole on tall phones (the peony seen through the slab's lower half, its petals and stem below
+it). A frame run past the stage's foot on phones lowered the bloom into the open band but put
+its darkest petals behind the dock's labels and the colophon (3.3 and 2.9 : 1): rejected.
+
+**Status: Shipped (2026-10-21).** Replaced the B3 / round-3 dusk room: the pink lotus placed
+twice, the graded dusk atmosphere and the three ambient pools. Under forced colours the picture
+steps back to the system canvas. The welcome hero (`/welcome`, `GlassScene`) keeps the dusk lotus
+environment and its tokens (`--environment-field`, `-lotus-light`, `-atmosphere`); it was not
+part of this change.
+
+*Before 2026-10-21 (B3, round 3):* E1 the pink lotus placed twice on a dusk field · E2 graded
+dusk + slab pool · E3 three drifting pools · E4 the wake · E5 `dark` for the sign-in room.
 
 ### The authenticated shell
 
@@ -185,6 +209,9 @@ frame loop; no Vue reactivity for per-frame values (`vue-patterns.md` §8).
 - **Reduced transparency / increased contrast:** the material moves to tier C
   (`materials.md` §8); the environment is unaffected except that E2 may deepen so labels on
   tier-C glass keep contrast.
+- **Forced colours (Windows High Contrast):** the material moves to tier C and turns opaque
+  in the system palette; a decorative picture behind forced text only fights it, so the stage
+  hides its wallpaper and never mounts the wake (shipped 2026-10-21 on the Login stage).
 - **Touch:** wallpaper + atmosphere, no wake. Nothing the user needs is inside an aperture.
 - **Contrast:** on-glass labels are measured against the *darkest and brightest* the
   environment can be under the material (wallpaper through the atmosphere, pool at full

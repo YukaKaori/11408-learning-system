@@ -456,10 +456,12 @@ defineExpose({ focusItem })
   font-size: var(--text-sm);
   font-weight: 550;
   letter-spacing: 0.02em;
-  /* Halo tokens (glass.css), overridable from the stage: over the bright
-     Product page the labels flip to dark ink and the dark halo would read
-     as smudge. */
-  text-shadow: 0 1px 10px var(--on-glass-halo);
+  /* Halo tokens (glass.css), overridable from the stage: over a bright room
+     the labels flip to dark ink and the dark halo would read as smudge. The
+     near halo is transparent for dusk labels and hugs ink ones. */
+  text-shadow:
+    0 0 3px var(--on-glass-halo-near),
+    0 1px 10px var(--on-glass-halo);
   cursor: pointer;
   transition:
     color 400ms var(--ease-out),
@@ -499,6 +501,7 @@ defineExpose({ focusItem })
 .dock-item.is-active {
   color: var(--on-glass-text);
   text-shadow:
+    0 0 3px var(--on-glass-halo-near),
     0 1px 10px var(--on-glass-halo),
     0 0 18px var(--on-glass-halo-active);
 }
@@ -610,6 +613,27 @@ defineExpose({ focusItem })
   }
 }
 
+/*
+ * Forced colours (Windows High Contrast): the light and the lens are drawn
+ * with shadows, gradients and a second slab, all of which the system palette
+ * erases — the current item would be marked by nothing. It is marked the way
+ * the system marks a selection instead: its own highlight pair. The bar itself
+ * keeps the primitive's forced edge.
+ */
+@media (forced-colors: active) {
+  .dock-indicator,
+  .dock-lens-track {
+    display: none;
+  }
+
+  .dock-item.is-active {
+    forced-color-adjust: none;
+    background-color: Highlight;
+    color: HighlightText;
+    text-shadow: none;
+  }
+}
+
 @media (max-width: 640px) {
   .dock-frame.has-lens {
     --dock-cell: 48px;
@@ -678,5 +702,26 @@ defineExpose({ focusItem })
   line-height: 1.1;
   text-overflow: ellipsis;
   white-space: nowrap;
+}
+
+/*
+ * English on the narrowest phones (< 360px). Six cells of 40.7px (at 320px)
+ * cannot hold "Syllabus", "Practice" or "Mistakes" at 12px — they ellipsized,
+ * the open item of the 2026-10-17 pass. The row gives the cells its gaps and
+ * a little of its side padding (45px each at 320px, still above the 44px
+ * touch floor) and the label steps down to a native tab bar's size. Only the
+ * inline geometry moves: the block padding — the part the concentric radius is
+ * derived from — and the item height stay. Chinese two-character labels fit
+ * the shipped bar and are left exactly as they were.
+ */
+@media (max-width: 359px) {
+  .dock--stacked:lang(en) {
+    gap: 0;
+    padding-inline: calc(var(--material-inset) + var(--space-1));
+  }
+
+  .dock--stacked:lang(en) .dock-item__label {
+    font-size: var(--app-dock-label-narrow);
+  }
 }
 </style>

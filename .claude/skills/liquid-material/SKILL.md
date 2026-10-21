@@ -113,20 +113,24 @@ deliberate, documented renegotiation — never a side effect.
    is a *composition* of it. Never fork the displacement chain; never write a
    second `backdrop-filter: url(#…)` anywhere.
 2. **The material guard is a test** (`components/experience/__tests__/glassBudget.spec.ts`).
-   Since Phase 17.2 it fails on four things: a fourth *file* mounting `GlassSurface`,
-   a forked refraction chain, any `backdrop-filter` outside `GlassSurface.vue`
-   (the `GlassScene` veil exception was retired in B3), and any reference to the
-   retired glassmorphism family. `environment.spec.ts` (B3) guards the
+   Since Phase 17.2 it fails on four things: a *file* mounting `GlassSurface`
+   that is not allow-listed (four since 2026-10-21), a forked refraction chain,
+   any `backdrop-filter` outside `GlassSurface.vue` (the `GlassScene` veil
+   exception was retired in B3), and any reference to the retired glassmorphism
+   family — and, since 2026-10-21, an entrance played by the element *around* a
+   slab (it cuts the slab off from its backdrop, `references/implementation.md`
+   §9). `environment.spec.ts` (B3) guards the
    environment: no primitive in any environment layer, no second cursor, the
    576px spotlight and its shroud stay retired. `styles/__tests__/materialTokens.spec.ts` additionally pins
    each preset to the values its surface shipped with.
    **The budget** is counted in **logical material surfaces** — one per
    (recipe, host container, role) that mounts the primitive, visible or not
-   (`references/components.md` §1 defines the unit). **5** today: the landing
+   (`references/components.md` §1 defines the unit). **6** today: the landing
    dock and its selection lens (A1), the mobile app dock (B5), the sign-in slab,
-   the note selection toolbar; at most 3 primitives on one screen (the login
-   stage). Environment layers, the indicator light, `.glass-material` skins and
-   adaptive states are **never** instances. Note that
+   the note selection toolbar, the note editor's `[[` link popover (2026-10-21,
+   never on screen with the toolbar); at most 3 primitives on one screen (the
+   login stage). Environment layers, the indicator light, `.glass-material`
+   skins and adaptive states are **never** instances. Note that
    the shipped guard counts *files*, not surfaces — a recipe mounted twice is
    invisible to it — so B5 adds a surface registry the guard reads.
 3. **Every surface declares its material.** `GlassSurface`'s `material` prop is
@@ -174,14 +178,20 @@ measured against the real shell content — per rank, `references/adaptive-mater
 §6: the clear dock keeps its density and draws its rims in ink
 (`--glass-rim-polarity`); the Regular toolbar's body rises to `.86` under its dusk
 labels; tier A refracts in one pass (no channel split) over a light backdrop; tier
-C keeps the dusk palette. Floating chrome over scrolling content also owes its
+C keeps the dusk palette. **Shipped (2026-10-21):** the hero's answer — on the
+daylight sign-in room it takes the dock's Clear density and its ink (rims, text,
+controls), and over a picture the ink's idle step is .8 with a tight near halo
+under dock labels. Floating chrome over scrolling content also owes its
 container the scroll edge (`references/scroll-edge.md`, shipped B5.2 under the app
-dock).
+dock). On a coarse pointer every on-glass control answers within an invisible
+44px hit area (`glass.css`, "Touch reach"), stacked neighbours sharing what
+overlaps.
 
 **Every engine.** The material is delivered in three tiers decided **once at boot
 by capability, never by browser brand** (`references/materials.md` §8): A `refract`
 (Blink), B `diffuse` (WebKit, Gecko — same slab, same dials, minus refraction),
-C `dense` (no `backdrop-filter`, or reduced transparency / increased contrast).
+C `dense` (no `backdrop-filter`, or reduced transparency / increased contrast /
+forced colours — the last opaque in the system palette, since 2026-10-21).
 Edge and Chrome are the same path by construction.
 
 ## 5. Motion budget

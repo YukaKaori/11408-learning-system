@@ -460,8 +460,6 @@ useGlassSpotlight(stageRef, {
 .selection-toolbar {
   position: absolute;
   z-index: 30;
-  /* One-shot settle on mount: light arrives, the slab does not travel. */
-  animation: toolbar-settle var(--duration-base) var(--ease-out) both;
 }
 
 @keyframes toolbar-settle {
@@ -475,8 +473,18 @@ useGlassSpotlight(stageRef, {
   }
 }
 
-/* Glass has mass: the resize is damped, never springy. */
+/*
+ * One-shot settle on mount: light arrives, the slab does not travel. Played by
+ * the slab itself (corrected 2026-10-21): it ran on the wrapper above with
+ * `both`, and the effect that fill leaves made the wrapper a backdrop root once
+ * the settle had played — the slab refracted and diffused an empty backdrop,
+ * the note line under the bar showed through the smoke as crisp type, and the
+ * B5.3 diffusion (displace 3) never reached it. On the slab the backdrop is
+ * right from the first frame. Glass has mass: the resize is damped, never
+ * springy.
+ */
 .toolbar-slab {
+  animation: toolbar-settle var(--duration-base) var(--ease-out) backwards;
   transition: width var(--duration-slow) var(--ease-out);
 }
 
@@ -584,11 +592,8 @@ useGlassSpotlight(stageRef, {
 }
 
 @media (prefers-reduced-motion: reduce) {
-  .selection-toolbar {
-    animation: none;
-  }
-
   .toolbar-slab {
+    animation: none;
     transition: none;
   }
 }

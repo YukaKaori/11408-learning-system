@@ -17,29 +17,25 @@ import {
 } from '@/components'
 import type { DockItem, IconName } from '@/components'
 import type { MaterialBackdrop } from '@/components/experience/materials'
-import lotusUrl from '@/assets/environment/lotus.webp'
 
-// A room with a sign-in slab in it (Phase B3 — `environment.md`). The stage is
-// composed back to front as environment, then material, then content:
+// A room with a sign-in slab in it (`environment.md`). The stage is composed
+// back to front as environment, then material, then content:
 //
-//   E1 wallpaper    the field (the stage's own dusk colour) and the pink lotus,
-//                   placed twice — present at rest, never behind the form
+//   E1 wallpaper    the supplied artwork — icy-blue peonies, a translucent
+//                   ribbon, droplets and petals on an ice-white ground —
+//                   cover-fit and cropped per stage shape; present at rest
 //   E4 wake         RefractionField — where the pointer is, a small liquid lens
 //                   bends the wallpaper; its residue relaxes (desktop only)
-//   E2 atmosphere   a dusk graded from above, deepest toward the dock; no blur,
-//                   no white. Above the wake, so the lens is dimmed exactly as
-//                   the wallpaper it bends
-//   E3 ambient      three slow pools of the room's light
 //   M  glass        the sign-in slab (hero) and the dock (chrome)
 //   C  content      the form
 //
-// The wallpaper is the translucent pink lotus this project generated for the
-// Login stage in Phase 4 (scripts/environment/source) — one flower, used twice
-// rather than a second style: a near bloom and a far one, the far one mirrored
-// so both lean toward the middle. On a wide stage they stand either side of the
-// slab, each running off its own edge, and the middle is open air; on a
-// portrait stage they take the corners above and below the form. Screen-blended
-// onto the field, so the artwork's black ground is simply the room.
+// A daylight room since 2026-10-21 (it was a dusk room with a pink lotus):
+// the picture is meant to be seen at full exposure, so nothing dims it (an
+// atmosphere would turn the ice to slate) and nothing drifts over it (the
+// ambient pools went with the dusk; behind three refracting slabs every moving
+// pixel re-runs their filters, frame after frame). The stage declares a light
+// backdrop instead and the glass answers in ink — the clear-slab optics in
+// glass.css — which is what makes Clear glass legal in a bright room.
 //
 // Environment layers are not glass and not budget instances. Every material
 // cue lives in GlassSurface + glass.css; the one light lives in
@@ -47,6 +43,12 @@ import lotusUrl from '@/assets/environment/lotus.webp'
 // composition. The dock moves the camera between three galleries — the sign-in
 // slab, the product tour and the sponsor page — full-screen layers that
 // appear behind the dock while the room and the glass remain.
+
+// E1 — the artwork lives in public/images: the PNG as supplied (the source and
+// the fallback) and its WebP twin, which is what a browser actually downloads
+// (scripts/environment/welcome.cjs; 140 KB against 1.7 MB, the same picture).
+const wallpaperPng = `${import.meta.env.BASE_URL}images/welcome-bg.png`
+const wallpaperWebp = `${import.meta.env.BASE_URL}images/welcome-bg.webp`
 
 const { t } = useI18n()
 const route = useRoute()
@@ -120,13 +122,11 @@ function onDockNavigate(target: string) {
   gallery.value = target as GalleryName
 }
 
-// The stage's declared backdrop (Phase B4, `environment.md` E5), authored per
-// gallery and the same in both themes: the sign-in room is dusk wherever its
-// glass stands, and the two galleries — Product and Sponsor — are daylight
-// rooms. The material reads this, never the theme.
-const stageBackdrop = computed<MaterialBackdrop>(() =>
-  gallery.value === 'login' ? 'dark' : 'light',
-)
+// The stage's declared backdrop (Phase B4, `environment.md` E5), authored for
+// the stage and the same in both themes: since the sign-in room became a
+// daylight room, all three rooms — sign-in, Product, Sponsor — are light behind
+// their glass. The material reads this, never the theme.
+const stageBackdrop: MaterialBackdrop = 'light'
 
 function closeGallery() {
   const from = gallery.value
@@ -136,11 +136,10 @@ function closeGallery() {
   }
 }
 
-// Environment elements the wake reads: the wallpaper's two lotus layers (the
-// plate it bends is re-drawn from them) and the two slabs a lens fades out under.
-const lotusNearRef = ref<HTMLImageElement | null>(null)
-const lotusFarRef = ref<HTMLImageElement | null>(null)
-const lotusLayers = computed(() => [lotusNearRef.value, lotusFarRef.value])
+// Environment elements the wake reads: the wallpaper (the plate it bends is
+// re-drawn from it, crop and all) and the two slabs a lens fades out under.
+const wallpaperRef = ref<HTMLImageElement | null>(null)
+const wallpaperLayers = computed(() => [wallpaperRef.value])
 const dockAnchorRef = ref<HTMLElement | null>(null)
 const wakeShelters = computed(() => [cardEl.value, dockAnchorRef.value])
 
@@ -213,33 +212,26 @@ function toggleLocale() {
 <template>
   <main ref="stageRef" class="login-stage" :data-material-backdrop="stageBackdrop">
     <!-- Environment — decorative, behind everything, never glass. The
-         wallpaper is the stage's own colour and one lotus placed twice. -->
-    <div class="stage-lotus stage-lotus--near" aria-hidden="true">
+         wallpaper is one picture, cover-fit; the frame is the layer the wake
+         re-draws, the WebP the file a browser fetches. -->
+    <picture class="stage-wallpaper" aria-hidden="true">
+      <source type="image/webp" :srcset="wallpaperWebp" />
       <img
-        ref="lotusNearRef"
-        class="stage-lotus__art"
-        :src="lotusUrl"
+        ref="wallpaperRef"
+        class="stage-wallpaper__art"
+        :src="wallpaperPng"
         alt=""
         decoding="async"
         fetchpriority="high"
       />
-    </div>
-    <div class="stage-lotus stage-lotus--far" aria-hidden="true">
-      <img ref="lotusFarRef" class="stage-lotus__art" :src="lotusUrl" alt="" decoding="async" />
-    </div>
+    </picture>
     <RefractionField
       :light="spotlight"
       :stage="stageRef"
-      :layers="lotusLayers"
+      :layers="wallpaperLayers"
       :shelters="wakeShelters"
       :active="gallery === 'login'"
     />
-    <div class="stage-atmosphere" aria-hidden="true"></div>
-    <div class="stage-ambient" aria-hidden="true">
-      <i class="ambient-pool ambient-pool--rose"></i>
-      <i class="ambient-pool ambient-pool--violet"></i>
-      <i class="ambient-pool ambient-pool--warm"></i>
-    </div>
 
     <GlassSurface
       ref="cardRef"
@@ -370,7 +362,7 @@ function toggleLocale() {
 /*
  * The stage — a room, not a void. A single column (short viewports scroll
  * instead of clipping): sign-in slab → dock → colophon. Its own colour is the
- * environment field, seen only while the wallpaper loads.
+ * wallpaper's mean, seen only while the picture loads.
  */
 .login-stage {
   position: relative;
@@ -381,129 +373,49 @@ function toggleLocale() {
   min-height: 100dvh;
   padding: var(--space-6);
   /* clip, not hidden: hidden leaves the stage programmatically scrollable
-     (the ambient bleed gives it hidden overflow), and the engine will
-     sometimes scroll it while the Product layer enters — visibly teleporting
-     the dock. clip is not a scroll container: nothing can. */
+     whenever anything overflows it (a room entering at 1.012×), and the engine
+     will sometimes scroll it while the Product layer enters — visibly
+     teleporting the dock. clip is not a scroll container: nothing can. */
   overflow: clip;
-  background-color: var(--environment-field);
+  background-color: var(--environment-daylight-field);
   isolation: isolate;
 }
 
-/* Environment layers share one rule: positioned, decorative, inert. */
-.stage-lotus,
-.stage-atmosphere,
-.stage-ambient {
+/*
+ * E1 — the wallpaper: one picture, cover-fit, placed by where its flowers
+ * stand. The artwork is landscape — a peony low at its left edge, one high at
+ * its right, the ribbon and the droplets crossing the middle — so the crop is
+ * authored per stage shape (the variables below), and every crop keeps a
+ * flower in the open: the slab may stand over the middle, never over every
+ * bloom.
+ *
+ * Shown as it is: no opacity, no blend, no filter, no tone curve. The wake
+ * re-draws it pixel for pixel (the plate reads its box, `object-fit` and
+ * `object-position`), and anything applied here would misregister the lens.
+ * Static by rule for the same reason.
+ */
+.stage-wallpaper {
   position: absolute;
+  inset: 0;
+  display: block;
   pointer-events: none;
 }
 
-/*
- * E1 — the wallpaper: the field (this stage's background colour) and the lotus,
- * twice. Each placement is authored by where its bloom stands — the centre of
- * the cup, (--lotus-x, --lotus-y) on the stage — and by its width; the cup sits
- * at 39.7% × 30.7% of the artwork, and it is also the pivot the far bloom is
- * mirrored and turned about, so a placement never drifts when it turns.
- *
- * Screen blend: the artwork is light on black, so its ground adds nothing and
- * only the petals' light lands on the field — no frame, no card edge, at any
- * crop. Static by rule: the wake re-draws these layers pixel for pixel, and a
- * moving layer would ghost against its own refraction. The ambient pools carry
- * the room's life.
- */
-.stage-lotus {
-  left: calc(var(--lotus-x) - 0.397 * var(--lotus-width));
-  top: calc(var(--lotus-y) - 0.307 * var(--lotus-width) * 880 / 760);
-  width: var(--lotus-width);
-  aspect-ratio: 760 / 880;
-  mix-blend-mode: screen;
-  opacity: calc(var(--environment-lotus-light) * var(--lotus-depth, 1));
-}
-
-.stage-lotus__art {
+.stage-wallpaper__art {
   display: block;
   width: 100%;
   height: 100%;
-  transform-origin: 39.7% 30.7%;
-  transform: scaleX(var(--lotus-mirror, 1)) rotate(var(--lotus-turn, 0deg));
-}
-
-/* Wide stages: a diagonal. The near bloom high on the right, running off the
-   right edge; the far one low on the left, running off the left edge —
-   smaller, quieter and mirrored to lean inward. Sized by the stage's height,
-   placed from its edges, so the slab keeps open air on every side. */
-.stage-lotus--near {
-  --lotus-x: calc(100% - 10.4vw);
-  --lotus-y: 24.5vh;
-  --lotus-width: 62vh;
-  --lotus-turn: -4deg;
-}
-
-.stage-lotus--far {
-  --lotus-x: 11.8vw;
-  --lotus-y: 62vh;
-  --lotus-width: 52vh;
-  --lotus-mirror: -1;
-  --lotus-turn: 8deg;
-  --lotus-depth: 0.8;
+  object-fit: cover;
+  object-position: var(--wallpaper-x, 50%) var(--wallpaper-y, 50%);
 }
 
 /*
- * E2 — the atmosphere: the dusk that makes Clear glass legal, graded from the
- * one light above, deepest behind the dock. A token (`--environment-atmosphere`),
- * shared with the welcome hero; deepened under reduced transparency. It lies
- * over the wake as over the wallpaper, so a lens is never lighter than the
- * room it bends.
- */
-.stage-atmosphere {
-  inset: 0;
-  background: var(--environment-atmosphere);
-}
-
-/*
- * E3 — ambient light: three soft pools of the room's own light (rose, violet,
- * warm white) drifting on 36–58s transform-only loops across the whole stage.
- * They sit above the wake and below the glass, so the slabs genuinely refract
- * moving light at their edges.
- */
-.stage-ambient {
-  inset: -20% -12%;
-  transform: translateZ(0);
-}
-
-.ambient-pool {
-  position: absolute;
-  width: 46%;
-  aspect-ratio: 1;
-  border-radius: 50%;
-}
-
-.ambient-pool--rose {
-  left: 2%;
-  top: 4%;
-  background: radial-gradient(circle, var(--environment-ambient-rose), transparent 70%);
-  animation: app-underlight-a 44s var(--ease-in-out) infinite alternate;
-}
-
-.ambient-pool--violet {
-  right: 0;
-  top: 30%;
-  background: radial-gradient(circle, var(--environment-ambient-violet), transparent 70%);
-  animation: app-underlight-b 58s var(--ease-in-out) infinite alternate;
-}
-
-.ambient-pool--warm {
-  left: 26%;
-  bottom: -6%;
-  background: radial-gradient(circle, var(--environment-ambient-warm), transparent 70%);
-  animation: app-underlight-c 36s var(--ease-in-out) infinite alternate;
-}
-
-/*
- * The sign-in slab — thick smoked optical glass standing in the room, the rose
- * seen bent through it. Legibility comes from smoked neutral density, never
- * from white frost; the rims, back-face reflection and directional Fresnel
- * make the surface read before the transparency. Entrance: one soft rise,
- * then stillness.
+ * The sign-in slab — optical glass standing in the room, the ribbon and the
+ * droplets seen bent at its rim. Legibility comes from the glass's own
+ * polarity, never from white frost: in this daylight room the slab is clear,
+ * its text and rims in ink; the rims, back-face reflection and directional
+ * Fresnel make the surface read before the transparency. Entrance: one soft
+ * rise, then stillness.
  */
 .login-card {
   position: relative;
@@ -511,10 +423,10 @@ function toggleLocale() {
   max-width: 520px;
   margin-top: clamp(72px, 12vh, 160px);
   animation: app-slide-up 640ms var(--ease-out) 60ms both;
-  /* Optics come from `material="hero"` (styles/glass.css): the Clear variant,
-     stage-tuned denser than the dock because the room behind this slab is
-     brighter than the dock's backdrop. `.stage-atmosphere` is the dimming
-     layer Clear requires. Nothing optical is declared here. */
+  /* Optics come from `material="hero"` (styles/glass.css). Over the stage's
+     light backdrop the preset falls to the Clear density the dock carries and
+     turns its rims, text and controls to ink — the clear-slab optics, the same
+     answer the dock gives beside it. Nothing optical is declared here. */
 }
 
 /*
@@ -658,10 +570,11 @@ function toggleLocale() {
 }
 
 /*
- * While a daylight gallery (the Product or Sponsor room) is on stage the
- * stage declares a light backdrop, and the dock's labels flip to dark ink
- * from glass.css (`[data-material-backdrop='light']`, Phase B4) — no private
- * override lives here any more.
+ * Every room on this stage is a daylight room, so the stage declares a light
+ * backdrop and the dock's labels, rims and lens read in dark ink from
+ * glass.css (`[data-material-backdrop='light']`, Phases B4 and B5.3) — the
+ * same bar it is over the Product and Sponsor rooms. No private override
+ * lives here.
  */
 
 /*
@@ -689,15 +602,20 @@ function toggleLocale() {
   transform: scale(1.012);
 }
 
-/* Colophon — the last, quietest line on the stage. It sits directly on the
-   deepest band of the atmosphere (not on glass), so it keeps a fixed dusk
-   tone in both themes. */
+/* Colophon — the last, quietest line on the stage: quiet by its size, not by a
+   faded ink. It sits directly on the picture (not on glass), where a petal or
+   the stem can pass behind it, so it takes the daylight rooms' full ink, the
+   same in both themes, with the dock's halo pair in the room's own paper (the
+   secondary ink read 3.1 : 1 on phones; the old dusk line, ~2.9 : 1). */
 .stage-colophon {
   position: relative;
   margin: var(--space-3) 0 0;
   font-size: var(--text-xs);
-  color: var(--environment-stage-text);
+  color: var(--landing-ink);
   text-align: center;
+  text-shadow:
+    0 0 3px color-mix(in oklch, var(--landing-paper) 85%, transparent),
+    0 1px 10px color-mix(in oklch, var(--landing-paper) 70%, transparent);
   animation: app-fade-in 640ms var(--ease-out) 420ms both;
 }
 
@@ -723,42 +641,45 @@ function toggleLocale() {
   }
 }
 
-/* Narrow landscape stages (small laptops, tablets on their side): the side
-   bands shrink faster than the height, so the blooms step down in size and
-   out toward the edges to keep air around the slab. */
-@media (max-width: 1180px) and (min-aspect-ratio: 4/5) {
-  .stage-lotus--near {
-    --lotus-x: calc(100% - 7vw);
-    --lotus-width: 56vh;
-  }
-
-  .stage-lotus--far {
-    --lotus-x: 8vw;
-    --lotus-width: 46vh;
+/*
+ * Wide and landscape stages keep the picture as it was composed: centred, a
+ * peony either side of the slab, the ribbon behind it (the default above).
+ *
+ * Portrait stages (tablets upright): the width holds only a third of the
+ * picture, so the crop moves to its left edge — the large peony stands in the
+ * open band between the slab and the dock, the small blossom above the slab,
+ * the ribbon reaching in behind it.
+ */
+@media (max-aspect-ratio: 4/5) {
+  .stage-wallpaper {
+    --wallpaper-x: 10%;
+    --wallpaper-y: 80%;
   }
 }
 
 /*
- * Portrait stages: the form fills the width, so the blooms take the corners
- * above and below it instead — the near one high on the right, mirrored so its
- * long petal lies along the slab's top edge and its stem falls clear of the
- * title, the far one low on the left in the band between the slab and the
- * dock. The composition turns a quarter; the space the form stands in stays
- * open, and the slab's rim bends only the calm parts of the flower.
+ * Tall phones: a quarter of the picture's width, and the slab takes most of
+ * the screen, so a flower can only stand in the open in part. The crop takes
+ * the picture's left edge whole: the small blossom above the slab, the large
+ * peony seen through its lower half — bent at its rim — with its outer petals
+ * and stem in the band above the dock. (A frame run past the stage's foot
+ * lowered the bloom into that band, but put its darkest petals behind the
+ * dock's ink labels and the colophon: 3.3 : 1 and 2.9 : 1, measured.)
  */
-@media (max-aspect-ratio: 4/5) {
-  .stage-lotus--near {
-    --lotus-x: calc(100% - 66px);
-    --lotus-y: 44px;
-    --lotus-width: min(96vw, 500px);
-    --lotus-mirror: -1;
-    --lotus-turn: -2deg;
+@media (max-aspect-ratio: 3/5) {
+  .stage-wallpaper {
+    --wallpaper-x: 0%;
   }
+}
 
-  .stage-lotus--far {
-    --lotus-x: 60px;
-    --lotus-y: calc(100% - 142px);
-    --lotus-width: min(84vw, 440px);
+/*
+ * Forced colours (Windows High Contrast): the system owns every colour, the
+ * slabs turn opaque (GlassSurface), and a bright decorative photograph behind
+ * forced text would only fight it — the room steps back to the system canvas.
+ */
+@media (forced-colors: active) {
+  .stage-wallpaper {
+    display: none;
   }
 }
 </style>

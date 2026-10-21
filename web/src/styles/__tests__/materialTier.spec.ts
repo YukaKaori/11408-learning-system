@@ -3,6 +3,7 @@ import { join } from 'node:path'
 import { fileURLToPath } from 'node:url'
 import { describe, expect, it } from 'vitest'
 import {
+  GLASS_TIER_MEDIA_QUERIES,
   GLASS_TIERS,
   resolveGlassTier,
   type GlassTierEnvironment,
@@ -14,7 +15,8 @@ import {
  * 1. The resolver is capability-driven: every Blink browser lands on the same
  *    `refract` path (Edge is Chrome by construction), engines that parse but do
  *    not render SVG backdrop filters land on `diffuse`, and no-backdrop /
- *    reduced-transparency / more-contrast environments land on `dense`.
+ *    reduced-transparency / more-contrast / forced-colours environments land
+ *    on `dense`.
  * 2. The brand guard: no file under `src/` other than the resolver may name a
  *    browser. If nothing in the code can see the difference between Chrome and
  *    Edge, they cannot render differently.
@@ -122,6 +124,12 @@ describe('material tier resolver', () => {
     expect(resolveGlassTier(env({ matches: reduced }))).toBe('dense')
     expect(resolveGlassTier(env({ matches: contrast }))).toBe('dense')
     expect(resolveGlassTier(env({ matches: reduced, brands: undefined, userAgent: 'Firefox/130.0' }))).toBe('dense')
+  })
+
+  it('resolves forced colours (Windows High Contrast) to dense — it does not imply more contrast', () => {
+    const forced = (query: string) => query === '(forced-colors: active)'
+    expect(resolveGlassTier(env({ matches: forced }))).toBe('dense')
+    expect(GLASS_TIER_MEDIA_QUERIES).toContain('(forced-colors: active)')
   })
 
   it('ignores reduced motion and pointer coarseness — those gate the light, not the material', () => {

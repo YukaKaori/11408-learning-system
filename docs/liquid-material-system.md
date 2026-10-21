@@ -105,6 +105,11 @@ Apple's rule is about legibility, not looks:
 Getting this backwards is the classic failure: Clear over an uncontrolled
 backdrop is unreadable, and Regular over a dark stage is a smudge.
 
+Over a stage that declares a **light** backdrop the Clear ranks are made legal
+by their polarity rather than by dimming: ink labels and ink rims on a clear
+body (the dock since B5.3, the sign-in slab since the daylight room of
+2026-10-21). Dimming a bright stage would only grey it; whitening is forbidden.
+
 ## 5. The presets
 
 Declared in `src/styles/glass.css`. A surface says **what it is** and inherits
@@ -113,11 +118,15 @@ the whole optical prescription; it never hand-types dials.
 | Preset | Variant | Density | Tint | Edge | Inner | The surface |
 |---|---|---|---|---|---|---|
 | `data-material="chrome"` | Clear | `.16` | chrome | `.85` | `.65` | `GlassDock` — permanent navigation, the lowest optical drama in the system |
-| `data-material="hero"` | Clear | `.34` | hero | `.68` | `.55` | `LoginView` card — the flagship slab, denser because the lotus artwork behind it is brighter than the dock's backdrop |
-| `data-material="floating"` | Regular | `.62` | floating | `.7` | `.5` | `NoteSelectionToolbar` — transient, over arbitrary note content |
+| `data-material="hero"` | Clear | `.34` | hero | `.68` | `.55` | `LoginView` card — the flagship slab, denser because the lotus artwork behind it was brighter than the dock's backdrop |
+| `data-material="floating"` | Regular | `.62` | floating | `.7` | `.5` | `NoteSelectionToolbar` and `WikiLinkSuggestions` — transient, over arbitrary note content |
 
 The hero's `.34` is a **documented stage override inside the Clear band**, not a
-magic number and not a third variant.
+magic number and not a third variant. Over a declared light backdrop each rank
+answers differently (`adaptive-material.md` §6): the chrome dock keeps `.16`
+with ink rims, the floating rank rises to `.86`, and — since the sign-in room
+became a daylight room on 2026-10-21 — the hero drops to the Clear `.16` in the
+same ink polarity as the dock beside it.
 
 `src/styles/__tests__/materialTokens.spec.ts` asserts each preset resolves to
 exactly what its surface ships today, so tagging the surfaces cannot move a
@@ -195,6 +204,16 @@ per-frame state.
 > `.content`). Every glass label in the shell now measures ≥ 4.5:1 in both themes
 > and all three tiers. Details: `.claude/skills/liquid-material/references/adaptive-material.md`
 > §6 and `scroll-edge.md` §7.
+>
+> **2026-10-21:** the sign-in room became a daylight room (the supplied
+> photograph), so the hero gained its light-backdrop answer: the Clear `.16`, ink
+> rims, the ink palette and ink-polarity control skins; the ink's idle step went
+> .7 → .8 with a tight near halo for dock labels over a picture. Forced colours
+> joined tier C (opaque system palette, a real edge, `Highlight` for the current
+> item). The note editor's `[[` link list became the first desktop glass beyond
+> the toolbar (budget 5 → 6), and both editor surfaces now play their entrance on
+> the slab — on the wrapper it had cut the toolbar off from its backdrop since
+> Phase 16. Record: `docs/liquid-material-global-reassessment.md` §25.
 
 Phase 17.2 delivers material *coherence*. What it deliberately does not do:
 

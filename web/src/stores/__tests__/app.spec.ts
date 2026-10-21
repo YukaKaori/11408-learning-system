@@ -18,7 +18,11 @@ vi.mock('@/api/modules/preferences', () => ({
 
 type Listener = (event: { matches: boolean }) => void
 
-function stubBrowser(prefersDark: boolean, storedTheme: string | null) {
+function stubBrowser(
+  prefersDark: boolean,
+  storedTheme: string | null,
+  storedLocale: string | null = null,
+) {
   const listeners: Listener[] = []
   const query = {
     matches: prefersDark,
@@ -26,22 +30,22 @@ function stubBrowser(prefersDark: boolean, storedTheme: string | null) {
   }
   const classes = new Set<string>()
   const storage = new Map<string, string>(storedTheme ? [['alp.theme', storedTheme]] : [])
+  if (storedLocale) storage.set('alp.locale', storedLocale)
+  const documentElement = {
+    // index.html's own attribute
+    lang: 'zh-CN',
+    classList: {
+      toggle: (name: string, force: boolean) => (force ? classes.add(name) : classes.delete(name)),
+      contains: (name: string) => classes.has(name),
+    },
+  }
 
   vi.stubGlobal('window', { matchMedia: () => query })
   vi.stubGlobal('localStorage', {
     getItem: (key: string) => storage.get(key) ?? null,
     setItem: (key: string, value: string) => storage.set(key, value),
   })
-  vi.stubGlobal('document', {
-    documentElement: {
-      lang: '',
-      classList: {
-        toggle: (name: string, force: boolean) =>
-          force ? classes.add(name) : classes.delete(name),
-        contains: (name: string) => classes.has(name),
-      },
-    },
-  })
+  vi.stubGlobal('document', { documentElement })
 
   return {
     /** The OS switches its colour scheme. */
@@ -50,6 +54,7 @@ function stubBrowser(prefersDark: boolean, storedTheme: string | null) {
       for (const listener of listeners) listener({ matches })
     },
     htmlDark: () => classes.has('dark'),
+    htmlLang: () => documentElement.lang,
   }
 }
 
@@ -104,5 +109,18 @@ describe('app store — theme in system mode', () => {
     store.setThemeMode('dark')
     browser.flip(false)
     expect(store.isDark).toBe(true)
+  })
+})
+
+describe('app store — the document language', () => {
+  beforeEach(() => {
+    vi.unstubAllGlobals()
+  })
+
+  it('a stored locale reaches <html lang> at boot, not only after the next switch', async () => {
+    const browser = stubBrowser(false, 'light', 'en-US')
+    const store = await bootStore()
+    expect(store.locale).toBe('en-US')
+    expect(browser.htmlLang()).toBe('en-US')
   })
 })

@@ -8,7 +8,8 @@
  *   diffuse  — the backdrop can only be blurred, not refracted (WebKit, Gecko):
  *              the same slab, same preset dials, minus the refraction layer
  *   dense    — no `backdrop-filter`, or the user asked for reduced transparency
- *              / more contrast: transmission down, density up, rims kept
+ *              / more contrast, or the system forces its own colours (Windows
+ *              High Contrast): transmission down, density up, rims kept
  *
  * Capability, never brand. Every Blink browser — Chrome, Edge, Brave, Arc,
  * Opera, Vivaldi — reports a literal `"Chromium"` brand in
@@ -51,9 +52,20 @@ export interface GlassTierEnvironment {
 
 const REDUCED_TRANSPARENCY = '(prefers-reduced-transparency: reduce)'
 const MORE_CONTRAST = '(prefers-contrast: more)'
+/**
+ * Forced colours replace every colour of the slab with the system palette and
+ * drop its shadows; the transmitting tiers would then show forced text over a
+ * bare refraction. It does not imply `prefers-contrast: more` (a custom
+ * high-contrast theme reports `custom`), so it is asked on its own.
+ */
+const FORCED_COLORS = '(forced-colors: active)'
 
 /** The media queries whose change re-runs the decision. */
-export const GLASS_TIER_MEDIA_QUERIES = [REDUCED_TRANSPARENCY, MORE_CONTRAST] as const
+export const GLASS_TIER_MEDIA_QUERIES = [
+  REDUCED_TRANSPARENCY,
+  MORE_CONTRAST,
+  FORCED_COLORS,
+] as const
 
 /**
  * The one place a browser-ish string may exist. Every Blink build carries
@@ -72,7 +84,13 @@ function isBlink(env: GlassTierEnvironment): boolean {
 
 /** Pure: capability in, tier out. */
 export function resolveGlassTier(env: GlassTierEnvironment): GlassTier {
-  if (env.matches(REDUCED_TRANSPARENCY) || env.matches(MORE_CONTRAST)) return 'dense'
+  if (
+    env.matches(REDUCED_TRANSPARENCY) ||
+    env.matches(MORE_CONTRAST) ||
+    env.matches(FORCED_COLORS)
+  ) {
+    return 'dense'
+  }
   if (!env.supports('backdrop-filter', 'blur(1px)')) return 'dense'
 
   const parsesSvgBackdrop = env.supports('backdrop-filter', 'url(#p)')

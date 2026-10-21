@@ -675,6 +675,33 @@ html[data-glass-tier='dense'] .glass-surface {
 }
 
 /*
+ * Forced colours (Windows High Contrast). The system palette replaces every
+ * colour and drops box-shadows and gradient images, so the slab would keep
+ * only its refraction and a body of 10 % Canvas — forced text over whatever
+ * the glass bends, and no edge at all. The tier resolver already puts the
+ * material in tier C here (`materialTier.ts`); this is the rest of that state:
+ * an opaque system body, a real 1px edge in the system's text colour (the rim
+ * the shadows were drawing), and none of the optical layers.
+ */
+@media (forced-colors: active) {
+  .glass-surface,
+  html[data-glass-tier] .glass-surface {
+    border: var(--border-width-sm) solid CanvasText;
+    background: Canvas;
+    backdrop-filter: none;
+  }
+
+  .glass-surface::before,
+  .glass-surface::after,
+  .glass-surface__light,
+  .glass-surface__depth,
+  .glass-surface__fresnel,
+  .glass-surface__flow {
+    display: none;
+  }
+}
+
+/*
  * Surface flow (surfaceFlow prop) — the slab is alive: a slow travelling
  * highlight band and two faint caustic pools, 20–40s transform/opacity
  * loops on the compositor. Never touches the displacement filter. The
@@ -689,6 +716,18 @@ html[data-glass-tier='dense'] .glass-surface {
   overflow: hidden;
   opacity: var(--glass-flow-opacity, 0.6);
   transition: opacity 900ms var(--ease-out);
+}
+
+/*
+ * Withdrawn over a declared light backdrop: a band of ≤10 % white crossing a
+ * bright scene moves no channel by more than 7/255 (measured on the landing
+ * dock, 2026-10-21) — nothing anyone sees — while every frame of it re-runs
+ * the refraction of any slab standing over it (the landing dock's lens): the
+ * daylight login stage drew 2.5× the frame time at rest with it. Over a dark
+ * scene the light reads, and the loop stays.
+ */
+[data-material-backdrop='light'] .glass-surface__flow {
+  display: none;
 }
 
 .glass-surface__flow::before {

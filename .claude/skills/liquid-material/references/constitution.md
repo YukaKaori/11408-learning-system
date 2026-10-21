@@ -258,7 +258,8 @@ Surfaces that should be built from this system (existing and future):
 - Command Palette (the flagship candidate: a floating slab over the workspace)
 - Dialogs and modal sheets (confirmations, premium upsells)
 - Cards elevated above content (stats, achievements, sponsor cards)
-- Context menus and dropdown panels
+- Context menus and dropdown panels (exists: the note editor's `[[` link
+  popover, `WikiLinkSuggestions`, since 2026-10-21)
 - Floating toolbars (exists: NoteSelectionToolbar)
 - Widgets (timers, streaks, quick actions)
 - Timeline overlays and scrubbers
@@ -271,9 +272,10 @@ Not everything is glass: dense reading surfaces (lesson bodies, tables, code
 editors, long forms) stay solid. Glass marks *elevated, transient, or premium*
 layers — the things floating above the work, never the work itself.
 
-Note the gap between this list and the material budget — **5 logical surfaces**
+Note the gap between this list and the material budget — **6 logical surfaces**
 mounted (landing dock, its selection lens, app dock, sign-in slab, note
-toolbar; the lens since Amendment A1). The list says what is *eligible*; the
+toolbar, note link popover; the lens since Amendment A1, the popover since the
+2026-10-21 pass). The list says what is *eligible*; the
 budget says what is *mounted*. Eligibility is not permission — a new instance
 is still a budget renegotiation, counted in the unit `components.md` §1 defines.
 

@@ -217,6 +217,12 @@
   --material-density-regular-light: 0.86;
   --material-density-dense-floor-light: 0.86;
   --material-rim-ink: oklch(0.22 0.018 275);
+  /* The error line on a clear slab over a light backdrop (the sign-in slab in
+     the daylight room, 2026-10-21): the slab's smoke greys the room behind
+     it, so the light theme's danger — #dc2626 = oklch(0.577 0.215 27.3) —
+     reads 3.1 : 1 there. Taken the step the brand ladder takes from accent to
+     accent-ink (L −.087, chroma ×.805), it reads 4.6 : 1. */
+  --material-danger-ink: oklch(0.49 0.173 27.3);
 
   /* Geometry (Phase B1, `components.md` §7). A slab's radius belongs to its
      recipe; the primitive's own content inset is part of every nested radius
@@ -268,15 +274,10 @@
   --scene-chip-border: rgba(246, 242, 243, 0.22);
   --scene-brand-lip: rgba(255, 255, 255, 0.55);
 
-  /* Environment — text resting directly on a dark stage (the login colophon).
-     Not on glass, so not `--on-glass-*`; not theme-relative, because the
-     stage is dusk in both themes. A frozen dusk value (`color.md` §1), moved
-     out of the component in Phase B1. */
-  --environment-stage-text: rgba(228, 226, 240, 0.38);
-
   /* ── Environment (Phase B3, `environment.md`) ─────────────────────────────
-     Everything the material sits in front of on the Login stage and the
-     welcome hero. Environment, not material: none of these reach a slab.
+     Everything the material sits in front of on the welcome hero — and, until
+     the daylight room replaced it on 2026-10-21, on the Login stage.
+     Environment, not material: none of these reach a slab.
 
      Anchor (`color.md` §3): the wallpaper itself — the pink lotus's petals,
      ≈ oklch(0.86 0.06 5), drawn in light on a black ground. The field is that
@@ -289,10 +290,10 @@
         lotus       how much of the artwork's light lands on the field (screen)
      E2 atmosphere  a neutral-density dusk graded top → bottom, the one light
                     being above: the room stays open where no glass sits and
-                    deepens toward the dock, which is what makes Clear glass
-                    legal there. No blur, no white: the wallpaper is always seen.
-     E3 ambient     three slow pools of the room's light
-     E4 wake        no token: the refraction wake only moves wallpaper pixels */
+                    deepens toward its foot. No blur, no white: the wallpaper
+                    is always seen.
+     (E3, the Login stage's three drifting ambient pools, left with the dusk
+     room: the welcome hero never had them.) */
   --environment-field: oklch(0.31 0.05 354);
   --environment-lotus-light: 1;
   --environment-atmosphere:
@@ -308,15 +309,30 @@
       oklch(0.15 0.03 346 / 0.5) 84%,
       oklch(0.13 0.028 344 / 0.62) 100%
     );
-  --environment-ambient-rose: oklch(0.8 0.09 10 / 0.12);
-  --environment-ambient-violet: oklch(0.72 0.09 300 / 0.1);
-  --environment-ambient-warm: oklch(0.96 0.04 80 / 0.08);
+
+  /* ── The daylight room — the Login stage since 2026-10-21 ────────────────
+     The wallpaper is the supplied artwork (`public/images/welcome-bg.png`):
+     icy-blue peonies, a translucent ribbon, droplets and petals on an
+     ice-white ground. It is meant to be seen at full exposure, so the room has
+     no atmosphere and no ambient pools — nothing dims it (it would only turn
+     the ice to slate) and nothing whitens it (forbidden, and it would wash it
+     out). The stage declares a `light` backdrop in both themes and the glass
+     answers with ink (`glass.css`), which is what makes Clear legal here.
+
+     Anchor (`color.md` §3): the picture itself, measured — mean
+     oklch(0.932 0.029 258), the peonies ≈ oklch(0.88 0.05 261), the open sky
+     behind the slab ≈ oklch(0.965 0.015 253).
+       field  the stage colour: the picture's mean, shown only while it loads
+              (and drawn under it in the wake's plate). Theme-invariant, like
+              the two daylight galleries below. */
+  --environment-daylight-field: oklch(0.932 0.029 258);
 
   /* ── Landing rooms — the Product and Sponsor galleries ────────────────────
-     The two daylight rooms of the login stage. Both declare a `light`
-     backdrop in both themes (`environment.md` E5), so these tokens are
-     theme-INVARIANT: `html.dark` never redeclares them, and neither room reads
-     a theme-relative `--color-*` token.
+     The two daylight galleries of the login stage (and, since 2026-10-21, the
+     ink of the sign-in room's colophon). Both declare a `light` backdrop in
+     both themes (`environment.md` E5), so these tokens are theme-INVARIANT:
+     `html.dark` never redeclares them, and neither room reads a theme-relative
+     `--color-*` token.
 
      Anchor (`color.md` §3): the brand — `--color-primary` #5e6ad2 =
      oklch(0.567 0.159 275). Neutrals are the anchor's hue at near-zero chroma
@@ -385,6 +401,9 @@
        space  height + the bottom gutter + the device's safe area */
   --app-dock-item: 48px;
   --app-dock-label: var(--text-xs);
+  /* English labels on the narrowest phones (< 360px), where a cell is ~45px:
+     the size a native tab bar sets its labels in (`GlassDock`, stacked). */
+  --app-dock-label-narrow: 11px;
   --app-dock-gutter: var(--space-3);
   --app-dock-height: calc(
     var(--app-dock-item) + 2 * var(--space-2) + 2 * var(--material-inset)
@@ -472,7 +491,8 @@ html.dark {
   --scene-brand-lip: rgba(180, 172, 255, 0.18);
 
   /* Environment — the same room at a later hour: the ground falls toward
-     night and the blooms, a little quieter, carry the room. */
+     night and the blooms, a little quieter, carry the room. (The daylight
+     room is theme-invariant and is not redeclared here.) */
   --environment-field: oklch(0.15 0.025 350);
   --environment-lotus-light: 0.9;
   --environment-atmosphere:
@@ -488,9 +508,6 @@ html.dark {
       oklch(0.1 0.018 346 / 0.5) 84%,
       oklch(0.09 0.016 344 / 0.62) 100%
     );
-  --environment-ambient-rose: oklch(0.72 0.1 10 / 0.1);
-  --environment-ambient-violet: oklch(0.64 0.11 300 / 0.1);
-  --environment-ambient-warm: oklch(0.92 0.04 80 / 0.06);
 
   color-scheme: dark;
 }

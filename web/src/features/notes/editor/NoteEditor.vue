@@ -21,9 +21,10 @@ import { buildTitleIndex, matchLinkTargets, normalizeWikiTitle, type LinkTarget 
  * the parent and the backend keep storing raw markdown, unaware of ProseMirror.
  *
  * Step 4 adds the knowledge layer: `[[wiki-links]]` render as inline nodes,
- * resolved/dangling is a decoration, `[[` opens a solid autocomplete, and
- * following a link is emitted upward (`navigate`) — this component never routes
- * or creates notes itself.
+ * resolved/dangling is a decoration, `[[` opens an autocomplete (a floating
+ * glass popover since 2026-10-21, the toolbar's sibling — the canvas itself
+ * stays solid), and following a link is emitted upward (`navigate`) — this
+ * component never routes or creates notes itself.
  *
  * Step 6 adds the empty-note placeholder — a decoration, not content, so a
  * pristine note still serializes to the empty string.

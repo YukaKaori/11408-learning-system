@@ -5,14 +5,16 @@ import { describe, expect, it } from 'vitest'
 
 /**
  * Environment guard (Phase B3 — `environment.md`, `constitution.md` §9; the
- * Login rework round 3 replaced the reveal wake with the refraction wake).
+ * Login rework round 3 replaced the reveal wake with the refraction wake; the
+ * 2026-10-21 pass made the sign-in room a daylight room).
  *
- * Environment is not Material. The Login stage is composed as wallpaper (the
- * field + the pink lotus, placed twice) → refraction wake → atmosphere →
- * ambient light → glass → content; none of those environment layers is glass,
- * none costs a budget instance, the retired 576px spotlight and its black
- * shroud stay retired, the wake owns no cursor of its own and adds no light,
- * and the welcome hero shares the environment instead of running a white
+ * Environment is not Material. The Login stage is composed as wallpaper (one
+ * supplied photograph, cover-fit) → refraction wake → glass → content; it is a
+ * daylight room, so it has no atmosphere and no ambient pools, and it declares
+ * a light backdrop. None of its environment layers is glass, none costs a
+ * budget instance, the retired 576px spotlight and its black shroud stay
+ * retired, the wake owns no cursor of its own and adds no light, and the
+ * welcome hero keeps the dusk lotus environment instead of running a white
  * frosted veil with a second spotlight.
  */
 const SRC = fileURLToPath(new URL('../../..', import.meta.url))
@@ -43,32 +45,35 @@ describe('the Login stage is a layered environment', () => {
   const login = read(LOGIN)
   const markup = template(login)
 
-  it('has a wallpaper (two placements of one lotus), a wake, an atmosphere and ambient light', () => {
-    for (const layer of ['stage-lotus stage-lotus--near', 'stage-lotus stage-lotus--far', 'stage-atmosphere', 'stage-ambient']) {
-      expect(markup, layer).toContain(`class="${layer}`)
-    }
+  it('has a wallpaper (one supplied picture) and a wake — a daylight room, with no atmosphere or ambient pools', () => {
+    expect(markup).toContain('class="stage-wallpaper"')
     expect(markup).toContain('<RefractionField')
-    // one artwork, one download: both placements show the same image
-    expect(markup.match(/:src="lotusUrl"/g)).toHaveLength(2)
+    // one picture: the WebP a browser downloads, the PNG as supplied behind it
+    expect(markup).toContain('<source type="image/webp" :srcset="wallpaperWebp" />')
+    expect(markup.match(/:src="wallpaperPng"/g)).toHaveLength(1)
+    // nothing dims or drifts over the picture
+    for (const retired of ['stage-atmosphere', 'stage-ambient', 'ambient-pool', 'stage-lotus']) {
+      expect(login, retired).not.toContain(retired)
+    }
   })
 
   it('composes environment first, then material: every layer precedes the sign-in slab', () => {
     const slab = markup.indexOf('<GlassSurface')
-    for (const marker of ['stage-lotus--near', 'stage-lotus--far', '<RefractionField', 'stage-atmosphere', 'stage-ambient']) {
+    for (const marker of ['stage-wallpaper', '<RefractionField']) {
       expect(markup.indexOf(marker), marker).toBeGreaterThan(-1)
       expect(markup.indexOf(marker), marker).toBeLessThan(slab)
     }
   })
 
-  it('the wake lies on the wallpaper, under the atmosphere — the dusk falls on it as on the wallpaper', () => {
-    expect(markup.indexOf('stage-lotus--far')).toBeLessThan(markup.indexOf('<RefractionField'))
-    expect(markup.indexOf('<RefractionField')).toBeLessThan(markup.indexOf('stage-atmosphere'))
+  it('the wake lies directly on the wallpaper it re-draws', () => {
+    expect(markup.indexOf('stage-wallpaper')).toBeLessThan(markup.indexOf('<RefractionField'))
+    expect(template(login)).toMatch(/<RefractionField[\s\S]*?:layers="wallpaperLayers"/)
   })
 
   it('environment layers are decorative and inert', () => {
-    for (const layer of ['stage-lotus stage-lotus--near', 'stage-lotus stage-lotus--far', 'stage-atmosphere', 'stage-ambient']) {
-      expect(markup).toMatch(new RegExp(`class="${layer}"[^>]*aria-hidden="true"`))
-    }
+    expect(markup).toMatch(/class="stage-wallpaper"[^>]*aria-hidden="true"/)
+    expect(markup).toMatch(/class="stage-wallpaper__art"[\s\S]*?alt=""/)
+    expect(styles(login)).toMatch(/\.stage-wallpaper \{[^}]*pointer-events: none/)
     expect(read(WAKE_VIEW)).toMatch(/<canvas[^>]*aria-hidden="true"/)
     expect(read(WAKE_VIEW)).toMatch(/\.refraction-field \{[^}]*pointer-events: none/)
   })
@@ -80,15 +85,31 @@ describe('the Login stage is a layered environment', () => {
     }
   })
 
-  it('the wallpaper layers never move: the wake re-draws them pixel for pixel', () => {
-    // a scale/translate/opacity loop on a wallpaper layer would misregister it
-    // against its own refraction — the ambient pools carry the room's life
+  it('the wallpaper never moves and is shown as it is: the wake re-draws it pixel for pixel', () => {
+    // a scale/translate/opacity loop would misregister it against its own
+    // refraction; an opacity, blend or filter is something the plate would
+    // not reproduce — the lens would bend a different picture
     const css = styles(login)
     const block = (selector: string) => css.match(new RegExp(`${selector.replace(/\./g, '\\.')} \\{([^}]*)\\}`))?.[1] ?? ''
-    for (const selector of ['.stage-lotus', '.stage-lotus__art', '.stage-lotus--near', '.stage-lotus--far']) {
+    for (const selector of ['.stage-wallpaper', '.stage-wallpaper__art']) {
       expect(block(selector), selector).not.toBe('')
-      expect(block(selector), selector).not.toMatch(/animation|transition/)
+      expect(block(selector), selector).not.toMatch(/animation|transition|opacity|mix-blend-mode|filter/)
     }
+    // the crop the plate reads: cover-fit, positioned by authored variables
+    expect(block('.stage-wallpaper__art')).toContain('object-fit: cover;')
+    expect(block('.stage-wallpaper__art')).toContain('object-position: var(--wallpaper-x, 50%) var(--wallpaper-y, 50%);')
+  })
+
+  it('every stage shape keeps a flower in view: the crop is authored for portrait and tall phones', () => {
+    const css = styles(login)
+    expect(css).toMatch(/@media \(max-aspect-ratio: 4\/5\) \{\s*\.stage-wallpaper \{[^}]*--wallpaper-x: 10%;/)
+    expect(css).toMatch(/@media \(max-aspect-ratio: 3\/5\) \{\s*\.stage-wallpaper \{[^}]*--wallpaper-x: 0%;/)
+    // the frame is the stage: the plate's box is exactly what is shown
+    expect(css).toMatch(/\.stage-wallpaper \{[^}]*inset: 0;/)
+  })
+
+  it('under forced colours the decorative picture steps back to the system canvas', () => {
+    expect(styles(login)).toMatch(/@media \(forced-colors: active\) \{\s*\.stage-wallpaper \{\s*display: none;/)
   })
 
   it('the wake adds no light: its canvas is drawn at full opacity with no blend or filter of its own', () => {
@@ -99,8 +120,14 @@ describe('the Login stage is a layered environment', () => {
     expect(read('styles/tokens.css')).not.toMatch(/--environment-wake-(daylight|strength)/)
   })
 
-  it('the wallpaper is the project’s own lotus artwork, whose source stays in the repository', () => {
-    expect(login).toContain(`from '@/assets/environment/lotus.webp'`)
+  it('the wallpaper is the supplied artwork in public/images, with its encoder in the repository', () => {
+    expect(login).toContain('images/welcome-bg.png')
+    expect(login).toContain('images/welcome-bg.webp')
+    expect(existsSync(join(SRC, '../public/images/welcome-bg.png'))).toBe(true)
+    expect(existsSync(join(SRC, '../public/images/welcome-bg.webp'))).toBe(true)
+    expect(existsSync(join(SRC, '../scripts/environment/welcome.cjs'))).toBe(true)
+    // the lotus is the welcome hero's alone now
+    expect(login).not.toMatch(/lotus\.webp|lotusUrl/)
     expect(read(SCENE)).toContain(`from '@/assets/environment/lotus.webp'`)
     expect(existsSync(join(SRC, 'assets/environment/lotus.webp'))).toBe(true)
     expect(existsSync(join(SRC, '../scripts/environment/source/pinklotus.png'))).toBe(true)
@@ -196,9 +223,19 @@ describe('environment tokens', () => {
     }
   })
 
+  it('the daylight room declares a field and nothing that dims or veils it', () => {
+    expect(tokens).toMatch(/--environment-daylight-field:\s*oklch\([^)]+\);/)
+    expect(tokens).not.toMatch(/--environment-daylight-(atmosphere|veil|shroud)/)
+    expect(tokens).not.toMatch(/--environment-ambient-/)
+    const login = read(LOGIN)
+    expect(login).toContain('background-color: var(--environment-daylight-field);')
+    expect(login).not.toMatch(/--environment-(atmosphere|lotus-light|field)\)/)
+    expect(login).toContain(`const stageBackdrop: MaterialBackdrop = 'light'`)
+  })
+
   it('new environment colours are OKLCH and never white frost', () => {
-    const declarations = [...tokens.matchAll(/--environment-(?!stage-text)[\w-]+:\s*([^;]+);/g)].map((m) => m[1]!)
-    expect(declarations.length).toBeGreaterThan(10)
+    const declarations = [...tokens.matchAll(/--environment-[\w-]+:\s*([^;]+);/g)].map((m) => m[1]!)
+    expect(declarations.length).toBeGreaterThan(5)
     for (const value of declarations) {
       expect(value).not.toMatch(/rgba?\(|#[0-9a-f]{3,8}\b/i)
       expect(value).not.toMatch(/blur\(/)

@@ -65,9 +65,11 @@
  *   chrome    Clear     permanent navigation over a stage that supplies its
  *                       own dimming; the lowest optical drama in the system
  *   hero      Clear     the flagship slab, stage-tuned denser (.34) because
- *                       the lotus artwork behind it is brighter than the
+ *                       the lotus artwork behind it was brighter than the
  *                       dock's backdrop — a documented override, not a magic
- *                       number, and still within the Clear band
+ *                       number, and still within the Clear band. Over a light
+ *                       backdrop (the daylight room) it falls back to the
+ *                       Clear value — see the light-backdrop optics below
  *   floating  Regular   transient surfaces over arbitrary user content, with
  *                       no stage to dim for them: legibility comes from the
  *                       material's own body
@@ -153,12 +155,26 @@
  *   floating  the Regular toolbar keeps its dusk labels, so its body rises to
  *             unmistakably dark smoke over white note paper. Its rims stay
  *             light: they are seen against its own dark body.
+ *   hero      (2026-10-21, when the sign-in room became a daylight room) the
+ *             slab reads like the dock beside it: ink text, ink rims. Its
+ *             stage-tuned smoke (.34) existed to carry dusk text over bright
+ *             petals; under ink it would only grey the slab and dim the text,
+ *             so it falls to the Clear value the dock carries — equal to the
+ *             chrome rank, never below it, so the order holds
+ *             (`adaptive-material.md` §5). Rank stays in its depth, Fresnel
+ *             and edge energy. A dark slab next to a clear dock would be two
+ *             materials on one stage (`components.md` §7).
  *
  * The polarity flip holds only while the slab transmits (tiers A and B). In
  * tier C the body is smoke whatever the page, so the light rims — and, below,
  * the dusk labels — return.
  */
 html:not([data-glass-tier='dense']) [data-material-backdrop='light'] [data-material='chrome'] {
+  --glass-rim-polarity: 1;
+}
+
+html:not([data-glass-tier='dense']) [data-material-backdrop='light'] [data-material='hero'] {
+  --glass-density: var(--material-density-clear);
   --glass-rim-polarity: 1;
 }
 
@@ -176,8 +192,11 @@ html[data-glass-tier='dense'] [data-material-backdrop='light'] {
   --on-glass-text-dim: rgba(230, 228, 244, 0.66);
   --on-glass-text-faint: rgba(230, 228, 244, 0.42);
   /* The halo under bare labels resting on the glass (the dock), and the
-     bloom the current label holds. A bright stage overrides both. */
+     bloom the current label holds. A bright stage overrides both. The near
+     halo hugs the glyphs; the dusk palette needs none (transparent paints
+     nothing), the ink flip below sets one. */
   --on-glass-halo: rgba(0, 0, 0, 0.5);
+  --on-glass-halo-near: transparent;
   --on-glass-halo-active: rgba(255, 255, 255, 0.38);
   /* The navigation indicator (Phase B2) — light gathered under the current
      item: a faint pool, a thin rim and a top lip; and the pool that answers a
@@ -221,30 +240,70 @@ html[data-glass-tier='dense'] [data-material-backdrop='light'] {
  * `.dock-anchor.is-on-light` override. Over a light backdrop the dock's fixed
  * dusk labels would vanish, so ONLY its on-glass text, halo and indicator
  * tokens flip to dark ink; geometry, material and motion stay. Scoped to the
- * `chrome` rank because that is the surface it was authored and verified for:
- * the Regular toolbar carries dusk labels on its own dense body whatever the
- * backdrop. `.glass-material` declares these variables on itself, so the
- * override lands on that element.
+ * two Clear ranks — the `chrome` dock it was authored for and, since the
+ * sign-in room became a daylight room (2026-10-21), the `hero` slab standing
+ * beside it, so the card and the dock read in one ink. The Regular toolbar
+ * carries dusk labels on its own dense body whatever the backdrop.
+ * `.glass-material` declares these variables on itself, so the override lands
+ * on that element. (The halo and indicator steps have no consumer on the hero.)
  *
  * Not in tier C (Phase B5.3): there the body is near-opaque smoke on every
  * page, so the bright room never reaches the labels — ink on that smoke was
  * the one illegible state of the app dock (reduced transparency, light theme).
  * The dusk palette, the one tuned for smoke, stays.
  */
-html:not([data-glass-tier='dense']) [data-material-backdrop='light'] [data-material='chrome'] .glass-material {
+html:not([data-glass-tier='dense']) [data-material-backdrop='light'] [data-material='chrome'] .glass-material,
+html:not([data-glass-tier='dense']) [data-material-backdrop='light'] [data-material='hero'] .glass-material {
   --on-glass-text: rgba(33, 28, 68, 0.92);
   /* .6 until Phase B5.3: the idle labels of the app dock measured 3.7:1 over
-     the light shell. At .7 they clear AA (≈5:1) and still read a clear step
-     below the current item, which also carries the indicator. */
-  --on-glass-text-dim: rgba(33, 28, 68, 0.7);
+     the light shell, and .7 cleared AA there (≈5:1). Over the daylight room's
+     picture (2026-10-21) — petals, droplets and ribbon behind clear glass, not
+     white paper — .7 measured 4.5:1 at best and 3.3:1 on phones, and the
+     sign-in slab's labels the same; .8 is still a clear step below the
+     current item, which also carries the indicator or the lens. */
+  --on-glass-text-dim: rgba(33, 28, 68, 0.8);
   --on-glass-text-faint: rgba(33, 28, 68, 0.4);
   --on-glass-halo: rgba(255, 255, 255, 0.7);
+  /* Over a picture the soft halo alone spreads too thin at a stroke's edge;
+     a tight one keeps every glyph on light whatever the glass bends. */
+  --on-glass-halo-near: color-mix(in oklch, white 85%, transparent);
   --on-glass-halo-active: rgba(120, 90, 255, 0.4);
   /* The indicator light goes to ink over the bright room, like the labels. */
   --on-glass-indicator-pool: rgba(33, 28, 68, 0.1);
   --on-glass-indicator-rim: rgba(33, 28, 68, 0.14);
   --on-glass-indicator-lip: rgba(255, 255, 255, 0.5);
   --on-glass-indicator-press: rgba(33, 28, 68, 0.08);
+}
+
+/*
+ * The rest of the remap, for the hero alone — the dock has no hairlines, panes
+ * or brand fills to flip. Hairlines and hover pools turn from light to ink
+ * (`--material-rim-ink`, the ink the rims are drawn in). The brand steps go the
+ * other way from `.glass-material`'s pin: the dark steps exist for contrast on
+ * smoke, and on a clear slab over a white room the deeper step is the legible
+ * one — the slab's smoke greys the room behind it, so small brand text and the
+ * white label on the button need the daylight ladder's ink step, and the error
+ * line the matching danger step (`--material-danger-ink`, `tokens.css`).
+ */
+html:not([data-glass-tier='dense']) [data-material-backdrop='light'] [data-material='hero'] .glass-material {
+  /* The secondary step (subtitle, field labels, "remember me", the footer
+     controls): on a phone the peony stands behind the form, and the dock's .8
+     read 4.2 : 1 there. The slab's own primary ink at 93% (≈ .86) clears it;
+     size and weight keep the hierarchy, not a fade. */
+  --on-glass-text-dim: color-mix(in srgb, var(--on-glass-text) 93%, transparent);
+  /* Icons and the placeholder: the dock's faint step (.4) reads 2 : 1 here;
+     this one keeps the input icons above 3 : 1 over the picture. */
+  --on-glass-text-faint: color-mix(in oklch, var(--material-rim-ink) 66%, transparent);
+  --on-glass-border: color-mix(in oklch, var(--material-rim-ink) 12%, transparent);
+  --color-border: color-mix(in oklch, var(--material-rim-ink) 16%, transparent);
+  --color-border-strong: color-mix(in oklch, var(--material-rim-ink) 26%, transparent);
+  --color-surface-hover: color-mix(in oklch, var(--material-rim-ink) 6%, transparent);
+  --color-primary: var(--landing-accent-ink);
+  --color-primary-hover: color-mix(in oklch, var(--landing-accent-ink), var(--landing-accent) 40%);
+  --color-primary-active: color-mix(in oklch, var(--landing-accent-ink), var(--material-rim-ink) 18%);
+  --color-primary-soft: color-mix(in oklch, var(--landing-accent) 22%, transparent);
+  --color-danger: var(--material-danger-ink);
+  --color-focus-ring: var(--color-primary);
 }
 
 /* ------------------------------------------------------------------ */
@@ -454,4 +513,108 @@ html:not([data-glass-tier='dense']) [data-material-backdrop='light'] [data-mater
 .glass-check input:focus-visible + .glass-check__box {
   outline: var(--border-width-md) solid var(--color-focus-ring);
   outline-offset: 2px;
+}
+
+/* ------------------------------------------------------------------ */
+/* The same facets on a clear slab in a daylight room (2026-10-21)     */
+/* ------------------------------------------------------------------ */
+
+/*
+ * The sign-in slab's controls once its backdrop is light. The vocabulary is
+ * the one above with its polarity turned: a pane carved into clear glass over
+ * a white room reads by a faint ink recess and a light exit lip, not by a
+ * white haze on smoke. Only what was drawn in light changes — the moving
+ * reflection (brighter here: it has to show on a bright pane), the brand
+ * button, the check mark and the press settle are the shared skins above.
+ * Not in tier C, where the slab is smoke and the dusk skins are the right
+ * ones. The unchecked box only: a checked box keeps the shared brand fill.
+ */
+html:not([data-glass-tier='dense']) [data-material-backdrop='light'] [data-material='hero'] .glass-material .app-input {
+  border-color: color-mix(in oklch, var(--material-rim-ink) 18%, transparent);
+  background-image:
+    radial-gradient(
+      circle 150px at var(--glass-light-x, 50%) var(--glass-light-y, 50%),
+      color-mix(
+        in oklch,
+        white calc(var(--glass-light-strength, 0) * (0.4 + var(--glass-proximity, 0) * 0.6) * 30%),
+        transparent
+      ),
+      transparent 72%
+    ),
+    linear-gradient(
+      to bottom,
+      color-mix(in oklch, var(--material-rim-ink) 6%, transparent),
+      color-mix(in oklch, var(--material-rim-ink) 3%, transparent)
+    );
+  box-shadow:
+    inset 0 1px 4px color-mix(in oklch, var(--material-rim-ink) 10%, transparent),
+    inset 0 1px 0 color-mix(in oklch, var(--material-rim-ink) 8%, transparent),
+    inset 0 -1px 0 color-mix(in oklch, white 55%, transparent);
+}
+
+html:not([data-glass-tier='dense']) [data-material-backdrop='light'] [data-material='hero'] .glass-material .app-input:focus-within {
+  border-color: var(--color-primary);
+  box-shadow:
+    inset 0 1px 4px color-mix(in oklch, var(--material-rim-ink) 10%, transparent),
+    inset 0 1px 0 color-mix(in oklch, var(--material-rim-ink) 8%, transparent),
+    inset 0 -1px 0 color-mix(in oklch, white 55%, transparent),
+    0 0 0 3px var(--color-primary-soft);
+}
+
+html:not([data-glass-tier='dense']) [data-material-backdrop='light'] [data-material='hero'] .glass-material .app-button.variant-ghost:hover:not(:disabled) {
+  background-color: var(--color-surface-hover);
+}
+
+/* Small brand text on the clear slab ("forgot password"): the ink step read
+   3.3–4.4 : 1 over the picture; the link takes it halfway to the rim ink —
+   still the brand's hue, at body-text contrast. */
+html:not([data-glass-tier='dense']) [data-material-backdrop='light'] [data-material='hero'] .glass-material .app-button.variant-plain {
+  color: color-mix(in oklch, var(--landing-accent-ink), var(--material-rim-ink) 50%);
+}
+
+html:not([data-glass-tier='dense']) [data-material-backdrop='light'] [data-material='hero'] .glass-check input:not(:checked) + .glass-check__box {
+  border-color: color-mix(in oklch, var(--material-rim-ink) 34%, transparent);
+  background-image: linear-gradient(
+    to bottom,
+    color-mix(in oklch, var(--material-rim-ink) 6%, transparent),
+    color-mix(in oklch, var(--material-rim-ink) 2%, transparent)
+  );
+  box-shadow: inset 0 1px 2px color-mix(in oklch, var(--material-rim-ink) 14%, transparent);
+}
+
+html:not([data-glass-tier='dense']) [data-material-backdrop='light'] [data-material='hero'] .glass-check:hover input:not(:checked) + .glass-check__box {
+  border-color: color-mix(in oklch, var(--material-rim-ink) 50%, transparent);
+}
+
+/* ------------------------------------------------------------------ */
+/* Touch reach (2026-10-21) — the 44px floor on a coarse pointer        */
+/* ------------------------------------------------------------------ */
+
+/*
+ * Controls cut from a slab are drawn at the slab's type size, and on a phone
+ * several fell under the 44px floor the material promises (`SKILL.md` §4): the
+ * sign-in card's theme and language buttons were 28px tall, the password
+ * reveal 14px square, "forgot password" 18px tall, "remember me" 21px, the
+ * toolbar's labelled actions 28px. On a coarse pointer each carries an
+ * invisible hit area of at least 44 × 44 centred on it: nothing drawn moves,
+ * nothing reflows. A fine pointer keeps the drawn size.
+ */
+@media (pointer: coarse) {
+  .glass-material .app-button,
+  .glass-material .app-input .icon-button,
+  .glass-check {
+    position: relative;
+  }
+
+  .glass-material .app-button::after,
+  .glass-material .app-input .icon-button::after,
+  .glass-check::before {
+    content: '';
+    position: absolute;
+    top: 50%;
+    left: 50%;
+    width: max(100%, 44px);
+    height: max(100%, 44px);
+    transform: translate(-50%, -50%);
+  }
 }

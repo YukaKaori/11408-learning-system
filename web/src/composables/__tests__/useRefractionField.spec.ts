@@ -7,6 +7,7 @@ import {
   WAKE_TILE,
   blendOperation,
   buildPlate,
+  coverSource,
   createFieldScratch,
   createWake,
   dropAlive,
@@ -643,11 +644,110 @@ describe('the plate registers with the CSS wallpaper', () => {
     expect(layer).toContainEqual(['drawImage', image, 0, 0, 40, 46])
     expect(ctx.imageSmoothingQuality).toBe('high')
   })
+
+  it('a cover-fit layer draws only the crop the stage shows', () => {
+    const calls: unknown[][] = []
+    const ctx = {
+      setTransform() {},
+      fillRect() {},
+      save() {},
+      restore() {},
+      translate() {},
+      transform() {},
+      drawImage: (...args: unknown[]) => calls.push(args),
+      getImageData: (_x: number, _y: number, width: number, height: number) => ({
+        data: new Uint8ClampedArray(width * height * 4),
+        width,
+        height,
+      }),
+      fillStyle: '',
+      globalCompositeOperation: 'source-over',
+      globalAlpha: 1,
+      imageSmoothingEnabled: false,
+      imageSmoothingQuality: 'low',
+    }
+    const canvas = { width: 0, height: 0, getContext: () => ctx } as unknown as HTMLCanvasElement
+    const image = {} as CanvasImageSource
+    buildPlate(canvas, {
+      width: 100,
+      height: 50,
+      dpr: 1,
+      field: 'oklch(0.932 0.029 258)',
+      layers: [
+        {
+          image,
+          box: { x: 0, y: 0, width: 100, height: 50 },
+          source: { x: 12, y: 0, width: 60, height: 30 },
+          matrix: [1, 0, 0, 1, 0, 0],
+          origin: { x: 50, y: 25 },
+          blend: 'source-over',
+          opacity: 1,
+        },
+      ],
+    })
+    expect(calls).toEqual([[image, 12, 0, 60, 30, 0, 0, 100, 50]])
+  })
+})
+
+describe('object-fit: cover — the plate crops as CSS does', () => {
+  const art = { width: 1691, height: 930 }
+
+  it('a wide stage keeps the full height and centres the width', () => {
+    const s = coverSource(art, { width: 1440, height: 900 }, '50% 50%')
+    const scale = 900 / 930
+    expect(s.y).toBeCloseTo(0)
+    expect(s.height).toBeCloseTo(930)
+    expect(s.width).toBeCloseTo(1440 / scale)
+    // the hidden width is split evenly either side
+    expect(s.x).toBeCloseTo((art.width - 1440 / scale) / 2)
+  })
+
+  it('object-position moves the crop: 0% pins the left edge, 100% the right', () => {
+    const box = { width: 390, height: 996 }
+    expect(coverSource(art, box, '0% 0%').x).toBeCloseTo(0)
+    const right = coverSource(art, box, '100% 0%')
+    expect(right.x + right.width).toBeCloseTo(art.width)
+    // a portrait box crops the width only, whatever the vertical term says
+    expect(coverSource(art, box, '0% 80%').y).toBeCloseTo(0)
+  })
+
+  it('lengths are offsets as they stand, and an unreadable term falls back to the centre', () => {
+    const box = { width: 400, height: 400 }
+    const scale = 400 / 930
+    expect(coverSource(art, box, '-20px 0px').x).toBeCloseTo(20 / scale)
+    const centred = coverSource(art, box, '50% 50%')
+    expect(coverSource(art, box, 'calc(10% + 4px) 50%').x).toBeCloseTo(centred.x)
+  })
+
+  it('the crop always has the box’s aspect ratio and stays inside the image', () => {
+    for (const box of [
+      { width: 1440, height: 900 },
+      { width: 820, height: 1180 },
+      { width: 2560, height: 1080 },
+    ]) {
+      for (const position of ['0% 0%', '50% 50%', '100% 100%', '10% 80%']) {
+        const s = coverSource(art, box, position)
+        expect(s.width / s.height).toBeCloseTo(box.width / box.height)
+        expect(s.x).toBeGreaterThanOrEqual(-1e-6)
+        expect(s.y).toBeGreaterThanOrEqual(-1e-6)
+        expect(s.x + s.width).toBeLessThanOrEqual(art.width + 1e-6)
+        expect(s.y + s.height).toBeLessThanOrEqual(art.height + 1e-6)
+      }
+    }
+  })
 })
 
 describe('wake — gated to nothing', () => {
-  const env = (fine: boolean, reduced: boolean) => (query: string) =>
-    query === WAKE_QUERIES.pointer ? fine : query === WAKE_QUERIES.reducedMotion ? reduced : false
+  const env =
+    (fine: boolean, reduced: boolean, forced = false) =>
+    (query: string) =>
+      query === WAKE_QUERIES.pointer
+        ? fine
+        : query === WAKE_QUERIES.reducedMotion
+          ? reduced
+          : query === WAKE_QUERIES.forcedColors
+            ? forced
+            : false
 
   it('mounts only for a fine hovering pointer with motion allowed', () => {
     expect(wakeQualifies(env(true, false))).toBe(true)
@@ -661,7 +761,12 @@ describe('wake — gated to nothing', () => {
     expect(wakeQualifies(env(true, true))).toBe(false)
   })
 
-  it('asks the same two questions as the spotlight', () => {
+  it('never under forced colours, where the stage hides the wallpaper it would bend', () => {
+    expect(WAKE_QUERIES.forcedColors).toBe('(forced-colors: active)')
+    expect(wakeQualifies(env(true, false, true))).toBe(false)
+  })
+
+  it('asks the spotlight’s two questions about the pointer and motion', () => {
     expect(WAKE_QUERIES.pointer).toBe('(hover: hover) and (pointer: fine)')
     expect(WAKE_QUERIES.reducedMotion).toBe('(prefers-reduced-motion: reduce)')
     const matches = vi.fn(() => false)

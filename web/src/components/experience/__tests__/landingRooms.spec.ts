@@ -67,7 +67,8 @@ describe('the landing rooms', () => {
   })
 
   it('both galleries declare a light backdrop on the stage, in both themes', () => {
-    expect(read('views/LoginView.vue')).toContain(`gallery.value === 'login' ? 'dark' : 'light'`)
+    // since 2026-10-21 the sign-in room is a daylight room too: one declaration for the stage
+    expect(read('views/LoginView.vue')).toContain(`const stageBackdrop: MaterialBackdrop = 'light'`)
   })
 })
 

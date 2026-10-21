@@ -49,9 +49,9 @@ Three numbers travel together:
 
 | Number | Today | Measured by |
 |---|---|---|
-| **Budget** (logical surfaces) | **5** — landing dock and its selection lens (chrome, A1), app dock (chrome, B5), sign-in slab (hero), note toolbar (floating) | the surface registry in the guard (`materialSurfaces.ts`, B5) |
-| **Fork count** (files containing `<GlassSurface`) | 3 | `glassBudget.spec.ts` "only the allow-listed surfaces instantiate GlassSurface" — **this is what the shipped test counts**; it is a fork guard, not a surface budget, and a recipe mounted twice is invisible to it |
-| **Concurrency ceiling** (primitives mounted at once on any screen) | 3 — the login stage: sign-in slab, dock, lens (A1; it was 2) | the `verify` skill at the real surface |
+| **Budget** (logical surfaces) | **6** — landing dock and its selection lens (chrome, A1), app dock (chrome, B5), sign-in slab (hero), note toolbar (floating), note link popover (floating, 2026-10-21) | the surface registry in the guard (`materialSurfaces.ts`, B5) |
+| **Fork count** (files containing `<GlassSurface`) | 4 | `glassBudget.spec.ts` "only the allow-listed surfaces instantiate GlassSurface" — **this is what the shipped test counts**; it is a fork guard, not a surface budget, and a recipe mounted twice is invisible to it |
+| **Concurrency ceiling** (primitives mounted at once on any screen) | 3 — the login stage: sign-in slab, dock, lens (A1; it was 2). The note editor shows at most one of its two (the toolbar is suppressed while the popover is open) | the `verify` skill at the real surface |
 
 The fork count must always be ≤ the budget and every entry must be a recipe or
 a sanctioned inline surface. A phase may not raise the budget because it
@@ -137,6 +137,26 @@ never a new refraction implementation. Optical dials refer to `materials.md` §7
   toolbar does not count as leaving the selection (the editor tracks focus
   within its shell) — and an action activated from the keyboard carries focus
   into the proposal.
+- **The settle is the slab's (corrected 2026-10-21).** It ran on the wrapper
+  with `both`, which kept the wrapper a backdrop root once it had played: the
+  slab refracted an empty backdrop and the note line under it showed through
+  the smoke as crisp type. Played by the slab, the line arrives as the haze the
+  recipe's diffusion intended (`implementation.md` §9).
+
+### `GlassPopover` (exists as `WikiLinkSuggestions.vue` — the note editor's `[[` list, 2026-10-21)
+
+- **Role:** a transient list summoned over content — link targets, a context
+  menu, a dropdown of choices.
+- **Recipe:** the toolbar's, at popover scale: `GlassSurface material="floating"`
+  + `.glass-material` rows; the settle on the slab; rows are operated, not read,
+  so they sit on the glass in the on-glass palette at the full dusk step, and
+  the current row holds the indicator's light (pool, rim, lip), never a fill;
+  under forced colours it takes `Highlight`.
+- **Rules:** it shares its host with the toolbar and never shows with it (the
+  editor suppresses the toolbar while the list is open), so the editor's two
+  transient surfaces are one material and one at a time. Results that are
+  *read* (a command palette's) are solid rows inside the slab instead
+  (`navigation.md` §4).
 
 ### `GlassNavigation.vue` (exists as `GlassDock.vue` — the pattern, one recipe, two hosts)
 
@@ -176,8 +196,8 @@ in `experience/materials.ts` and resolve to `--material-*` bundles in
 | Preset | Apple variant | Rank | Character | Shipped on |
 |---|---|---|---|---|
 | `chrome` | Clear | permanent navigation | lowest drama; the scene shows through it; density ~0.16 | GlassDock |
-| `hero` | Clear | the flagship slab | stage-tuned denser (~0.34) for brighter artwork; full depth + Fresnel | LoginView card |
-| `floating` | Regular | transient over arbitrary content | carries legibility in its own body (density ~0.62) | NoteSelectionToolbar |
+| `hero` | Clear | the flagship slab | stage-tuned denser (~0.34) over a dark stage; over a light one the Clear 0.16 in its ink polarity; full depth + Fresnel | LoginView card |
+| `floating` | Regular | transient over arbitrary content | carries legibility in its own body (density ~0.62, 0.86 over a light page) | NoteSelectionToolbar, WikiLinkSuggestions |
 
 The Clear/Regular rule is about legibility, not looks: **Clear** may only be used
 where the stage supplies its own dimming (a shroud, a dark stage, a controlled

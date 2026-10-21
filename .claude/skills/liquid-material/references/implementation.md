@@ -291,6 +291,23 @@ transition: all 0.2s ease-in-out;
 - Never animate `filter`, `backdrop-filter`, `box-shadow` spreads, or anything
   triggering paint per frame. If a light must move, move a gradient position
   through a variable.
+- **An entrance is played by the slab, never by the element around it.**
+  Opacity (or a filling transform effect) on an *ancestor* of a `GlassSurface`
+  makes that ancestor a backdrop root: the slab refracts and diffuses an empty
+  backdrop, and the page shows through its smoke uncut. With `both` the state
+  outlives the settle — the note toolbar shipped that way from Phase 16 to
+  2026-10-21, its B5.3 diffusion never reaching the note line under it. On the
+  slab itself the same animation is harmless (the sign-in card renders
+  pixel-identical with `both` or `backwards`). Wrappers carry no animation;
+  slabs settle with `backwards` (`glassBudget.spec.ts` guards both toolbars of
+  the editor). The landing dock's entrance is played by its layers for the
+  same reason.
+- **Nothing loops under a slab that is not there to be seen.** Any animation
+  behind or inside a refracting slab re-runs its filter every frame: the dusk
+  login's drifting ambient pools and the landing dock's flow band (under the
+  lens) kept that stage at ~6× the idle frame time at rest. The flow band is
+  withdrawn over a light backdrop, where it moves no channel by more than
+  7/255.
 
 ## 10. Testing
 

@@ -20,9 +20,10 @@ import {
  * sit on the hand, not chase it).
  *
  * Gated to nothing: the canvas is only mounted for a fine hovering pointer with
- * motion allowed, decided after mount and re-decided when either preference
- * changes. Touch, keyboard-only and reduced-motion users get the stage at rest,
- * which is complete without it.
+ * motion allowed and the system's own colours not forced, decided after mount
+ * and re-decided when any of those preferences changes. Touch, keyboard-only,
+ * reduced-motion and high-contrast users get the stage at rest, which is
+ * complete without it.
  */
 const props = defineProps<{
   /** The stage's spotlight (or anything carrying its raw pointer). */
@@ -39,24 +40,21 @@ const props = defineProps<{
 const qualifies = ref(false)
 const canvasRef = ref<HTMLCanvasElement | null>(null)
 
-let pointerQuery: MediaQueryList | null = null
-let motionQuery: MediaQueryList | null = null
+let queries: MediaQueryList[] = []
 
 function evaluate() {
   qualifies.value = wakeQualifies((query) => window.matchMedia(query).matches)
 }
 
 onMounted(() => {
-  pointerQuery = window.matchMedia(WAKE_QUERIES.pointer)
-  motionQuery = window.matchMedia(WAKE_QUERIES.reducedMotion)
-  pointerQuery.addEventListener('change', evaluate)
-  motionQuery.addEventListener('change', evaluate)
+  queries = Object.values(WAKE_QUERIES).map((query) => window.matchMedia(query))
+  for (const query of queries) query.addEventListener('change', evaluate)
   evaluate()
 })
 
 onBeforeUnmount(() => {
-  pointerQuery?.removeEventListener('change', evaluate)
-  motionQuery?.removeEventListener('change', evaluate)
+  for (const query of queries) query.removeEventListener('change', evaluate)
+  queries = []
 })
 
 useRefractionField(canvasRef, {

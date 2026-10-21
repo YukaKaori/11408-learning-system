@@ -62,6 +62,10 @@ export const useAppStore = defineStore('app', {
       }
       this.sidebarCollapsed = localStorage.getItem(SIDEBAR_STORAGE_KEY) === '1'
       i18n.global.locale.value = this.locale
+      // index.html ships `lang="zh-CN"`; a stored English locale must say so
+      // from the first paint, not only after the next switch — assistive tech
+      // picks its voice from it, and `:lang()` styles key on it.
+      document.documentElement.lang = this.locale
       this.applyTheme()
       darkQuery.addEventListener('change', (event) => {
         this.systemPrefersDark = event.matches

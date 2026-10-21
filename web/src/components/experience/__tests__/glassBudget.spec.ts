@@ -41,19 +41,21 @@ const SRC = fileURLToPath(new URL('../../..', import.meta.url))
 /**
  * Files allowed to instantiate the primitive, and why.
  *
- * Phase B5 corrected what this list *is*. Three entries are the **fork count**
+ * Phase B5 corrected what this list *is*. Its entries are the **fork count**
  * — the files that own a mount of the primitive — not the budget. The budget is
- * counted in logical surfaces (recipe × host × role) and is **5** since the A1
- * lens: `GlassDock` is one file mounted in two hosts, and on the landing it
- * mounts the primitive a second time for its selection lens — none of which
- * this assertion can see. `materialSurfaces.ts` is the instrument for that, and
- * the two are cross-checked below. The landing galleries (ProductPresentation,
+ * counted in logical surfaces (recipe × host × role) and is **6** since the
+ * note editor's link suggestions (2026-10-21): `GlassDock` is one file mounted
+ * in two hosts, and on the landing it mounts the primitive a second time for
+ * its selection lens — none of which this assertion can see.
+ * `materialSurfaces.ts` is the instrument for that, and the two are
+ * cross-checked below. The landing galleries (ProductPresentation,
  * SponsorPanel) deliberately carry no glass and must stay that way.
  */
 const ALLOWED = {
   'components/experience/GlassDock.vue': 'the persistent landing dock',
-  'views/LoginView.vue': 'the smoked sign-in card',
+  'views/LoginView.vue': 'the sign-in card',
   'features/notes/editor/NoteSelectionToolbar.vue': 'Phase 16 transient AI toolbar',
+  'features/notes/editor/WikiLinkSuggestions.vue': 'the transient `[[` link popover (2026-10-21)',
 } as const
 
 /**
@@ -140,13 +142,21 @@ describe('optical glass budget', () => {
     expect(mounting).toHaveLength(MATERIAL_FORK_COUNT)
   })
 
-  it('exactly one displacement surface lives in the authenticated feature tree', () => {
-    // The other two are unauthenticated chrome (the landing dock, the sign-in
-    // card). Phase 17.2 P0 restated this: it asserts where the *primitive* is
+  it('the authenticated feature tree mounts the primitive only in the note editor’s two transient surfaces', () => {
+    // The other recipes are chrome (the dock) and the unauthenticated sign-in
+    // card. Phase 17.2 P0 restated this: it asserts where the *primitive* is
     // mounted, and says nothing about the app's glass-looking surfaces — those
-    // are covered by the three guards below.
+    // are covered by the three guards below. Since 2026-10-21 the editor holds
+    // two summoned surfaces, the toolbar and the link popover, never at once.
     const inFeatures = Object.keys(ALLOWED).filter((path) => path.startsWith('features/'))
-    expect(inFeatures).toEqual(['features/notes/editor/NoteSelectionToolbar.vue'])
+    expect(inFeatures.sort()).toEqual([
+      'features/notes/editor/NoteSelectionToolbar.vue',
+      'features/notes/editor/WikiLinkSuggestions.vue',
+    ])
+    // ...and they share a host that never shows both: the toolbar is
+    // suppressed while the popover is open.
+    const editor = readFileSync(join(SRC, 'features/notes/editor/NoteEditor.vue'), 'utf8')
+    expect(editor).toContain('const toolbarSuppressed = computed(() => !focusWithin.value || popupOpen.value)')
   })
 
   it('nobody re-implements the refraction chain outside GlassSurface', () => {
@@ -185,6 +195,27 @@ describe('optical glass budget', () => {
 
     expect(authors).toEqual([FACET_OWNER, ...Object.keys(FACET_MIGRATING)].sort())
   })
+
+  it('the entrance is played by the slab, never by the element around it', () => {
+    // Measured 2026-10-21: an opacity/transform animation on the element
+    // *around* a GlassSurface makes that element a backdrop root — and with a
+    // `both` fill it stays one after the settle — so the slab refracts an empty
+    // backdrop and the page shows through its smoke uncut. On the slab itself
+    // the same animation is harmless (the sign-in card renders pixel-identical
+    // with either fill).
+    const surfaces: Record<string, [wrapper: string, slab: string]> = {
+      'features/notes/editor/NoteSelectionToolbar.vue': ['.selection-toolbar', '.toolbar-slab'],
+      'features/notes/editor/WikiLinkSuggestions.vue': ['.wiki-suggestions', '.suggestions-slab'],
+    }
+    const rule = (source: string, selector: string) =>
+      source.match(new RegExp(`\\n${selector.replace('.', '\\.')} \\{([^}]*)\\}`))?.[1] ?? ''
+    for (const [file, [wrapper, slab]] of Object.entries(surfaces)) {
+      const source = readFileSync(join(SRC, file), 'utf8')
+      expect(rule(source, wrapper), `${file} ${wrapper}`).not.toBe('')
+      expect(rule(source, wrapper), `${file} ${wrapper}`).not.toMatch(/animation:/)
+      expect(rule(source, slab), `${file} ${slab}`).toMatch(/animation:[^;]*\bbackwards;/)
+    }
+  })
 })
 
 /**
@@ -196,9 +227,9 @@ describe('optical glass budget', () => {
  * stopped mounting it fails immediately.
  */
 describe('the material surface registry', () => {
-  it('counts five logical surfaces — the Phase B5 budget plus the A1 lens', () => {
+  it('counts six logical surfaces — B5, the A1 lens and the note editor’s link popover', () => {
     expect(MATERIAL_SURFACES).toHaveLength(MATERIAL_BUDGET)
-    expect(MATERIAL_BUDGET).toBe(5)
+    expect(MATERIAL_BUDGET).toBe(6)
     expect(new Set(MATERIAL_SURFACES.map((surface) => surface.id)).size).toBe(MATERIAL_BUDGET)
   })
 

@@ -17,8 +17,8 @@ import type { MaterialPreset } from '../materials'
  *
  * Three numbers travel together, and all three are asserted from this table:
  *
- *   budget       logical surfaces        5   (this file's length)
- *   fork count   files mounting the primitive   3   (distinct `recipe` values)
+ *   budget       logical surfaces        6   (this file's length)
+ *   fork count   files mounting the primitive   4   (distinct `recipe` values)
  *   concurrency  primitives in the DOM at once  3   (measured at the real
  *                surface with the `verify` skill, never by regex — recorded
  *                here so the number has one home)
@@ -33,6 +33,11 @@ import type { MaterialPreset } from '../materials'
  * dock recipe in the same host. A surface is therefore identified by
  * (recipe, host, role); the budget rose 4 → 5 and the login stage's
  * concurrency 2 → 3 (sign-in slab, dock, lens).
+ *
+ * The 2026-10-21 visual pass added the first desktop surface beyond the
+ * selection toolbar: the note editor's `[[` link suggestions, the toolbar's
+ * sibling (same rank, same host, never on screen with it). Budget 5 → 6, fork
+ * count 3 → 4; no screen gained a concurrent primitive.
  *
  * It lives under `__tests__/` deliberately: every guard's source walk skips
  * that directory, so the registry can name files without being mistaken for
@@ -105,16 +110,29 @@ export const MATERIAL_SURFACES: ReadonlyArray<MaterialSurface> = [
     mount: '<NoteSelectionToolbar',
     presence: 'while a text selection exists in the note editor',
   },
+  {
+    id: 'note-link-suggestions',
+    recipe: 'features/notes/editor/WikiLinkSuggestions.vue',
+    host: 'features/notes/editor/NoteEditor.vue',
+    role: 'slab',
+    preset: 'floating',
+    mount: /<WikiLinkSuggestions\s+v-if="popupOpen"/,
+    presence: 'while the `[[` autocomplete is open — the toolbar is suppressed meanwhile',
+  },
 ]
 
 /**
  * Logical material surfaces. Raised 3 → 4 in Phase B5 for the app dock
- * (decision B), and 4 → 5 by Amendment A1 for the landing dock's lens.
+ * (decision B), 4 → 5 by Amendment A1 for the landing dock's lens, and 5 → 6
+ * in the 2026-10-21 pass for the note editor's link suggestions.
  */
-export const MATERIAL_BUDGET = 5
+export const MATERIAL_BUDGET = 6
 
-/** Files that mount the primitive. Unchanged by B5 and A1 — both add roles, not files. */
-export const MATERIAL_FORK_COUNT = 3
+/**
+ * Files that mount the primitive. Unchanged by B5 and A1 — both add roles, not
+ * files; 3 → 4 with the link suggestions, a recipe of their own.
+ */
+export const MATERIAL_FORK_COUNT = 4
 
 /**
  * Primitives simultaneously in the DOM on any one screen. Measured, not

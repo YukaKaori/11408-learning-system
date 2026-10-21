@@ -707,3 +707,61 @@ one budget definition across the skill.
 
 *Audit complete. Skill consolidated. No product code, test, or runtime file was modified.
 Waiting for approval before B1.*
+
+---
+
+## 25. Record — the daylight sign-in room, the desktop link popover, the audit (2026-10-21)
+
+A pre-M3 visual pass on top of `71c4829`, at the owner's request: a new welcome wallpaper,
+a deliberate desktop glass presence, and an audit of the shipped implementation.
+Committed on branch `welcome-daylight-desktop-glass` on the owner's request (2026-10-21).
+
+**1. The sign-in room became a daylight room.** E1 is the supplied artwork
+(`web/public/images/welcome-bg.png`, 1691 × 930, kept as supplied; the browser downloads its
+WebP twin, 140 KB, from `scripts/environment/welcome.cjs`). E2 and E3 left with the dusk: an
+atmosphere could only turn the high-key picture to slate, and the drifting pools behind three
+refracting slabs re-ran their filters every frame. E5 is `light` in all three rooms and both
+themes. The crop is authored per stage shape (centred; the left edge at `10% 80%` on portrait
+tablets; the left edge whole on tall phones). The wake's plate learned `object-fit: cover`
+(`coverSource`). `/welcome` keeps the lotus.
+
+**2. The hero's light-backdrop answer** (the row `adaptive-material.md` §6 had as "never stands
+on a light stage"): the Clear `.16`, rim polarity 1, the dock's ink palette, and a hero-only
+remap — hairlines, hover pools, the brand at `--landing-accent-ink`, the error line at
+`--material-danger-ink`, a secondary step at 93 % of the primary ink, a deeper link, ink-polarity
+input and checkbox skins. A dark slab beside the clear dock was rendered and rejected (two
+materials on one stage). The ink's idle step went .7 → .8 and ink dock labels gained a near halo
+(transparent for dusk labels — the dark-theme app dock is pixel-identical, A/B 0 px).
+Contrast over the picture, worst 5 % of pixels under each text, 320/390/820/1024/1440 px × both
+themes × both locales: title ≥ 8.4, subtitle ≥ 5.5, field labels ≥ 5.5, "remember me" ≥ 4.5,
+"forgot password" ≥ 4.9, submit ≥ 5.3, language ≥ 4.9, dock labels ≥ 4.7, colophon ≥ 9.9,
+input icons ≥ 3.5. Tier C (dense): all ≥ 4.5 except the dusk-pinned brand button's label,
+4.34 on phones — unchanged skin, the same in the old room.
+
+**3. Desktop glass: the note editor's `[[` link popover** (`WikiLinkSuggestions`, `floating`),
+the toolbar's sibling — a popover summoned over the note being written, never on screen with the
+toolbar. Budget 5 → 6, fork count 3 → 4, concurrency unchanged (3, the login stage). The other
+candidates were read and left solid by `navigation.md` §5: the AI tutor's composer and the
+paper-result scoring bar are permanent bars over arbitrary content (Regular would be a dark slab
+in the light theme), the focus timer is docked, the exam head sits over the paper.
+
+**4. Audit findings, fixed:**
+
+| Finding | Evidence | Fix |
+|---|---|---|
+| The note toolbar never refracted or diffused the note once settled | its settle ran on the wrapper with `both`: the wrapper stayed a backdrop root; a solid red slab hid the text, a plain `blur(6px)` left it crisp | the settle is played by the slab (`backwards`); guard added |
+| No forced-colours state | under emulated forced colours the slabs kept tier A: 10 %-alpha `Canvas` body, no edge, forced text over a live refraction, no current-item marker | tier C on `(forced-colors: active)`; opaque `Canvas` body + 1px `CanvasText` edge; `Highlight` for current items; the wallpaper and the wake step back |
+| Rest-state cost on the login stage | 38.9 ms mean frame interval at rest (software-rendered harness) — the ambient pools *and* the dock's flow band under the lens each kept it there | pools gone with the dusk; the flow band withdrawn over a light backdrop (it moved no channel by more than 7/255): 6.2–6.7 ms |
+| English app-dock labels ellipsized below 360 px | "Syllabus", "Practice", "Mistakes" cut at 320 px | `:lang(en)` < 360 px: the row gives the cells its gaps (45 px) and labels 11 px; Chinese untouched |
+| `<html lang>` stayed `zh-CN` after a reload in English | `init()` never wrote it | written at boot (assistive voices, `:lang()`) |
+| On-glass controls under 44 px on touch | sign-in footer 28 px, password reveal 14 px, "forgot password" 18 px, "remember me" 21 px | invisible centred hit areas on a coarse pointer: 42–44 px effective, stacked neighbours sharing the overlap |
+
+**Verified:** 455 unit tests, `vue-tsc`, oxlint, eslint, production build. Real-surface runs
+in Chrome (Playwright, headless): 24 login shots (6 viewports × 2 themes × 2 locales), the
+popover in 8 states, tiers B/C forced via the root attribute, reduced transparency through
+emulated media, forced colours in both system palettes, reduced motion, keyboard order, hit
+testing, the galleries' round trip, sign-in → `/today`, `/welcome`; no console errors.
+**Not run:** Gecko, WebKit, real Windows High Contrast, physical devices.
+
+**Open:** the Product room's scroll edge; Gecko/WebKit; on 320 px phones the peony stands
+behind the form (legible, measured, but busy); the dense tier's brand-button label at 4.34.

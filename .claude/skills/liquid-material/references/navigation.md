@@ -102,20 +102,27 @@ app dock, sign-in slab, note toolbar.
 - **Material:** `chrome` (Clear). The lowest optical drama in the system —
   permanent surfaces earn the least, because they are on screen while the user
   is trying to do something else.
-- **Why Clear:** it is a strip over a stage the app controls (the atmosphere
-  dims for it — `environment.md` §1 E2), and the whole point is that the scene
-  shows through it. Clear over an *uncontrolled* backdrop would be unreadable;
-  see §5.
+- **Why Clear:** it is a strip over a stage the app controls, and the whole
+  point is that the scene shows through it. Clear over an *uncontrolled*
+  backdrop would be unreadable; see §5. (The stage once dimmed for it with a
+  dusk atmosphere; since 2026-10-21 every room of the landing is a daylight
+  room and the stage declares a light backdrop instead — the labels answer in
+  ink, `environment.md` §2.)
 - **Layout:** wide bar, text labels solid and high-contrast, touch targets
   ≥44px. Width adapts to item count rather than letting items overflow; labels
   ellipsize before the bar reflows. A bar that changes *shape* as items are
   added is a bar the user cannot build muscle memory against. Since A1 the
   landing bar is a **segmented control** — equal cells across a 780px bar,
   15px labels in 56px cells — marked by the selection lens below.
-- **Bright rooms:** over the Product gallery the labels flip to dark ink.
-  Shipped (B4): the stage declares `data-material-backdrop="light"` for that
-  gallery and `glass.css` flips the chrome rank's on-glass tokens; the private
-  override in `LoginView` is gone.
+- **Bright rooms:** over a light backdrop the labels flip to dark ink.
+  Shipped (B4): the stage declares `data-material-backdrop="light"` and
+  `glass.css` flips the chrome rank's on-glass tokens; the private override in
+  `LoginView` is gone. Since 2026-10-21 that is every room of the landing — the
+  sign-in room is a daylight room too — and over a picture the ink labels carry
+  a tight near halo with the soft one (`--on-glass-halo-near`) and an idle step
+  of .8: the idle labels measured 4.5 : 1 at best at .7 over the photograph.
+- **Forced colours:** the light and the lens are erased by the system palette;
+  the current item takes the system's `Highlight` / `HighlightText` pair.
 
 ### App dock — Shipped (B5.1 the dock, B5.2 the scroll edge, B5.3 the light-backdrop optics)
 

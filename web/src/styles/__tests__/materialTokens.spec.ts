@@ -214,9 +214,12 @@ describe('liquid material tokens', () => {
   it('the targeted material literals moved into tokens', () => {
     expect(read('components/experience/GlassDock.vue')).not.toMatch(/rgba\(/)
     expect(read('features/notes/editor/NoteSelectionToolbar.vue')).not.toMatch(/rgba\(/)
+    expect(read('features/notes/editor/WikiLinkSuggestions.vue')).not.toMatch(/rgba\(|#[0-9a-f]{3,8}\b|oklch\(/i)
     expect(read('components/experience/GlassSurface.vue')).not.toMatch(/#0(07aff|a84ff)/)
     expect(read('views/LoginView.vue')).not.toContain('rgba(228, 226, 240, 0.38)')
-    expect(tokens).toContain('--environment-stage-text:')
+    // the colophon's dusk token left with the dusk room; it reads the daylight ink
+    expect(tokens).not.toContain('--environment-stage-text:')
+    expect(read('views/LoginView.vue')).toMatch(/\.stage-colophon \{[^}]*color: var\(--landing-ink\);/)
     expect(glass).toContain('--on-glass-halo:')
     expect(glass).toContain('--on-glass-inset-bg:')
   })
@@ -240,15 +243,19 @@ describe('liquid material tokens', () => {
   } as const
 
   /**
-   * The Product-room ink flip, moved byte-for-byte out of LoginView — with one
-   * measured change since: Phase B5.3 raised the dim step .6 → .7, because the
-   * app dock's idle labels read 3.7:1 over the light shell (AA needs 4.5).
+   * The Product-room ink flip, moved byte-for-byte out of LoginView — with two
+   * measured changes since: Phase B5.3 raised the dim step .6 → .7, because the
+   * app dock's idle labels read 3.7:1 over the light shell (AA needs 4.5); the
+   * daylight sign-in room (2026-10-21) raised it to .8 and added a near halo,
+   * because over a picture behind clear glass .7 read 4.5:1 at best and 3.3:1
+   * on phones (`docs/liquid-material-global-reassessment.md`, the record).
    */
   const LIGHT_INK = {
     '--on-glass-text': 'rgba(33, 28, 68, 0.92)',
-    '--on-glass-text-dim': 'rgba(33, 28, 68, 0.7)',
+    '--on-glass-text-dim': 'rgba(33, 28, 68, 0.8)',
     '--on-glass-text-faint': 'rgba(33, 28, 68, 0.4)',
     '--on-glass-halo': 'rgba(255, 255, 255, 0.7)',
+    '--on-glass-halo-near': 'color-mix(in oklch, white 85%, transparent)',
     '--on-glass-halo-active': 'rgba(120, 90, 255, 0.4)',
     '--on-glass-indicator-pool': 'rgba(33, 28, 68, 0.1)',
     '--on-glass-indicator-rim': 'rgba(33, 28, 68, 0.14)',
@@ -295,24 +302,30 @@ describe('liquid material tokens', () => {
     for (const file of Object.keys(STAGES)) {
       expect(read(file), file).toMatch(/:data-material-backdrop="/)
     }
-    // the Login stage: dark in the sign-in room; the Product and Sponsor
-    // galleries are daylight rooms — in both themes
-    expect(read('views/LoginView.vue')).toContain(`gallery.value === 'login' ? 'dark' : 'light'`)
+    // the Login stage: every room is a daylight room since 2026-10-21 — the
+    // sign-in room, the Product and Sponsor galleries — in both themes
+    expect(read('views/LoginView.vue')).toContain(`const stageBackdrop: MaterialBackdrop = 'light'`)
     // the shell: its content is its backdrop, and its content follows the theme
     expect(read('layouts/AppLayout.vue')).toContain(`appStore.isDark ? 'dark' : 'light'`)
   })
 
-  /** The chrome rank's ink flip — gated off tier C since Phase B5.3. */
-  const INK_FLIP = `html:not([data-glass-tier='dense']) [data-material-backdrop='light'] [data-material='chrome'] .glass-material`
+  /**
+   * The Clear ranks' ink flip — gated off tier C since Phase B5.3, shared by
+   * the hero since the sign-in room became a daylight room (2026-10-21).
+   */
+  const INK_FLIP_CHROME = `html:not([data-glass-tier='dense']) [data-material-backdrop='light'] [data-material='chrome'] .glass-material`
+  const INK_FLIP_HERO = `html:not([data-glass-tier='dense']) [data-material-backdrop='light'] [data-material='hero'] .glass-material`
+  const INK_FLIP = `${INK_FLIP_CHROME},\n${INK_FLIP_HERO}`
 
-  it('L-A: the light backdrop moves the shipped ink flip — values unchanged, chrome rank only', () => {
+  it('L-A: the light backdrop moves the shipped ink flip — values unchanged, the two Clear ranks only', () => {
     const ink = block(glass, INK_FLIP)
     const declared = Object.fromEntries(
       [...ink.matchAll(/(--[\w-]+):\s*([^;]+);/g)].map((m) => [m[1], m[2]!.trim()]),
     )
     expect(declared).toEqual(LIGHT_INK)
-    // the flip is the chrome rank's alone: the Regular toolbar keeps dusk labels
-    expect(glass).not.toMatch(/\[data-material-backdrop='light'\] \[data-material='(hero|floating)'\] \.glass-material/)
+    // the Regular toolbar (and the link popover) keep their dusk labels on
+    // their own dense body whatever the backdrop
+    expect(glass).not.toMatch(/\[data-material-backdrop='light'\] \[data-material='floating'\] \.glass-material/)
   })
 
   // ---- Phase B5.3: the light-backdrop optics (decision L-A) -----------------
@@ -328,12 +341,20 @@ describe('liquid material tokens', () => {
   it('B5.3: exactly the measured light-backdrop optics ride on the declaration', () => {
     const optics = Object.fromEntries(
       lightRules()
-        .filter(([selector]) => !selector.endsWith('.glass-material') && selector !== `[data-material-backdrop='light']`)
+        // optics only: the token remaps and the control skins on the slab are
+        // checked on their own below
+        .filter(([selector]) => !/\.glass-(material|check)/.test(selector) && selector !== `[data-material-backdrop='light']`)
         .map(([selector, body]) => [selector, dialsOf(body)]),
     )
     expect(optics).toEqual({
       // a clear slab on paper reads by a darker edge — only while it transmits
       [`html:not([data-glass-tier='dense']) [data-material-backdrop='light'] [data-material='chrome']`]: {
+        '--glass-rim-polarity': '1',
+      },
+      // the daylight sign-in room (2026-10-21): the hero reads like the dock
+      // beside it — ink rims, and the Clear density instead of its stage smoke
+      [`html:not([data-glass-tier='dense']) [data-material-backdrop='light'] [data-material='hero']`]: {
+        '--glass-density': 'var(--material-density-clear)',
         '--glass-rim-polarity': '1',
       },
       // the Regular body rises to dark smoke under its dusk labels
@@ -367,11 +388,59 @@ describe('liquid material tokens', () => {
 
   it('B5.3: the rim ink is derived in OKLCH, and nothing per-frame rides on a backdrop', () => {
     expect(tokens).toMatch(/--material-rim-ink:\s*oklch\(0\.22 0\.018 275\);/)
+    // no backdrop rule *sets* per-frame state (a control skin may read the
+    // light, as every skin does — its moving reflection)
     for (const [selector, body] of lightRules()) {
-      expect(body, selector).not.toMatch(/--glass-(light-|proximity|press|focus)/)
+      expect(body, selector).not.toMatch(/--glass-(light-|proximity|press|focus)[\w-]*\s*:/)
     }
-    // the hero slab never stands on a light stage, so it has no light remap
-    expect(glass).not.toMatch(/\[data-material-backdrop='light'\] \[data-material='hero'\]/)
+  })
+
+  // ---- The daylight sign-in room (2026-10-21) -------------------------------
+
+  /** Every rule of glass.css as [selector, body], comments stripped, whitespace collapsed. */
+  const cssRules = () =>
+    [...glass.replace(/\/\*[\s\S]*?\*\//g, '').matchAll(/([^{}]+)\{([^}]*)\}/g)].map(
+      (m) => [m[1]!.trim().replace(/\s+/g, ' '), m[2]!] as const,
+    )
+
+  /** The hero's own rules under a light backdrop — not the ink flip it shares with the dock. */
+  const heroLightRules = () =>
+    cssRules().filter(
+      ([selector]) =>
+        selector.includes(`[data-material-backdrop='light'] [data-material='hero']`) &&
+        !selector.includes(`[data-material='chrome']`),
+    )
+  const heroRule = (selector: string) => heroLightRules().find(([s]) => s === selector)?.[1] ?? ''
+
+  it('daylight: the hero keeps rank on a light stage — the dock’s density, never below it, and only while it transmits', () => {
+    const value = (name: string) => resolveToken(tokens, `var(${name})`)
+    const optics = heroRule(`html:not([data-glass-tier='dense']) [data-material-backdrop='light'] [data-material='hero']`)
+    expect(dialsOf(optics)).toEqual({
+      '--glass-density': 'var(--material-density-clear)',
+      '--glass-rim-polarity': '1',
+    })
+    // equal to the chrome rank's: adaptation moves the scale, never the order
+    expect(parseFloat(value('--material-density-clear'))).toBeLessThanOrEqual(
+      parseFloat(value('--material-density-clear-stage')),
+    )
+    // every hero rule on a light backdrop is gated off tier C, where the slab is
+    // smoke and its dusk palette and skins are the legible ones
+    expect(heroLightRules().length).toBeGreaterThan(4)
+    for (const [selector] of heroLightRules()) {
+      expect(selector).toMatch(/^html:not\(\[data-glass-tier='dense'\]\) /)
+    }
+  })
+
+  it('daylight: the hero’s remap and skins invent no colour — every value comes from a token', () => {
+    for (const [selector, body] of heroLightRules()) {
+      expect(body, selector).not.toMatch(/rgba?\(|#[0-9a-f]{3,8}\b|oklch\(/i)
+    }
+    const remap = dialsOf(heroRule(INK_FLIP_HERO))
+    // the brand takes the daylight ladder's ink step, the error line its danger twin
+    expect(remap['--color-primary']).toBe('var(--landing-accent-ink)')
+    expect(remap['--color-danger']).toBe('var(--material-danger-ink)')
+    expect(remap['--color-focus-ring']).toBe('var(--color-primary)')
+    expect(tokens).toMatch(/--material-danger-ink:\s*oklch\(0\.49 0\.173 27\.3\);/)
   })
 
   it('B5.3: the primitive reads the rim polarity with an inert default — exactly its shipped rims at 0', () => {

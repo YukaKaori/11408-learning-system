@@ -146,9 +146,13 @@ Not met, carried forward:
   light-backdrop optics) landed in the 2026-10-17 visual pass, with the
   English-locale follow-up: the note toolbar sizes to its actions and goes
   icon-only where they cannot fit, and the dock's stacked labels use their
-  whole cell. Still open: the Product room's scroll edge, the Gecko/WebKit
-  checks, and English dock labels at 320px, which still ellipsize
-  (`docs/liquid-material-global-reassessment.md`).
+  whole cell. The 2026-10-21 pass made the sign-in room a daylight room on the
+  supplied wallpaper, gave the hero slab its
+  light-backdrop optics, made the note editor's `[[` list the first desktop
+  glass beyond the toolbar, fixed the toolbar's lost refraction, added a
+  forced-colours state, 44px touch reach on glass controls and English dock
+  labels at 320px (§25 of `docs/liquid-material-global-reassessment.md`).
+  Still open: the Product room's scroll edge and the Gecko/WebKit checks.
 - The local folder rename to `11408-Learning-System` (it cannot be renamed
   while an editor or Claude Code holds it open) and the hosted repository
   renames by the account owner — see README § Repository.
