@@ -371,8 +371,9 @@ defineExpose({ element: containerRef })
   justify-content: center;
   overflow: hidden;
   /* The declared backdrop (Phase B4): every light-dark() pair in this slab —
-     and the preset tint — resolves against the stage's declaration, not the
-     theme. Undeclared, the token follows the theme (tokens.css). */
+     and, natively, the preset tint — resolves against the stage's
+     declaration, not the theme. Undeclared, the token follows the theme
+     (tokens.css). A production build needs the literal schemes below. */
   color-scheme: var(--material-backdrop);
   background: light-dark(
     hsl(0 0% 100% / calc(var(--glass-frost, 0) * (1 - var(--glass-proximity, 0) * 0.1))),
@@ -397,6 +398,31 @@ defineExpose({ element: containerRef })
     opacity 0.26s ease-out,
     --glass-press var(--duration-fast) var(--ease-out),
     --glass-focus var(--duration-base) var(--ease-out);
+}
+
+/*
+ * The declaration, spelled out (2026-10-23). The production build's CSS
+ * minifier (Lightning CSS, under Vite) rewrites every light-dark() pair as
+ * `var(--lightningcss-light, A) var(--lightningcss-dark, B)` and flips that
+ * switch only where it reads a literal `color-scheme`. `var(--material-backdrop)`
+ * flipped nothing, so in the dark theme a slab on a light stage — the sign-in
+ * slab, the landing dock and its lens — drew the theme's dark pairs, a black
+ * frost and violet rims, where the source asks for the light ones (on a 320px
+ * phone the sign-in title read 5.4 : 1 against 7.0 in the light theme; 6.9
+ * with this). The development server serves light-dark() natively and was
+ * never wrong. Each declared value written out here gives the minifier its
+ * switch; natively it is what the variable holds.
+ *
+ * Still the theme's in a production build: a pair stored in a root token (the
+ * `--material-tint-*` smokes), which the fallback resolves where it is
+ * declared — a few levels of near-black apart at the Clear densities.
+ */
+[data-material-backdrop='light'] .glass-surface {
+  color-scheme: light;
+}
+
+[data-material-backdrop='dark'] .glass-surface {
+  color-scheme: dark;
 }
 
 /*
@@ -428,6 +454,20 @@ html[data-glass-tier='refract'] .glass-surface {
  * rendering fault. The declaration says which case this is; nothing samples.
  */
 html[data-glass-tier='refract'] [data-material-backdrop='light'] .glass-surface {
+  backdrop-filter: var(--filter-id-mono) saturate(var(--glass-saturation, 1));
+}
+
+/*
+ * The Regular rank refracts in one pass over every backdrop (2026-10-23). It
+ * floats over arbitrary content, and that content is text: the split turns
+ * the thin, high-contrast strokes of a line it crosses into three coloured
+ * copies. Over the dark theme's page a white heading under the note toolbar
+ * came through as orange, yellow and violet smears — chroma p99 50, against
+ * 22 in one pass, which leaves a neutral haze. The dispersion whisper belongs
+ * to the Clear slabs, whose backdrops are designed or dissolved before they
+ * reach the glass (the app dock measured the same in one pass or three).
+ */
+html[data-glass-tier='refract'] .glass-surface[data-material='floating'] {
   backdrop-filter: var(--filter-id-mono) saturate(var(--glass-saturation, 1));
 }
 

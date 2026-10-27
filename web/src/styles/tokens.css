@@ -168,7 +168,12 @@
   /* Body density — the legibility dial (how much smoke is in the slab) */
   --material-density-clear: 0.16; /* Clear · the dock over its dark stage */
   --material-density-clear-stage: 0.34; /* Clear · stage-tuned for brighter artwork */
-  --material-density-regular: 0.62; /* Regular · carries legibility alone */
+  /* Regular · carries legibility alone. .62 until 2026-10-23: over the dark
+     theme's page a white heading under the note toolbar brought its dusk
+     labels to 3.65 : 1 (worst 5 % of pixels); .78 holds them at 5.7, and at
+     about 5.9 over a fully white region behind the slab. (Over a declared
+     light backdrop the band below, .86, applies instead.) */
+  --material-density-regular: 0.78;
 
   /* Body tint — the colour of the neutral-density smoke, per material rank */
   --material-tint-chrome: light-dark(rgb(24 26 36), rgb(13 15 24));
@@ -194,7 +199,7 @@
        diffuse  — blur radius of the diffusion that stands in for refraction
        dense    — the floor the body rises from toward opaque: alpha =
                   floor + (1 − floor) × density, so rank order survives
-                  (chrome .765 · hero .815 · floating .894) */
+                  (chrome .765 · hero .815 · floating .938) */
   --material-diffusion: 10px;
   --material-density-dense-floor: 0.72;
 
@@ -220,9 +225,17 @@
   /* The error line on a clear slab over a light backdrop (the sign-in slab in
      the daylight room, 2026-10-21): the slab's smoke greys the room behind
      it, so the light theme's danger — #dc2626 = oklch(0.577 0.215 27.3) —
-     reads 3.1 : 1 there. Taken the step the brand ladder takes from accent to
-     accent-ink (L −.087, chroma ×.805), it reads 4.6 : 1. */
-  --material-danger-ink: oklch(0.49 0.173 27.3);
+     reads 3.1 : 1 there. One step down the brand ladder (accent → accent-ink:
+     L −.087, chroma ×.805), oklch(0.49 0.173 27.3), was taken for 4.6 : 1, but
+     measured bare against what is behind the line across stage shapes it read
+     2.4–4.7 : 1 before the 2026-10-23 pass and 3.1–4.4 : 1 after it (the
+     slab moved with the room's 2 : 3 shares), never 4.5 everywhere. The
+     deepest backdrop it crosses — an upright tablet, with the "forgot
+     password" hint open above it, which lowers the line onto the peony
+     (L .397) — asks for a red of luminance ≤ .049: this is a little under
+     that — 4.6 : 1 there — at the ladder's own chroma-to-lightness ratio,
+     still the error red (#771816). */
+  --material-danger-ink: oklch(0.375 0.13 27.3);
 
   /* Geometry (Phase B1, `components.md` §7). A slab's radius belongs to its
      recipe; the primitive's own content inset is part of every nested radius
@@ -261,54 +274,27 @@
      component CSS can always list it alongside a base shadow. */
   --shadow-glow-primary: 0 0 0 0 rgba(94, 106, 210, 0);
 
-  /* Scene — the welcome hero (`GlassScene`). Since Phase B3 it is the Login
-     environment's wallpaper under the same atmosphere, not a white frosted
-     veil: its text rides on dusk in both themes, so these are the dusk values
-     the dark theme always had. --scene-aura is the rose glow behind the solid
-     welcome sections below the hero. */
-  --scene-text: #f6f2f3;
-  --scene-text-soft: rgba(246, 242, 243, 0.8);
-  --scene-aura: rgba(219, 168, 178, 0.22);
+  /* Scene — the welcome hero (`GlassScene`). Since 2026-10-23 it stands in the
+     daylight room the sign-in room stands in, in both themes (it was the dusk
+     lotus room, whose values these were), so its copy is the daylight rooms'
+     ink: the landing ladder's ink and its second step; the hero chip an ink
+     hairline over a faint ink wash, which is also the outline button's hover.
+     --scene-aura is the glow behind the solid welcome sections below the hero:
+     the peonies' blue (`--environment-daylight-*` anchor), an echo of the
+     picture above — it was the lotus's rose. */
+  --scene-text: var(--landing-ink);
+  --scene-text-soft: var(--landing-ink-2);
+  --scene-aura: oklch(0.88 0.05 261 / 0.22);
   /* The hero chip riding on the scene, and the sign-in brand tile's lip. */
-  --scene-chip-bg: rgba(18, 16, 26, 0.5);
-  --scene-chip-border: rgba(246, 242, 243, 0.22);
+  --scene-chip-bg: color-mix(in oklch, var(--landing-ink) 5%, transparent);
+  --scene-chip-border: var(--landing-line-strong);
   --scene-brand-lip: rgba(255, 255, 255, 0.55);
 
-  /* ── Environment (Phase B3, `environment.md`) ─────────────────────────────
-     Everything the material sits in front of on the welcome hero — and, until
-     the daylight room replaced it on 2026-10-21, on the Login stage.
-     Environment, not material: none of these reach a slab.
-
-     Anchor (`color.md` §3): the wallpaper itself — the pink lotus's petals,
-     ≈ oklch(0.86 0.06 5), drawn in light on a black ground. The field is that
-     ground brought into the rose family: a dusk of the petals' own hue, dark
-     enough that the screen-blended flower still reads as light. Every colour
-     below keeps the family and walks lightness: the dusk that dims the room is
-     the room's own depth, the ambient pools are the room's own light.
-
-     E1 field       the stage colour — the wallpaper's ground
-        lotus       how much of the artwork's light lands on the field (screen)
-     E2 atmosphere  a neutral-density dusk graded top → bottom, the one light
-                    being above: the room stays open where no glass sits and
-                    deepens toward its foot. No blur, no white: the wallpaper
-                    is always seen.
-     (E3, the Login stage's three drifting ambient pools, left with the dusk
-     room: the welcome hero never had them.) */
-  --environment-field: oklch(0.31 0.05 354);
-  --environment-lotus-light: 1;
-  --environment-atmosphere:
-    radial-gradient(
-      ellipse min(40vw, 560px) min(48vh, 480px) at 50% 40%,
-      oklch(0.15 0.03 348 / 0.46),
-      oklch(0.15 0.03 348 / 0) 100%
-    ),
-    linear-gradient(
-      180deg,
-      oklch(0.2 0.035 350 / 0) 0%,
-      oklch(0.2 0.035 350 / 0.08) 50%,
-      oklch(0.15 0.03 346 / 0.5) 84%,
-      oklch(0.13 0.028 344 / 0.62) 100%
-    );
+  /* (The dusk lotus room — `--environment-field`, `-lotus-light` and
+     `-atmosphere`, the pink lotus placed twice under a graded dusk — retired
+     on 2026-10-23 with its last stage, the welcome hero. The Login stage left
+     it on 2026-10-21. The artwork stays in the repository: `scripts/
+     environment/source/pinklotus.png` and its encoder, unmounted.) */
 
   /* ── The daylight room — the Login stage since 2026-10-21 ────────────────
      The wallpaper is the supplied artwork (`public/images/welcome-bg.png`):
@@ -324,8 +310,13 @@
      behind the slab ≈ oklch(0.965 0.015 253).
        field  the stage colour: the picture's mean, shown only while it loads
               (and drawn under it in the wake's plate). Theme-invariant, like
-              the two daylight galleries below. */
+              the two daylight galleries below.
+       sky    the picture's open sky (2026-10-23): on a phone-shaped stage the
+              picture is a crown band at the top that dissolves into the room's
+              own light — this sky above, the field below — so the form rests
+              on calm daylight instead of on a peony. */
   --environment-daylight-field: oklch(0.932 0.029 258);
+  --environment-daylight-sky: oklch(0.965 0.015 253);
 
   /* ── Landing rooms — the Product and Sponsor galleries ────────────────────
      The two daylight galleries of the login stage (and, since 2026-10-21, the
@@ -383,6 +374,8 @@
   --duration-slow: 320ms;
   --ease-out: cubic-bezier(0.16, 1, 0.3, 1);
   --ease-in-out: cubic-bezier(0.65, 0, 0.35, 1);
+  /* Overshoots — for solid UI only; never on a glass surface, whose motion is
+     damped and never springs (`constitution.md` §2.13). */
   --ease-spring: cubic-bezier(0.34, 1.56, 0.64, 1);
 
   /* Layout */
@@ -486,47 +479,14 @@ html.dark {
   /* The undeclared backdrop follows the theme (see :root). */
   --material-backdrop: dark;
 
-  --scene-aura: rgba(219, 168, 178, 0.08);
+  --scene-aura: oklch(0.88 0.05 261 / 0.08);
   /* The brand tile's lip keeps its violet cast on the dark theme. */
   --scene-brand-lip: rgba(180, 172, 255, 0.18);
 
-  /* Environment — the same room at a later hour: the ground falls toward
-     night and the blooms, a little quieter, carry the room. (The daylight
-     room is theme-invariant and is not redeclared here.) */
-  --environment-field: oklch(0.15 0.025 350);
-  --environment-lotus-light: 0.9;
-  --environment-atmosphere:
-    radial-gradient(
-      ellipse min(40vw, 560px) min(48vh, 480px) at 50% 40%,
-      oklch(0.11 0.02 346 / 0.4),
-      oklch(0.11 0.02 346 / 0) 100%
-    ),
-    linear-gradient(
-      180deg,
-      oklch(0.12 0.02 348 / 0) 0%,
-      oklch(0.12 0.02 348 / 0.1) 50%,
-      oklch(0.1 0.018 346 / 0.5) 84%,
-      oklch(0.09 0.016 344 / 0.62) 100%
-    );
+  /* (The daylight room is theme-invariant and is not redeclared here. The
+     dusk room's later hour left with it on 2026-10-23, and with it the
+     reduced-transparency deepening of its atmosphere — no stage has an
+     atmosphere now; tier C answers reduced transparency in the material.) */
 
   color-scheme: dark;
-}
-
-/*
- * Reduced transparency / increased contrast — the environment's half of tier C
- * (`environment.md` §4): the material turns dense on its own; the atmosphere
- * deepens and the blooms recede so nothing decorative competes with a label.
- * Declared once, for both themes (same specificity, later wins).
- */
-@media (prefers-reduced-transparency: reduce), (prefers-contrast: more) {
-  :root,
-  html.dark {
-    --environment-atmosphere: linear-gradient(
-      180deg,
-      oklch(0.15 0.025 345 / 0.56) 0%,
-      oklch(0.14 0.025 345 / 0.68) 50%,
-      oklch(0.12 0.022 344 / 0.84) 100%
-    );
-    --environment-lotus-light: 0.6;
-  }
 }

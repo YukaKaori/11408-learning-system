@@ -6,6 +6,13 @@
 declaration implemented** (2026-09-17, uncommitted — see §20 row B4). Phases B5–B6 wait for
 explicit approval and the decisions in §23 (R, T and Y were exercised by B1; W and V by B3;
 L by B4).
+**Since then** (the status line above is kept as written): B4 committed (`4904a7a`, 2026-09-17),
+B5.1 the app dock (`e47804b`), B5.2/B5.3 the scroll edge and the light-backdrop optics
+(`71c4829`), the daylight sign-in room and the desktop link popover (`75e4e30`, record §25), and
+a welcome-room, phone-crown and verification pass — verified on production builds in Chrome and
+committed on branch `welcome-room-crown-verification` on 2026-10-27, with its open exceptions
+listed (record §26).
+B6 is not started.
 **Supersedes:** the 2026-09-14 draft of this document and
 `docs/authenticated-liquid-material-rollout.md` (2026-08-01, kept as history).
 **Authority:** `.claude/skills/liquid-material/` — `SKILL.md`, `references/constitution.md`
@@ -765,3 +772,267 @@ testing, the galleries' round trip, sign-in → `/today`, `/welcome`; no console
 
 **Open:** the Product room's scroll edge; Gecko/WebKit; on 320 px phones the peony stands
 behind the form (legible, measured, but busy); the dense tier's brand-button label at 4.34.
+
+---
+
+## 26. Record — the welcome hero's daylight room, the phone crown, and a verification pass (2026-10-23)
+
+Made on top of `75e4e30` between 2026-10-23 and 2026-10-27: the implementation, then a
+verification, narrowly scoped repair and documentation pass (interrupted three times — two
+session limits, then a machine restart; its last runs finished on 2026-10-27). Committed on
+branch `welcome-room-crown-verification` on the owner's request once the verification had
+finished (2026-10-27). Every figure below comes from the verification, measured on **production
+builds** with one instrument (26.2).
+
+### 26.1 What the working tree changes
+
+1. **The welcome hero stands in the sign-in room's daylight** (`GlassScene`): the supplied
+   picture through the same `<picture>` pair, cover-fit; its copy in the daylight rooms' ink
+   (`--scene-*` → `--landing-ink*`), the smaller lines with the colophon's halo pair, the eyebrow
+   and the three words in the full ink; the actions on the daylight brand ladder; every keyboard ring in the room the
+   brand ink (declared on `.hero`); the sections' aura the peonies' blue. Environment only — the
+   route mounts no glass. The dusk lotus room is retired: `--environment-field`, `-lotus-light`,
+   `-atmosphere` and their reduced-transparency deepening are gone (guarded); the lotus artwork
+   and its encoder stay, unmounted.
+2. **Phone-shaped stages** (≤ 640px wide, or taller than 3 : 5) **wear the picture as a crown** on
+   both rooms — a band across the top half, cropped to the right peony, masked into the room's own
+   daylight (`--environment-daylight-sky` → `-field`). The wake's gate excludes the same query, and
+   re-decides when a window crosses it.
+3. **The sign-in room's composition:** a grid sharing the free height 2 : 3 above and below the
+   slab (1 : 1 on a phone), floors in proportion — it replaced a 12vh margin that left the dock 9px
+   under the slab on a 768px-tall laptop.
+4. **The Regular rank** (`floating`, the note toolbar and the `[[` list): density **.62 → .78**,
+   refraction in **one pass** on every backdrop.
+5. **The shell's scroll container drops its mask while a slab is mounted inside it**
+   (`.content:has(.glass-surface)`), or the toolbar and the list refract nothing on phones.
+6. **On smoke**, a brand fill under a white label takes the anchor's steps (`--on-glass-brand-fill*`),
+   and **every slab declares its own keyboard ring**: smoke `--landing-accent-soft`; the clear dock
+   and the clear sign-in slab over a light stage `--material-rim-ink`.
+7. **A production build honours the declared backdrop:** each declared value is also written as a
+   literal `color-scheme` on the slab (26.3, finding 1).
+8. **`--material-danger-ink`** oklch(0.49 0.173 27.3) → **oklch(0.375 0.13 27.3)** (finding 5).
+9. Comments only: `motion.css` (`app-float` never on glass), `tokens.css` (`--ease-spring` solid UI
+   only), `RefractionField.vue`, `GlassSurface.vue`.
+
+No surface was added: budget 6, fork count 4, at most 3 primitives on one screen.
+
+### 26.2 One instrument, and why the earlier figures disagreed
+
+The pass inherited contradictory numbers for the same text — the landing dock's current label at
+820 × 1180 was "3.31", "4.8", "5.89" and "5.54" in different reports — and figures that could not
+be compared: the earlier scripts differed in five ways.
+
+| | 2026-10-21 baseline | 2026-10-23, first session | this pass |
+|---|---|---|---|
+| served from | dev server | dev server | **production build** (`vite build` + `vite preview`) |
+| browser | Chrome | bundled Chromium (headless shell) | Chrome |
+| sampled region | the element's box | the text's line boxes | the text's line boxes |
+| halo | kept | removed (`after-native` log), then **kept** (`final-native` log) | **both**, reported separately |
+| colour parsing | canvas (correct) | `oklch()` read as **black** | the browser's own serialisation (`color(srgb …)`) |
+| clipped or covered text | sampled anyway | sampled anyway | **refused** (hit test + every clipping ancestor) |
+
+So the "5.89 / 4.8" of the first session's final log (11:32) was the "3.31 / 3.70" of its 11:26 log
+re-measured with the halo kept — the instrument changed at 11:28, the code did not. Its colophon
+and "forgot password" were computed as black text: 15.9 and 13.4 at 320 × 640 (they are 12.6 and
+7.3), 13.2 and 13.2 at 820 × 1180 (10.5 and 7.2). Its dense-tier log covered 320 × 640 only. The
+4.34 (2026-10-21) and 4.41 (first session) are one finding — the sign-in button's label in tier
+C — measured by two instruments.
+
+**The method of this pass:** per-pixel WCAG 2 contrast of the computed colour (times the
+opacity of the element and its ancestors) composited over the pixels rendered behind each line
+box, with the glyphs made transparent; **bare** (the text's own `text-shadow` removed too) is the
+headline figure, **halo** (shadow kept) is reported beside it; the statistic is the 5th percentile
+of the pixels (the worst 5 %). Rings: the outline colour over the band it occupies, against the
+same pixels with the ring made transparent. Fourteen stage shapes (320 × 640 to 1920 × 1080,
+phones and upright tablets emulated as touch devices at DPR 2, desktops at DPR 1), both themes,
+both locales, tiers A (native), B (`diffuse`, forced through the root attribute — Blink rendering
+the WebKit/Gecko tier) and C (`dense`, through emulated `prefers-reduced-transparency`).
+Signed-in pages answer the preferences read with the run's theme (nothing written). The
+backend's CORS allow-list knows only the dev origin, so a write from a preview port is refused
+(403 "Invalid CORS request" — a harness artefact, not a product defect); the harness presents the
+dev origin for API requests. The proposal stream is answered in the browser — no AI call.
+Regression or pre-existing was decided against a production build of `75e4e30`. A temporary-folder
+cleanup removed the instrument's scripts and logs mid-pass; it was re-created from the session
+record with the same rules and checked against a context measured before any repair (820 × 1180,
+light, zh-CN: all twelve texts, bare and halo, identical to two decimals). Figures from before the
+cleanup that this record uses were taken on builds whose source differed from the final one only
+where stated, and each such difference was re-measured on the final build.
+
+### 26.3 Findings and what was done
+
+| # | Finding | Evidence | Kind | Done |
+|---|---|---|---|---|
+| 1 | In a built app the light-stage slabs drew the **dark theme's** `light-dark()` pairs — a black frost, violet rims — under the sign-in slab, the dock and the lens | the minifier (Lightning CSS) rewrites every `light-dark()` as `var(--lightningcss-light, A) var(--lightningcss-dark, B)` and switches it only beside a literal `color-scheme`; `var(--material-backdrop)` switched nothing. Sign-in title at 320px: 6.95 light vs 5.41 dark. The dev server (native) never showed it | pre-existing (since B4) | literal `color-scheme` per declared value on `.glass-surface`; title now 6.86 dark (the root-token tints remain theme-resolved in a build: ~1 %) |
+| 2 | The **landing dock's keyboard ring** (brand anchor) read **1.6–2.3 : 1** against what is behind it at every stage shape | rings sampled per cell, both locales; the anchor's ink step 2.3–3.3; the rim ink 5.9–8.5 from the same pixels | the colour is pre-existing; the rule naming it was this pass's | the dock's ring is the rim ink |
+| 3 | The **sign-in slab's ring** (brand ink) dipped to **2.76–3.0** at 744, 810 and 1440 px | same method; the rim ink ≥ 7.09 (7.24 in the light theme) | pre-existing | the slab's ring is the rim ink |
+| 4 | `/welcome`: the **scroll hint's ring** read **2.36** (dark theme) on the bright picture; the **eyebrow** **3.88** bare at 360px in English; the **three words** **4.33** at 1024 × 768 | the ring was declared on `.hero-content`, outside which the hint sits; the soft ink over the crown's peony, and over the picture's darker middle on a landscape laptop | regression (this pass's room) | the ring on `.hero`; the eyebrow and the words in the full ink |
+| 5 | The **sign-in error line** failed almost everywhere | `75e4e30`: 2.4–4.7; after the 2 : 3 grid 3.1–4.4 (better on phones, worse on upright tablets and 1024/1366, where the slab now stands lower) — the deepest case with the "forgot password" hint open above the line | pre-existing, shifted by this pass | the ink two measured steps deeper (`#771816`) |
+| 6 | The **tier C sign-in button** (4.34 / 4.41) and the **toolbar's proposal button** (4.0–4.1 in tier A, first session) | the pinned dusk brand (`#7b86e8`…) under a white label | pre-existing / the first session's fix | `--on-glass-brand-fill*` (first session) — confirmed below in every tier, for Accept and Retry |
+| 7 | The **app-wide dark-theme primary button**: a white label on `#7b86e8` | rendered **3.27 : 1** on `/flashcards`, `/calendar` and the welcome page's closing CTA (light theme 4.70) | pre-existing, app-wide | **documented, not changed** — every solid primary button in the dark theme; a fill token for the dark theme (e.g. the anchor step, 4.7 : 1) is the likely fix and a visual decision |
+| 8 | The **landing dock's current label on upright tablets** is under 4.5 : 1 **bare** | 744, 820 and 834 portrait, both themes and locales: **3.36–4.27 bare** (halo 4.60–6.36); 768, 810 and 1024 portrait ≥ 4.63 bare. `75e4e30` at 744/820/834 (light): 3.49–4.27 — the same figure in every context measured on both | pre-existing (the portrait crop puts the large peony behind the dock; the dock did not move) | **documented exception** — no change inside the material rules: the label is ink on clear glass over a mid-tone petal; only a different crop or a denser bar would move it |
+| 9 | The **note toolbar, its proposal panel and the `[[` list** open into the clipped part of a scrolled editor pane | placed from the editor shell's top, not the pane's visible box (`.canvas-body`, ~290px tall on a phone): 24 of the bar's 60px rows visible after an 81px scroll at 390 × 844; the flip also assumes a 48px bar (it renders 60px). Identical in `75e4e30` | pre-existing (positioning, not material) | **documented** (`components.md` §3); measured with the pane positioned so each slab is whole |
+| 10 | A `[` typed into the editor was lost once | 0 of 12 deliberate repetitions on the production preview and the dev server | not reproduced | — |
+| 11 | **Tier C (reduced transparency) still has short rings and, at desktop widths, a short error line** | the dock's rings at every shape (390–1920, both themes): the current cell **1.34–1.93**, 赞助 **1.64–1.88**, 产品 **2.74–3.13**; at 1024–1920 also the sign-in button's **2.76–2.92**, the theme's **2.60–2.97** and the language's **2.58–2.88** (5.24–5.90 at 390/820); the error line **4.16–4.31** in the light theme at 1024–1920 (dark 4.64–4.76; 390/820 5.73–6.29). The what-if colours from the same pixels (the brand anchor, its ink step, the rim ink, the light step): none clears 3 : 1 on the dock's cells — the slab is smoke there; its lower part is lifted by the back-face bloom (the band behind the footer rings ≈ `rgb(90 92 96)`), and the dock's end cells put part of their ring band outside the rounded bar, on the bright picture, so no single ring colour clears both | pre-existing — against `75e4e30` at 390, 820 and 1440 (light): the error line (4.11 → 4.18–4.31 at 1440), the sign-in button's label (4.34–4.35 → 6.24–6.26) and 26 of the 27 rings are better (HEAD 1.31–3.43); one is lower — the dock's current cell at 820, **1.49 → 1.34** (the light step this pass declares on smoke reads below the page's brand on that cell's band; both far under 3) | **documented, open**: a two-tone (inset light + outer dark) focus ring for tier C, and a lighter smoke danger step, are the likely fixes — a ring-geometry change, outside a narrow repair |
+
+### 26.4 Final measurements (production build, bare unless marked)
+
+**Sources.** *The final build:* the two lanes of 2026-10-26 on a production build of the final
+tree under `vite preview` — lane 1 the sign-in room (40 contexts, the last 8 of them on a
+production build of `75e4e30`), lane 2 the welcome route, the note toolbar and `[[` list and the
+app-wide primary button, then the interaction checks (finished 2026-10-27, 26.5) — and two single
+contexts on the same bundle (820 × 1180 light zh-CN, the instrument's cross-check; 1440 × 900
+light zh-CN in tier C). The bundle `vite build` made from the final tree on 2026-10-27 is
+byte-identical to the one measured (SHA-256, all 154 files). *Three sweeps of 2026-10-24* that
+the lanes did not repeat, each on a build that differed from the final one only in tokens that
+do not reach what it measured: the sign-in room's texts in tier A at the twelve shapes from
+320 × 640 to 1024 × 768, both themes and locales (48 contexts; that build predates the slab's
+rim-ink ring, the final error ink and the welcome words line); the error line on the final ink
+(all 14 shapes, both themes and locales, with and without the hint above it: 112 figures); and
+the rings in the rim ink at every shape. Where a context was measured on both, the figures agree:
+the cross-check to two decimals, the tablet dock label at `75e4e30` context for context. Targets:
+4.5 : 1 for text, 3 : 1 for large text, icons and rings. **Bold** = under target.
+
+**The sign-in room.** Final build: tier A at 1024, 1366, 1440 and 1920 (both themes, both
+locales) and 820 light zh-CN; tier B (`diffuse`) at 390, 820 and 1440 and tier C (`dense`) at
+390, 820, 1024, 1440 and 1920 (both themes, zh-CN). In brackets, the 2026-10-24 tier A sweep at
+320–1024.
+
+| | tier A | tier B | tier C |
+|---|---|---|---|
+| title · subtitle | 8.59–9.55 · 7.50–7.86 (≥ 6.83 · ≥ 6.00) | 8.46–9.55 · 7.37–7.87 | 11.63–12.70 · 6.14–6.59 |
+| field labels · remember | 7.07–7.92 · 6.13–7.21 (≥ 6.23 · ≥ 5.78) | 7.12–7.87 · 6.89–7.33 | 6.30–6.71 · 6.24–6.68 |
+| forgot · the button's label · language | 4.84–7.27 · 5.30–5.36 · 7.01–7.57 (≥ 6.71 · ≥ 5.29 · ≥ 7.15) | 6.69–7.54 · 5.30–5.41 · 7.16–7.81 | 4.79–5.33 · 6.24–6.36 · 5.40–5.96 |
+| the dock's current label | 5.43–6.52 at 1024–1920 (halo ≥ 5.66); **3.53** at 820 (halo 6.31) (≥ 3.36: **under 4.5 in 12 of 48 contexts — exactly the 744, 820 and 834 portraits**, 3.36–4.27, halo 4.60–6.36; finding 8) | 4.90–6.89 (halo ≥ 6.22) | 11.71–13.40 |
+| the dock's other labels | 5.39–5.92 (≥ 5.25) | 5.39–6.19 | 5.41–6.15 |
+| colophon · the forgot-password hint | 10.48–11.80 · 5.68–7.04 (≥ 10.37 · ≥ 5.67) | 10.48–12.71 · 6.17–7.26 | 10.48–12.71 · 5.81–6.67 |
+| the error line, under the open hint | 4.83–6.62; on the final ink, every shape, with and without the hint (2026-10-24): 4.63–6.94 | 5.44–6.92 | **4.16–4.31** light at 1024–1920; dark 4.64–4.76; 390/820 5.73–6.29 |
+| rings on the slab | at 1024–1920: reveal 10.48–10.94, remember 10.41–11.35, forgot 7.86–11.00, sign in 9.48–11.06, theme 10.68–12.41, language 10.81–12.30 (every shape, 2026-10-24: ≥ 7.09) | 8.24–11.92 | reveal 4.98–5.98, remember 5.39–7.24, forgot 4.53–7.10; sign in, theme, language 5.24–5.90 at 390/820, **2.58–2.97** at 1024–1920 |
+| rings on the dock | 6.62–8.39 at 1024–1920 (every shape, 2026-10-24: 5.89–8.54) | 6.18–8.54 | **the current cell 1.34–1.93, 赞助 1.64–1.88, 产品 2.74–3.13** at every shape |
+
+The rings are the rim ink in tiers A and B and the brand's light step in tier C (smoke). The
+text fields draw no outline — a focused field turns its frame to the brand (26.5). `75e4e30`
+(production build, for regression): tier A at 744, 820 and 834 light — the dock's current label
+3.49–4.27 (halo 4.73–6.36), the error line **3.14–3.47**; tier C at 390, 820 and 1440 light — the
+button's label **4.34–4.35**, the error line **4.11** at 1440 (5.73–5.82 at 390/820), rings
+**1.31–3.43** (the theme's brand, `#5e6ad2`).
+
+**The welcome route.** Final build: 1024, 1366, 1440 and 1920 light (both locales), 390 and 1440
+dark (both locales), 820 and 1920 dark zh-CN — 14 contexts. The hero is the same room in both
+themes: at 1440 its light and dark figures agree to two decimals but for the hint's icon
+(5.28 / 5.34). In brackets, 22 contexts of 2026-10-24 at 320–1024, measured before the three
+words moved to the full ink.
+
+| | final build | (2026-10-24) |
+|---|---|---|
+| eyebrow | 11.03–15.15 (halo ≥ 12.68) | ≥ 9.44 |
+| the title's two lines (large) | 11.84–14.64 | ≥ 11.50 |
+| the three words | 10.52–16.00 (halo ≥ 11.97) | ≥ 4.33 — the 1024 × 768 finding (4), since fixed |
+| subtitle | 4.61–6.20 (halo ≥ 4.94) | ≥ 4.53 |
+| Start (white on the anchor) · Discover | 4.71 · 13.78–15.44 | 4.71 · ≥ 13.72 |
+| the scroll hint's icon | 5.16–5.87 | ≥ 5.16 |
+| the solid sections: titles · copy | 15.48–18.03 · 6.96–8.29 | ≥ 15.33 · ≥ 6.61 |
+| the closing CTA's label | 4.70 light · **3.27** dark (every dark context; finding 7) | **3.27** dark |
+| rings | Start 4.82–6.14, Discover 5.35–5.81, the scroll hint 4.80–5.55 (the daylight brand ink); the closing CTA 4.24–4.96 (the theme's ring) | — |
+
+Every section was revealed by scrolling (none left hidden) and no context scrolled sideways.
+
+**The note toolbar and the `[[` list** (Regular rank, `floating`): 1440 and 390, both themes in
+tiers A and C, the light theme in tier B; the proposal stream answered in the browser; each slab
+measured where it is whole (finding 9).
+
+| | tier A | tier B | tier C |
+|---|---|---|---|
+| the `[[` list: active · idle row | 5.80–14.57 · 7.97–15.04 | 5.80 · 6.55–7.97 | 13.77–14.58 · 14.25–15.07 |
+| the bar's four actions | 6.65–15.31 | 6.65–9.80 | 14.76–15.32 |
+| the proposal: title · body | 5.53–15.13 · 5.58–14.45 | 5.55–6.16 · 5.58–12.26 | 14.36–15.07 · 7.01–15.21 |
+| Discard (ghost) · Accept / Retry (brand fill) | 8.34–14.76 · 5.72–6.64 | 8.34–9.25 · 5.73–5.83 | 13.64–14.76 · 6.43–6.64 |
+| rings: the bar · the proposal | 3.21–3.88 · 4.19–7.41 | 4.40–4.46 · 4.19–4.33 | 7.15–7.55 · 6.41–7.39 |
+
+The shell's scroll-edge mask is on the phone's `.content` before a slab opens and gone while the
+toolbar or the list is mounted (desktop has none). No console error, page error or failed
+request in any context.
+
+**The app-wide primary button** (outside glass; `/flashcards` and `/calendar` at 1440 and 390):
+a white label on `#5e6ad2` 4.70 in the light theme, on `#7b86e8` **3.27** in the dark (finding 7).
+
+**The app dock** (390 × 844, 2026-10-27): the current label 8.18 light / 12.71 dark, the first
+idle label 6.65 / 7.06; the first three cells' rings 10.92–11.48 (the rim ink) / 6.31–6.86 (the
+light step).
+
+### 26.5 Interaction checks (production build, Chrome headless)
+
+Pass/fail checks, not contrast (except §7's labels and rings); every page is also checked for
+console errors, page errors and failed requests. **564 checks, all passing on the final build.**
+
+| § | What | Contexts | Checks | Run |
+|---|---|---|---|---|
+| 1 | `/` and `/welcome` rendered: signed out, `/` is the sign-in room; signed in, `/today`; theme and language applied; no sideways scroll; the app dock on a phone; the welcome picture decoded; screenshots kept | 1440 and 390 × both themes × both locales | 84 | 2026-10-26 |
+| 2 | `/welcome` at every shape: no sideways scroll; the copy clears the scroll hint; the hint on screen; a phone-shaped stage wears the crown (half the height, masked), the rest the whole picture | 15 shapes × 2 locales | 150 | 2026-10-26 |
+| 3 | `/welcome` by keyboard and pointer: Tab reaches Start → Discover → the scroll hint → the closing CTA, each with a ring, the hero's three in the daylight brand ink; Discover and the scroll hint scroll to the sections; the copy drifts on scroll; Start lands on `/today`. Reduced motion: no drift, every section revealed at once, the hint plays once. Reduced transparency: tier C, no glass on the route, the picture still shown. Forced colours: tier C, the picture and the crown's gradient gone | 1440 and 390 × both themes | 80 | 2026-10-27 |
+| 4 | `/login` at every shape: no sideways scroll; slab, dock and colophon apart; the room scrolls rather than clips; a phone-shaped stage: the crown and no wake; the rest: the whole picture, and the wake only with a fine pointer | 15 shapes × 2 locales | 180 | 2026-10-27 |
+| 5 | The wake re-decides when a desktop window crosses the phone shape (1440 → 600 → 1440 px; the crown on at 600) | 1 | 2 | 2026-10-27 |
+| 6 | `/login` by keyboard: the fields, reveal, remember, forgot, sign in, theme, language, then the dock, each showing focus (a field by its brand frame); Enter on 产品 opens the Product room, the slab recedes and goes inert; Escape returns to the room, focus on 产品; a real sign-in lands on `/today`. Reduced motion: no wake. Reduced transparency: tier C; the wake still runs on a desktop (it is not a material), none on a phone. Forced colours: tier C, no wake, the picture steps back | 1440 and 390 × both themes | 60 | 2026-10-27 (rerun) |
+| 7 | The app dock on a phone: its labels ≥ 4.5 bare, its rings ≥ 3 against what is behind them (figures in 26.4) | 390, both themes | 8 | 2026-10-27 |
+
+Three corrections to the **harness** — none to the product — were needed to finish it:
+
+1. On 2026-10-26 the run stopped in §3, after §1–2 had run through. The process died before it
+   wrote its results file, so the 234 passes of §1–2 rest on its log, which prints every failure
+   and holds none, and on their 24 screenshots. Playwright's click waits for an element to stand still, and the scroll hint floats
+   without end (`app-float`, 2.4 s, 8px — unchanged since `75e4e30`), so the click timed out. The
+   harness now checks that the pointer lands on the hint at its centre (a check of its own, among
+   the 80) and clicks there with the mouse; the scroll that follows is what it verifies. The run
+   resumed at §3 on 2026-10-27 against the same bundle; the machine had restarted overnight, so the
+   backend jar and the preview were started again.
+2. §6 then failed "every stop shows focus" on the two text fields in all four contexts. The
+   harness compared the field's frame colour with the raw text of `--color-primary`, which a
+   production build minifies (`oklch(48% .128 275)`), while the browser serialises the frame as
+   `oklch(0.48 0.128 275)` — never equal, whatever the field drew. A probe showed the frame in
+   exactly that colour 140 ms after Tab in all four contexts. With the comparison made against the
+   value the browser resolves, §6 was rerun: 60/60. (The frame's *contrast* is not measured — the
+   instrument measures outlines — and its colour is the one `75e4e30` draws.)
+3. The `/verify` smoke (26.6) first failed its console check in all four contexts on
+   `net::ERR_ABORTED`: it left `/today` the moment the address changed, and its own navigation
+   aborted `/today`'s requests and lazy chunks (no HTTP error, no console error). Letting each
+   page's network settle before moving on: 24/24.
+
+### 26.6 Verified, not run, open
+
+**Verified** (Chrome — Blink — only):
+
+- **The gates on the final tree** (`/verify`, 2026-10-27): the unit suite 463/463 (36 files);
+  `vue-tsc --build` clean; oxlint 0 warnings and 0 errors on 217 files (123 rules); eslint clean
+  (both run without `--fix`); `npm run build` (type-check + `vite build`) passed with no warning —
+  and its bundle is byte-identical to the one the lanes measured (26.4).
+- **The real surface** (`/verify`): the API (`/api/v1/system/info` 200, a sign-in code 0); a smoke
+  — sign in through the form, land on `/today`, the welcome route's daylight hero, a note's
+  selection toolbar and `[[` list, both themes at 1440 × 900 and 390 × 844, no console error, page
+  error or failed request — **24/24 on the production build** (`vite preview`) and **24/24 on the
+  dev server** (after one warm-up pass, whose one failure was a cold dev server's first page
+  aborting its own module loads, `net::ERR_ABORTED` — the warm-up the `verify` skill prescribes).
+  Each run created one note through the API and deleted it (none left); no paper session is open.
+- **Every repair in 26.3 holds on the final build** — the production `light-dark()` fix, the
+  docks' and the slab's rim-ink rings, the error ink in tiers A and B, the welcome scroll-hint
+  ring, eyebrow and three words, the tier C button and the toolbar's proposal buttons on the
+  anchor's fill — and the crown, the wake's gate (also across a resized window) and the scroll
+  container's mask stepping aside for a slab behave as specified: the figures in 26.4 and the 564
+  checks in 26.5.
+- The final session (2026-10-27) changed no product code; its corrections were to the measuring
+  scripts (26.5), which live outside the repository.
+
+**Not run:** Gecko and WebKit (not installed); real Windows High Contrast (forced colours only in
+Chromium's emulation); physical phones and tablets (emulated in Chrome); hover and press states'
+contrast (rest, focus and the two proposal states were measured); a live DeepSeek key (out of
+scope); the backend's tests (no file under `server/` changed in this pass — the server last
+changed in `b974bc3`). **Not re-measured on the final build itself** (26.4 takes them from the
+2026-10-24 sweeps, with what differed): the sign-in room's tier A texts at the phone and tablet
+shapes, and the welcome hero at the phone and tablet shapes other than 390 and 820. Tiers B and C
+were measured in Chinese only, tier B at three shapes; the text fields' focus frame was not
+contrast-measured; the comparison with `75e4e30` covers the shapes 26.4 names.
+
+**Open** (each pre-existing, with its measured figures in 26.3–26.4): the landing dock's current
+label on upright tablets (8: 3.36–4.27 bare); the app-wide dark-theme primary button (7: 3.27);
+tier C's focus rings and its desktop error line (11: rings 1.34–3.13 on the dock and 2.58–2.97 at
+desktop widths, the error line 4.16–4.31 — deferred, the two-tone ring being out of scope; one of
+its rings, the dock's current cell at 820, reads lower than at `75e4e30`, 1.34 against 1.49); the toolbar/panel/list positioning (9); the root-token smoke tints a build
+resolves by theme (1); the Product room's scroll edge; `yChannel` (B6).

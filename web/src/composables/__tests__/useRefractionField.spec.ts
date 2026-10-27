@@ -1,3 +1,5 @@
+import { readFileSync } from 'node:fs'
+import { fileURLToPath } from 'node:url'
 import { describe, expect, it, vi } from 'vitest'
 import {
   EDGE_BOUND,
@@ -764,6 +766,15 @@ describe('wake — gated to nothing', () => {
   it('never under forced colours, where the stage hides the wallpaper it would bend', () => {
     expect(WAKE_QUERIES.forcedColors).toBe('(forced-colors: active)')
     expect(wakeQualifies(env(true, false, true))).toBe(false)
+  })
+
+  it('never on a phone-shaped stage, where the picture is a masked crown the plate cannot re-draw', () => {
+    const phone = (query: string) => query === WAKE_QUERIES.pointer || query === WAKE_QUERIES.phoneStage
+    expect(wakeQualifies(phone)).toBe(false)
+    // the stage's own query: the crown and the gate can never disagree
+    expect(WAKE_QUERIES.phoneStage).toBe('(max-width: 640px), (max-aspect-ratio: 3/5)')
+    const login = readFileSync(fileURLToPath(new URL('../../views/LoginView.vue', import.meta.url)), 'utf8')
+    expect(login).toContain(`@media ${WAKE_QUERIES.phoneStage} {`)
   })
 
   it('asks the spotlight’s two questions about the pointer and motion', () => {

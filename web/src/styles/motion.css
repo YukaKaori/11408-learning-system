@@ -82,7 +82,9 @@
   }
 }
 
-/* Soft vertical drift for floating glass cards (pair with staggered delays). */
+/* Soft vertical drift for solid marketing cards and hints (pair with staggered
+   delays). Never on glass: a slab has mass and does not levitate — constant
+   floating is a forbidden pattern (`constitution.md` §7). */
 @keyframes app-float {
   from {
     transform: translateY(0);

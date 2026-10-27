@@ -962,18 +962,26 @@ export function workingDpr(deviceRatio: number, width: number, height: number): 
  * The gate: a fine hovering pointer and no reduced-motion preference — the
  * spotlight's two questions — and a wallpaper to bend: under forced colours
  * the stage hides it (`LoginView`), so there is nothing for a lens to re-draw.
+ *
+ * Nor on a phone-shaped stage (2026-10-23): there the stage shows the picture
+ * as a crown band dissolving into an authored field (`LoginView`) — a mask
+ * and a gradient the plate does not reproduce, so a lens would bend a picture
+ * that is not on screen. Phones never had a wake (no fine pointer); this keeps
+ * a narrow desktop window from drawing one. The query is the stage's own.
  */
 export const WAKE_QUERIES = {
   pointer: '(hover: hover) and (pointer: fine)',
   reducedMotion: '(prefers-reduced-motion: reduce)',
   forcedColors: '(forced-colors: active)',
+  phoneStage: '(max-width: 640px), (max-aspect-ratio: 3/5)',
 } as const
 
 export function wakeQualifies(matches: (query: string) => boolean): boolean {
   return (
     matches(WAKE_QUERIES.pointer) &&
     !matches(WAKE_QUERIES.reducedMotion) &&
-    !matches(WAKE_QUERIES.forcedColors)
+    !matches(WAKE_QUERIES.forcedColors) &&
+    !matches(WAKE_QUERIES.phoneStage)
   )
 }
 

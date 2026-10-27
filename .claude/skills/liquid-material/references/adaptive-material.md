@@ -64,7 +64,7 @@ The three shipped values are a fixed answer to three known backdrops:
 |---|---|---|
 | `chrome` | `.16` | The app's own stage behind the dock |
 | `hero` | `.34` | The login artwork — brighter, so denser, inside the Clear band |
-| `floating` | `.62` | Arbitrary note content — unknown, so it carries legibility alone |
+| `floating` | `.78` (`.62` until 2026-10-23) | Arbitrary note content — unknown, so it carries legibility alone; a white heading behind it in the dark theme measured `.62` short (3.65 : 1) |
 
 Read that table as three *frozen samples* of a curve the system cannot yet
 compute.
@@ -230,9 +230,9 @@ into one answer per rank:
 | Rank over a light backdrop | What it gets | Why |
 |---|---|---|
 | `chrome` (the docks) | density **unchanged** (.16); **rim polarity 1** — front and back rims in ink (`--material-rim-ink`), the specular top lip stays light | its labels are ink: more smoke would *lower* their contrast. The far edge of a clear slab on paper reads darker than the paper, so the rim that proves the slab exists is ink |
-| `floating` (the toolbar) | density **.62 → .86** (`--material-density-regular-light`); rims stay light | its labels are dusk, and dusk is only legible on unmistakably dark glass; its rims are seen against its own dark body |
+| `floating` (the toolbar) | density **.78 → .86** (`--material-density-regular-light`; the base was .62 until 2026-10-23); rims stay light | its labels are dusk, and dusk is only legible on unmistakably dark glass; its rims are seen against its own dark body |
 | `hero` (since 2026-10-21, the daylight sign-in room) | density **.34 → .16** (`--material-density-clear`, the dock's value — equal, never below, so the order holds); **rim polarity 1**; the dock's ink palette, plus its own remap — hairlines and hover pools in ink, the brand at the daylight ladder's ink step (`--landing-accent-ink`), the error line at `--material-danger-ink`, a secondary step at 93 % of its primary ink, and ink-polarity skins for its inputs, checkbox and links | its text goes to ink beside an ink dock: the stage-tuned smoke existed to carry dusk text over bright petals, and under ink it would only grey the slab and dim the text. A dark hero beside a clear dock would be two materials on one stage (`components.md` §7). Rank stays in its depth, Fresnel and edge energy |
-| every rank, tier A | refraction in **one pass** (`--filter-id-mono`): the bend without the per-channel split | over white, a displaced channel that reaches past the captured backdrop leaves a saturated line along the rim — loud aberration (`materials.md` §4) |
+| every rank, tier A | refraction in **one pass** (`--filter-id-mono`): the bend without the per-channel split | over white, a displaced channel that reaches past the captured backdrop leaves a saturated line along the rim — loud aberration (`materials.md` §4). Since 2026-10-23 the `floating` rank refracts in one pass over *every* backdrop: over the dark theme's page the split turned a white heading under the toolbar into coloured smears (chroma p99 50 against 22) |
 | every rank, tier C | the dusk palette and light rims return (the ink flip and the polarity are gated off `dense`); the dense floor rises .72 → .86 | the body is near-opaque smoke whatever the page; ink on it was illegible (1.6:1) |
 
 **Over a picture, not paper (2026-10-21).** B5.3 tuned the ink against the shell's white
@@ -251,6 +251,40 @@ over `/today`, `/syllabus`, `/mistakes` scrolled, refract / diffuse / dense): li
 theme dock idle 4.96 / 4.96 / 5.36, dock current 8.53 / 8.48 / 8.13; toolbar 6.51 /
 6.92 / 14.77 (light), 15.21 / 14.49 / 15.42 (dark); dark-theme dock idle ≥ 6.93.
 The token guard pins every value (`materialTokens.spec.ts`, "B5.3").
+
+**Over a heading, not a paragraph (2026-10-23).** Those toolbar figures were taken over body
+text. With a selection in a note's first paragraph the toolbar stands over the note's title,
+and in the dark theme a white heading behind `.62` smoke brought the labels to **3.65 : 1**
+(worst 5 % of pixels). The Regular base density went **.62 → .78** (5.7 : 1 there; about 5.9 over
+a fully white region behind the slab) and the rank refracts in one pass on every backdrop. The
+light band (.86) is unchanged. On smoke the brand *fill* now takes the anchor's steps
+(`--on-glass-brand-fill*`, the proposal button 4.0–4.4 → ≥ 5.85 : 1) and the keyboard ring is
+declared on the slab (`--landing-accent-soft`; the root-resolved ring had been the page's brand,
+2.45 : 1 on the light theme's toolbar, now 4.74).
+
+**How these were measured, and the re-measurement (2026-10-23).** The figures above were taken
+on the development server with the text's own halo left in the sample (only the glyph made
+transparent) and, on 2026-10-21, over each element's whole box. The 2026-10-23 verification
+re-measured every surface on a **production build** with one instrument: the line boxes of the
+text, the glyph hidden **and its own `text-shadow` removed** (bare — the headline figure), a
+halo-assisted figure beside it, colours resolved by the browser (an earlier parser read `oklch()`
+as black), and a guard that refuses a box that is clipped or covered. It found what the old
+method hid: the landing dock's current label on three upright tablets (744, 820, 834 px) reads
+3.4–4.3 : 1 bare (4.6–6.4 with its halo — open); the clear dock's keyboard ring, drawn in the brand anchor, read 1.6–2.3 : 1 on the landing
+dock at every stage shape, and the sign-in slab's, in its brand ink, 2.8–3.0 at some — both are
+drawn in the rim ink now (5.9–8.5 and ≥ 7.1); the sign-in error line read
+3.1–4.4 (its ink went one step deeper, `--material-danger-ink`); and in a built app, in the dark
+theme, the light-stage slabs had been drawing the theme's `light-dark()` pairs instead of the
+backdrop's (fixed by writing each declared value as a literal `color-scheme` on the slab; in
+development the rows above always held). Tier C stays short in places: its smoke is lifted by the
+back-face bloom near a slab's foot and the dock's end cells ring partly outside the rounded bar,
+so the smoke ring (`--landing-accent-soft`) reads under 3 : 1 there — the dock's cells 1.3–3.1
+at every shape, the slab's footer rings 2.6–3.0 at desktop widths — and the sign-in error line in
+the smoke danger (`#f87171`) 4.2–4.3 at desktop widths in the light theme. Against `75e4e30` every
+compared figure is better but one: the dock's current cell at 820px, 1.49 → 1.34, where the light
+step reads below the page's brand (no single colour clears 3 : 1 on that band). Still open,
+deferred: a two-tone ring is the likely fix. The figures and the exceptions:
+`docs/liquid-material-global-reassessment.md` §26.
 
 Who declares:
 

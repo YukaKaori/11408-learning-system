@@ -6,7 +6,9 @@ import { describe, expect, it } from 'vitest'
 /**
  * Environment guard (Phase B3 — `environment.md`, `constitution.md` §9; the
  * Login rework round 3 replaced the reveal wake with the refraction wake; the
- * 2026-10-21 pass made the sign-in room a daylight room).
+ * 2026-10-21 pass made the sign-in room a daylight room; the 2026-10-23 pass
+ * gave phone-shaped stages the crown and brought the welcome hero into the
+ * same room).
  *
  * Environment is not Material. The Login stage is composed as wallpaper (one
  * supplied photograph, cover-fit) → refraction wake → glass → content; it is a
@@ -14,8 +16,8 @@ import { describe, expect, it } from 'vitest'
  * a light backdrop. None of its environment layers is glass, none costs a
  * budget instance, the retired 576px spotlight and its black shroud stay
  * retired, the wake owns no cursor of its own and adds no light, and the
- * welcome hero keeps the dusk lotus environment instead of running a white
- * frosted veil with a second spotlight.
+ * welcome hero stands in the same daylight room — never a white frosted veil
+ * with a second spotlight. The dusk lotus room is retired.
  */
 const SRC = fileURLToPath(new URL('../../..', import.meta.url))
 const read = (path: string) => readFileSync(join(SRC, path), 'utf8')
@@ -100,16 +102,36 @@ describe('the Login stage is a layered environment', () => {
     expect(block('.stage-wallpaper__art')).toContain('object-position: var(--wallpaper-x, 50%) var(--wallpaper-y, 50%);')
   })
 
-  it('every stage shape keeps a flower in view: the crop is authored for portrait and tall phones', () => {
+  it('every stage shape keeps a flower in view: portrait stages crop the left edge, phone-shaped ones wear the crown', () => {
     const css = styles(login)
     expect(css).toMatch(/@media \(max-aspect-ratio: 4\/5\) \{\s*\.stage-wallpaper \{[^}]*--wallpaper-x: 10%;/)
-    expect(css).toMatch(/@media \(max-aspect-ratio: 3\/5\) \{\s*\.stage-wallpaper \{[^}]*--wallpaper-x: 0%;/)
     // the frame is the stage: the plate's box is exactly what is shown
     expect(css).toMatch(/\.stage-wallpaper \{[^}]*inset: 0;/)
   })
 
+  it('a phone-shaped stage wears the picture as a crown over the room’s own daylight (2026-10-23)', () => {
+    const css = styles(login)
+    const at = css.indexOf('@media (max-width: 640px), (max-aspect-ratio: 3/5) {')
+    expect(at).toBeGreaterThan(-1)
+    const crown = css.slice(at, css.indexOf('@media (forced-colors: active)'))
+    // a band across the top half, cropped to the right peony, dissolving by a mask
+    expect(crown).toMatch(
+      /\.stage-wallpaper \{[^}]*inset: 0 0 auto;[^}]*height: 50%;[^}]*mask-image: linear-gradient\(to bottom, black 45%, transparent\);[^}]*--wallpaper-x: 100%;[^}]*--wallpaper-y: 0%;/,
+    )
+    // into the picture's sky above and its mean below — tokens, never a white veil
+    expect(crown).toMatch(
+      /\.login-stage \{[^}]*background-image: linear-gradient\(\s*to bottom,\s*var\(--environment-daylight-sky\) 30%,\s*var\(--environment-daylight-field\)\s*\);/,
+    )
+    // after the portrait crop, so a phone takes the crown's crop
+    expect(at).toBeGreaterThan(css.indexOf('@media (max-aspect-ratio: 4/5)'))
+    // the whole-picture crop for tall phones went with it
+    expect(css).not.toMatch(/@media \(max-aspect-ratio: 3\/5\) \{/)
+  })
+
   it('under forced colours the decorative picture steps back to the system canvas', () => {
-    expect(styles(login)).toMatch(/@media \(forced-colors: active\) \{\s*\.stage-wallpaper \{\s*display: none;/)
+    expect(styles(login)).toMatch(
+      /@media \(forced-colors: active\) \{\s*\.stage-wallpaper \{\s*display: none;\s*\}\s*\.login-stage \{\s*background-image: none;/,
+    )
   })
 
   it('the wake adds no light: its canvas is drawn at full opacity with no blend or filter of its own', () => {
@@ -126,11 +148,17 @@ describe('the Login stage is a layered environment', () => {
     expect(existsSync(join(SRC, '../public/images/welcome-bg.png'))).toBe(true)
     expect(existsSync(join(SRC, '../public/images/welcome-bg.webp'))).toBe(true)
     expect(existsSync(join(SRC, '../scripts/environment/welcome.cjs'))).toBe(true)
-    // the lotus is the welcome hero's alone now
-    expect(login).not.toMatch(/lotus\.webp|lotusUrl/)
-    expect(read(SCENE)).toContain(`from '@/assets/environment/lotus.webp'`)
-    expect(existsSync(join(SRC, 'assets/environment/lotus.webp'))).toBe(true)
+    // the welcome hero stands in the same room (2026-10-23): the same picture
+    expect(read(SCENE)).toContain('images/welcome-bg.png')
+    expect(read(SCENE)).toContain('images/welcome-bg.webp')
+    // the lotus is mounted by no stage now; the owner's artwork and its encoder
+    // stay in the repository
+    const lotusReaders = sourceFiles(SRC)
+      .filter((file) => /lotus\.webp|lotusUrl|scene-lotus/.test(readFileSync(file, 'utf8')))
+      .map(relative)
+    expect(lotusReaders).toEqual([])
     expect(existsSync(join(SRC, '../scripts/environment/source/pinklotus.png'))).toBe(true)
+    expect(existsSync(join(SRC, '../scripts/environment/lotus.cjs'))).toBe(true)
   })
 
   it('environment colours are tokens — no literal in the stage layers', () => {
@@ -164,9 +192,42 @@ describe('the retired spotlight architecture stays retired', () => {
   it('the welcome hero is the environment, not a frosted veil', () => {
     const scene = read(SCENE)
     expect(scene).not.toContain('scene-veil')
-    expect(scene).toContain('var(--environment-atmosphere)')
+    // the daylight room: the picture over its field, nothing dimming or veiling it
+    expect(scene).toContain('background-color: var(--environment-daylight-field);')
+    expect(scene).toMatch(/\.scene-wallpaper__art \{[^}]*object-fit: cover;/)
+    expect(styles(scene)).not.toMatch(/backdrop-filter|filter:|blur\(|opacity/)
+    // and it crowns a phone-shaped stage exactly as the sign-in room does
+    expect(scene).toContain('@media (max-width: 640px), (max-aspect-ratio: 3/5) {')
+    expect(scene).toMatch(/\.scene-wallpaper \{[^}]*mask-image: linear-gradient\(to bottom, black 45%, transparent\);/)
     const tokens = read('styles/tokens.css')
     expect(tokens).not.toMatch(/--scene-veil-(bg|blur|lip)|--spotlight-radius/)
+  })
+
+  it('the welcome hero’s copy is the daylight rooms’ ink — no dusk value is left in the scene tokens', () => {
+    const tokens = read('styles/tokens.css')
+    const scene = (name: string) => tokens.match(new RegExp(`${name}:\\s*([^;]+);`))?.[1].trim()
+    expect(scene('--scene-text')).toBe('var(--landing-ink)')
+    expect(scene('--scene-text-soft')).toBe('var(--landing-ink-2)')
+    expect(scene('--scene-chip-border')).toBe('var(--landing-line-strong)')
+    // the aura below echoes the peonies, in OKLCH, in both themes
+    expect([...tokens.matchAll(/--scene-aura:\s*([^;]+);/g)].map((m) => m[1])).toEqual([
+      'oklch(0.88 0.05 261 / 0.22)',
+      'oklch(0.88 0.05 261 / 0.08)',
+    ])
+    // the actions and the ring are the daylight ladder's in both themes
+    const welcome = read('views/WelcomeView.vue')
+    expect(welcome).toMatch(/\.hero-actions \{[^}]*--color-primary: var\(--landing-accent\);/)
+    // the eyebrow, highest in the room (over a phone's crown), and the three words,
+    // across the picture's middle on a landscape laptop, take the full ink: in the
+    // soft ink they read 3.9 : 1 (360px, English) and 4.3 : 1 (1024 × 768) bare
+    expect(welcome).toMatch(/\.hero-eyebrow \{[^}]*color: var\(--scene-text\);/)
+    expect(welcome).toMatch(/\.hero-words \{[^}]*color: var\(--scene-text\);/)
+    // the ring is the room's, so it reaches every control standing in it — the
+    // scroll hint sits outside the copy and kept the theme's ring (2.4 : 1, dark)
+    // while the ring was declared on `.hero-content` (until 2026-10-23)
+    expect(welcome).toMatch(/\.hero \{[^}]*--color-focus-ring: var\(--landing-accent-ink\);/)
+    expect(welcome).not.toMatch(/\.hero-content \{[^}]*--color-focus-ring/)
+    expect(welcome).toMatch(/<GlassScene class="hero">[\s\S]*class="scroll-hint"[\s\S]*<\/GlassScene>/)
   })
 })
 
@@ -213,14 +274,12 @@ describe('one cursor per stage', () => {
 describe('environment tokens', () => {
   const tokens = read('styles/tokens.css')
 
-  it('the atmosphere is declared per theme and deepened under reduced transparency', () => {
-    const root = tokens.slice(tokens.indexOf(':root {'), tokens.indexOf('html.dark {'))
-    const dark = tokens.slice(tokens.indexOf('html.dark {'), tokens.indexOf('@media (prefers-reduced-transparency'))
-    const reduced = tokens.slice(tokens.indexOf('@media (prefers-reduced-transparency: reduce), (prefers-contrast: more)'))
-    for (const block of [root, dark, reduced]) {
-      expect(block).toContain('--environment-atmosphere:')
-      expect(block).toContain('--environment-lotus-light:')
-    }
+  it('the dusk room is retired with its last stage: no atmosphere, no lotus light, no dusk field', () => {
+    expect(tokens).not.toMatch(/--environment-(atmosphere|lotus-light|field):/)
+    const readers = sourceFiles(SRC)
+      .filter((file) => /--environment-(atmosphere|lotus-light|field)\)/.test(readFileSync(file, 'utf8')))
+      .map(relative)
+    expect(readers).toEqual([])
   })
 
   it('the daylight room declares a field and nothing that dims or veils it', () => {
@@ -233,24 +292,18 @@ describe('environment tokens', () => {
     expect(login).toContain(`const stageBackdrop: MaterialBackdrop = 'light'`)
   })
 
-  it('new environment colours are OKLCH and never white frost', () => {
-    const declarations = [...tokens.matchAll(/--environment-[\w-]+:\s*([^;]+);/g)].map((m) => m[1]!)
-    expect(declarations.length).toBeGreaterThan(5)
-    for (const value of declarations) {
+  it('environment colours are OKLCH, anchored on the picture, and never white frost', () => {
+    const declarations = Object.fromEntries(
+      [...tokens.matchAll(/(--environment-[\w-]+):\s*([^;]+);/g)].map((m) => [m[1]!, m[2]!.trim()]),
+    )
+    // the picture's mean and its open sky (the anchors `tokens.css` measured)
+    expect(declarations).toEqual({
+      '--environment-daylight-field': 'oklch(0.932 0.029 258)',
+      '--environment-daylight-sky': 'oklch(0.965 0.015 253)',
+    })
+    for (const value of Object.values(declarations)) {
       expect(value).not.toMatch(/rgba?\(|#[0-9a-f]{3,8}\b/i)
       expect(value).not.toMatch(/blur\(/)
-    }
-    // the atmosphere is dusk in every declaration: every stop is dark (L ≤ 0.2).
-    // Three: root, dark and reduced transparency. (The round-2 narrow-viewport
-    // deepening went with its plate: the phone no longer crops to the lightest
-    // part of a picture — the blooms are placed, and the ground is the field.)
-    // The L ≤ 0.2 bound is the rule that keeps this layer a dusk and not a veil.
-    const atmospheres = [...tokens.matchAll(/--environment-atmosphere:([^;]+);/g)].map((m) => m[1]!)
-    expect(atmospheres).toHaveLength(3)
-    for (const value of atmospheres) {
-      const lightness = [...value.matchAll(/oklch\(([\d.]+) /g)].map((m) => parseFloat(m[1]!))
-      expect(lightness.length).toBeGreaterThan(2)
-      for (const l of lightness) expect(l).toBeLessThanOrEqual(0.2)
     }
   })
 })

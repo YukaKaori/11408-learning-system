@@ -86,7 +86,7 @@ onBeforeUnmount(() => window.removeEventListener('scroll', onScroll))
 
 <template>
   <div ref="pageRef" class="welcome-page">
-    <!-- Hero — full-viewport scene: the Login environment's room at rest -->
+    <!-- Hero — full-viewport scene: the sign-in room's daylight, at rest -->
     <GlassScene class="hero">
       <header ref="heroContentRef" class="hero-content">
         <p class="hero-eyebrow">{{ t('welcome.hero.eyebrow') }}</p>
@@ -239,10 +239,18 @@ onBeforeUnmount(() => window.removeEventListener('scroll', onScroll))
 
 /* ---------- Hero ---------- */
 
+/* The hero stands in the daylight room (GlassScene) in both themes, so every
+   keyboard ring in it — the actions' and the scroll hint's — is the daylight
+   rooms' brand ink, not the theme's, whose dark step reads under 3 : 1 on the
+   bright picture. (Declared on the copy alone until 2026-10-23, it missed the
+   scroll hint: 2.4 : 1 in the dark theme.) */
 .hero {
+  --color-focus-ring: var(--landing-accent-ink);
+
   height: 100vh;
 }
 
+/* Its copy is the daylight rooms' ink (`--scene-*`, tokens.css). */
 .hero-content {
   display: flex;
   flex-direction: column;
@@ -257,6 +265,17 @@ onBeforeUnmount(() => window.removeEventListener('scroll', onScroll))
   will-change: transform, opacity;
 }
 
+/* The smaller copy rests directly on the picture, where a petal or the ribbon
+   may pass behind a glyph: it carries the sign-in room colophon's halo pair,
+   in the room's own paper. */
+.hero-eyebrow,
+.hero-words,
+.hero-subtitle {
+  text-shadow:
+    0 0 3px color-mix(in oklch, var(--landing-paper) 85%, transparent),
+    0 1px 10px color-mix(in oklch, var(--landing-paper) 70%, transparent);
+}
+
 .hero-eyebrow {
   margin: 0 0 var(--space-5);
   padding: var(--space-1) var(--space-4);
@@ -266,7 +285,11 @@ onBeforeUnmount(() => window.removeEventListener('scroll', onScroll))
   font-size: var(--font-label-size);
   font-weight: var(--font-label-weight);
   letter-spacing: var(--font-label-tracking);
-  color: var(--scene-text-soft);
+  /* The room's full ink, not its second step: the chip stands highest in the
+     room, where a phone's crown puts the peony behind it, and in the soft ink
+     its label read 3.9 : 1 there (360px, English — the longest chip). The chip
+     keeps its place in the hierarchy by its size, its hairline and its wash. */
+  color: var(--scene-text);
   animation: app-slide-down var(--duration-slow) var(--ease-out) both;
 }
 
@@ -296,7 +319,9 @@ onBeforeUnmount(() => window.removeEventListener('scroll', onScroll))
   font-size: var(--font-title-size);
   font-weight: var(--font-title-weight);
   letter-spacing: var(--tracking-wide);
-  color: var(--scene-text-soft);
+  /* The full ink too: on a landscape laptop (1024 × 768) the line crosses the
+     picture's darker middle, and in the second step it read 4.3 : 1 there. */
+  color: var(--scene-text);
   animation: app-fade-in 800ms var(--ease-out) 300ms both;
 }
 
@@ -315,15 +340,23 @@ onBeforeUnmount(() => window.removeEventListener('scroll', onScroll))
   animation: app-fade-in 800ms var(--ease-out) 420ms both;
 }
 
+/* The actions take the daylight rooms' brand in both themes: the anchor and its
+   ink step carry a white label (the theme's dark step reads 3.3 : 1 under it),
+   and no dark-theme glow. */
 .hero-actions {
+  --color-primary: var(--landing-accent);
+  --color-primary-hover: var(--landing-accent-ink);
+  --color-primary-active: var(--landing-accent-ink);
+  --shadow-glow-primary: 0 0 0 0 transparent;
+
   display: flex;
   gap: var(--space-3);
   margin-top: var(--space-10);
   animation: app-slide-up 600ms var(--ease-out) 500ms both;
 }
 
-/* Outline button rides the scene's atmosphere, not an app surface — retint
-   from the scene's own chip tokens. */
+/* Outline button rides the scene, not an app surface — retint from the
+   scene's own chip tokens. */
 .hero-actions :deep(.variant-outline) {
   --color-text: var(--scene-text);
   --color-border-strong: var(--scene-chip-border);
@@ -358,7 +391,7 @@ onBeforeUnmount(() => window.removeEventListener('scroll', onScroll))
   padding-block: var(--space-20);
 }
 
-/* Soft rose-tinted glow behind the card grid — echo of the flower identity. */
+/* Soft glow behind the card grid — an echo of the peonies above. */
 .section-aura {
   position: absolute;
   inset: 0;

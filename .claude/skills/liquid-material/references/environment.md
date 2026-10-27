@@ -50,13 +50,17 @@ stage a *place* rather than a void.
   light where no glass stands (~.08–.22 in the light theme), deepest behind the dock (~.8), plus
   a soft pool under the sign-in slab — rather than the flat .80–.86 band first proposed: the
   brief is a bright, transparent room, and the dimming Clear glass needs is supplied *where the
-  glass stands*, measured (label contrast, §4).
+  glass stands*, measured (label contrast, §4). **Retired (2026-10-23)** with its last stage:
+  the sign-in room left the dusk on 2026-10-21 and the welcome hero followed it into the daylight
+  room. No stage carries an E2 today; `--environment-atmosphere`, `-lotus-light` and `-field`
+  are gone from `tokens.css`, and `environment.spec.ts` keeps them out.
 - It is what makes Clear glass legal (`navigation.md` §5): the stage supplies the dimming.
 - **Never a page-colour sheet. Never white frost.** A white translucent veil with `blur()`
   is the forbidden glassmorphism idiom applied to the environment; it hides the scene it
   should be dimming. The `/welcome` veil (`GlassScene.vue`, a white sheet + a 26px backdrop
-  blur) was the last instance; **retired in B3** (decision V-A) — the welcome hero is now the
-  Login wallpaper under the same atmosphere token.
+  blur) was the last instance; **retired in B3** (decision V-A) — the welcome hero became the
+  Login wallpaper under the same atmosphere token, and since 2026-10-23 it is the daylight
+  room's picture with no atmosphere at all (§2).
 - May carry `mask-image` apertures. Masks are how the atmosphere opens; blur is not. (B3 shipped
   none: the room is visible at rest, so the old card aperture had nothing left to open, and the
   wake is drawn as a reveal layer above the atmosphere — see E4.)
@@ -72,6 +76,18 @@ stage a *place* rather than a void.
 ### E4 — Reactive layer: the reveal wake
 
 The pointer does not carry a lamp; it **wakes** the wallpaper. Wake, not spotlight.
+
+> **Shipped today: the refraction wake** (Login rework round 3, 2026-09-28) —
+> `composables/useRefractionField.ts` + `components/experience/RefractionField.vue`: a small
+> liquid lens bends the wallpaper where the pointer is, and its residue relaxes. It re-draws the picture into a plate (box, `object-fit`, `object-position`),
+> so nothing may be applied to the picture that the plate cannot reproduce. Its gate
+> (`wakeQualifies`): a fine hovering pointer, no reduced motion, no forced colours and —
+> since 2026-10-23 — **not a phone-shaped stage**, `(max-width: 640px), (max-aspect-ratio:
+> 3/5)`, the very query that turns the picture into a masked crown (§2): a mask the plate
+> cannot reproduce, so a lens there would bend a picture that is not on screen. Phones never
+> had one (no fine pointer); the clause keeps a narrow desktop window from drawing one. The
+> reveal below (B3, `useRevealField`, removed) is kept as the record of the contract both
+> wakes obey.
 
 ```
 pointer (eased)  →  stamps a small opening every ≥12px of travel (travel accumulates through pauses)
@@ -130,6 +146,14 @@ chrome dock's labels go to dark ink. No surface reads its own pixels.
   **shipped in B5.3** — per rank, measured against the shell: ink rims for the clear
   dock, a denser body for the Regular toolbar, one-pass refraction over a light
   page (`adaptive-material.md` §6).
+- **In a production build (2026-10-23)** the primitive also writes each declared value as a
+  literal `color-scheme` on the slab. The build's CSS minifier rewrites `light-dark()` as a
+  variable pair it switches only beside a literal `color-scheme`; through
+  `var(--material-backdrop)` alone, a built app drew the **dark theme's** pairs on the light
+  login stage — a black frost and violet rims under the sign-in slab and the dock (the sign-in
+  title 5.4 : 1 instead of 7.0 on a 320px phone). The dev server serves `light-dark()` natively
+  and never showed it. Still theme-resolved in a build: a pair kept in a root token (the
+  `--material-tint-*` smokes), a few levels of near-black.
 
 ## 2. The two environments this product has
 
@@ -138,9 +162,11 @@ chrome dock's labels go to dark ink. No surface reads its own pixels.
 ```
 E1  wallpaper: the supplied artwork   public/images/welcome-bg.png (+ its WebP twin), one picture,
                                       cover-fit, cropped per stage shape, shown as it is (no opacity,
-                                      blend, filter or loop — the wake re-draws it)
+                                      blend, filter or loop — the wake re-draws it); on a phone-shaped
+                                      stage a crown band masked into the room's own daylight
 E4  RefractionField (the wake)        desktop fine-pointer only; never under reduced motion or forced
-                                      colours; the plate reads the picture's object-fit / -position
+                                      colours, never on a phone-shaped stage; the plate reads the
+                                      picture's object-fit / -position
 E5  light, in all three rooms and both themes — data-material-backdrop
 M   GlassDock (chrome) · sign-in slab (hero) — both in their ink polarity (adaptive-material.md §6)
 ```
@@ -149,24 +175,71 @@ No E2 and no E3: the picture is high-key and meant to be seen at full exposure. 
 atmosphere turned it to slate; a light one would wash it out and is forbidden anyway; drifting
 pools behind three refracting slabs re-ran their filters every frame for no visible gain (the
 stage drew ~6× the idle frame time at rest in the harness). Legibility comes from the glass's
-polarity, measured over the real picture: every text on the slab, the dock and the colophon at
-≥ 4.5 : 1 (worst 5 % of pixels) from 320 px phones to 1440 px, in both themes and locales.
+polarity, measured over the real picture. On 2026-10-21 that read "every text ≥ 4.5 : 1", but
+the figures were taken with each text's own halo left in the sample. Re-measured **bare** on a
+production build (2026-10-23 to 10-27 — fourteen stage shapes from 320 × 640 to 1920 × 1080,
+both themes, both locales, worst 5 % of pixels): in tier A every text on the slab, the dock and
+the colophon is ≥ 4.5 : 1 **except the dock's current label on three upright tablets** (744,
+820, 834 px: 3.4–4.3 bare, 4.6–6.4 with its halo), where the portrait crop puts the large peony
+under the dock's lens — an open exception. Tier C has its own: the error line reads 4.2–4.3 at
+desktop widths in the light theme, and several rings stay under 3 : 1 (`adaptive-material.md`
+§6). Both are recorded in `docs/liquid-material-global-reassessment.md` §26.
 
 The crop is authored because the art is landscape, its peonies at the far left and right:
 centred on wide and landscape stages (a peony either side of the slab), the left edge at
-`10% 80%` on portrait tablets (the large peony in the open band under the slab), the left edge
-whole on tall phones (the peony seen through the slab's lower half, its petals and stem below
-it). A frame run past the stage's foot on phones lowered the bloom into the open band but put
-its darkest petals behind the dock's labels and the colophon (3.3 and 2.9 : 1): rejected.
+`10% 80%` on portrait tablets (the large peony in the open band under the slab).
 
-**Status: Shipped (2026-10-21).** Replaced the B3 / round-3 dusk room: the pink lotus placed
-twice, the graded dusk atmosphere and the three ambient pools. Under forced colours the picture
-steps back to the system canvas. The welcome hero (`/welcome`, `GlassScene`) keeps the dusk lotus
-environment and its tokens (`--environment-field`, `-lotus-light`, `-atmosphere`); it was not
-part of this change.
+**A phone-shaped stage — ≤ 640px wide, or taller than 3 : 5 — has a composition of its own
+(2026-10-23), not the room squeezed in.** A phone holds a quarter of the picture's width and the
+slab covers most of the screen, so every whole-picture crop put a peony behind the form: busy
+under the fields, and upscaled to a blur. The picture is a **crown** instead: a band across the
+top half of the stage, cropped to the right peony (`100% 0%`), which stands above the slab's
+upper corner and bends at its rim, dissolving through a mask (`black 45%` → transparent) into the
+room's own daylight — the picture's sky (`--environment-daylight-sky`) above, its mean
+(`--environment-daylight-field`) below. The form, the dock and the colophon rest on that calm
+light, and the smaller frame asks about half the upscale of the 1691px artwork. (Before it: the
+left edge whole on tall phones — the peony seen through the slab's lower half — shipped on
+2026-10-21 and replaced by the crown; a frame run past the stage's foot, which put the darkest
+petals behind the dock's labels and the colophon at 3.3 and 2.9 : 1, was rejected outright.)
+
+**The room's composition (2026-10-23):** a grid whose free height is shared **2 : 3** above and
+below the slab (1 : 1 on a phone-shaped stage, where the crown wants air above it), the dock and
+the colophon at the floor. It replaced a 12vh top margin with the dock pushed down, which left
+the dock 9px under the slab on a 768px-tall laptop and 600px of empty room on a 1440px-tall
+screen. Each share has a floor in proportion (16px a share), so a short screen keeps a gap and
+scrolls rather than touching.
+
+**Status: Shipped (2026-10-21; crown and composition 2026-10-23).** Replaced the B3 / round-3
+dusk room: the pink lotus placed twice, the graded dusk atmosphere and the three ambient pools.
+Under forced colours the picture (and the crown's gradient) steps back to the system canvas.
+The welcome hero followed it into the daylight on 2026-10-23 (below).
 
 *Before 2026-10-21 (B3, round 3):* E1 the pink lotus placed twice on a dusk field · E2 graded
 dusk + slab pool · E3 three drifting pools · E4 the wake · E5 `dark` for the sign-in room.
+
+### The welcome hero (`/welcome`) — the same daylight room (2026-10-23)
+
+```
+E1  the same picture                 GlassScene: <picture> with the WebP twin, cover-fit, centred on
+                                     wide and portrait stages; on a phone-shaped stage the sign-in
+                                     room's crown (same query, crop, mask and daylight gradient)
+E2–E4  none                          no atmosphere, no pools, no wake: no glass stands here and the
+                                     hero owns no light (useGlassSpotlight)
+E5  none                             nothing reads it — the route mounts no GlassSurface
+```
+
+The hero is a continuation of the sign-in room, so it now stands in the room the sign-in room
+has (it kept the dusk lotus for two days after the login left it). Environment, not material:
+no primitive, no `backdrop-filter`, no budget instance. Its copy takes the daylight rooms' ink
+in both themes (`--scene-text` → `--landing-ink`, `--scene-text-soft` → `--landing-ink-2`) — the
+eyebrow chip (highest in the room, over a phone's crown) and the three words (across the
+picture's middle on a landscape laptop) in the full ink: in the second step they read 3.9 and
+4.3 : 1 bare (360px English; 1024 × 768) — the smaller lines carry the colophon's halo pair in the
+room's paper, the actions take the daylight
+brand ladder (`--landing-accent`, hover `--landing-accent-ink`, no dark-theme glow), and every
+keyboard ring in the room is `--landing-accent-ink` — declared on `.hero`, so the scroll hint
+outside the copy has it too. The solid sections below keep the theme; their aura is the
+peonies' blue. Under forced colours the picture and the crown's gradient step back.
 
 ### The authenticated shell
 
@@ -176,8 +249,13 @@ E2  none — the content is the backdrop and must stay legible; nothing dims it
 E3  none
 E4  never
 E5  derived from the theme by AppLayout
-M   the app dock (chrome, mobile, B5) · NoteSelectionToolbar (floating, transient)
+M   the app dock (chrome, mobile, B5) · NoteSelectionToolbar and the [[ list (floating, transient)
 ```
+
+The shell's scroll container (`.content`) carries the scroll edge's mask under the app dock,
+and a mask makes its element a backdrop root: since 2026-10-23 the container drops the mask
+while a slab is mounted inside it (`scroll-edge.md` §7), or the toolbar and the list would
+transmit nothing.
 
 The shell has no wallpaper because content is the work. The material earns its place there
 by *floating over* content (the dock) or by being *summoned over* it (toolbar, P19 palette),
@@ -185,8 +263,9 @@ never because the page was made to look like a stage.
 
 ### Mobile and pointer-less
 
-E1 + E2 + E3 + E5. **E4 is never mounted.** The atmosphere alone carries the scene; that is
-the appearance to review first (`SKILL.md` §4).
+E1 (on a phone-shaped stage, the crown) + E5. **E4 is never mounted.** The picture at rest
+carries the scene; that is the appearance to review first (`SKILL.md` §4). (Until 2026-10-23
+this read "E1 + E2 + E3 + E5 … the atmosphere alone carries the scene": no stage has either now.)
 
 ## 3. Animation budget
 
@@ -207,15 +286,19 @@ frame loop; no Vue reactivity for per-frame values (`vue-patterns.md` §8).
 - **Reduced motion:** E1/E3 loops freeze (global override); E4 is not mounted; E2 and E5 are
   static and stay. The scene must read as a place with all motion removed.
 - **Reduced transparency / increased contrast:** the material moves to tier C
-  (`materials.md` §8); the environment is unaffected except that E2 may deepen so labels on
-  tier-C glass keep contrast.
+  (`materials.md` §8); the environment is unaffected — the picture is shown as it is (a
+  photograph is not a material). E2 used to deepen here; that left with the atmosphere
+  (2026-10-23).
 - **Forced colours (Windows High Contrast):** the material moves to tier C and turns opaque
   in the system palette; a decorative picture behind forced text only fights it, so the stage
   hides its wallpaper and never mounts the wake (shipped 2026-10-21 on the Login stage).
-- **Touch:** wallpaper + atmosphere, no wake. Nothing the user needs is inside an aperture.
+- **Touch:** the picture (a crown on a phone), no wake. Nothing the user needs is inside an
+  aperture.
 - **Contrast:** on-glass labels are measured against the *darkest and brightest* the
-  environment can be under the material (wallpaper through the atmosphere, pool at full
-  drift). The atmosphere's band is chosen so that measurement passes.
+  environment can be under the material — the picture behind the glass at every stage shape,
+  since that is where its petals move — and measured **bare**: the glyph hidden and the text's
+  own halo removed. A halo-assisted figure is reported beside it, never in its place
+  (2026-10-23; the record is `docs/liquid-material-global-reassessment.md` §26).
 
 ## 5. Anti-patterns
 

@@ -1,33 +1,36 @@
 <script setup lang="ts">
-import lotusUrl from '@/assets/environment/lotus.webp'
-
 /**
  * The welcome hero's environment — the same room as the Login stage.
  *
- * Phase B3 (`environment.md` §1, decision V): this used to be a white frosted
- * veil (a 26px backdrop blur over a translucent white sheet) with a pointer
- * spotlight melting a 340px hole into it — the forbidden glassmorphism idiom
- * applied to an environment, plus a second eased cursor. It is now the
- * Login environment's wallpaper under the Login environment's atmosphere, from
- * the same tokens: one environment family across the product — the field and
- * the pink lotus placed twice, either side of the hero's copy.
+ * That is the daylight room again since 2026-10-23: the supplied artwork
+ * (`public/images/welcome-bg.png`; a browser downloads its WebP twin), shown
+ * as it is, cover-fit and cropped as the sign-in room crops it — the whole
+ * picture on wide and portrait stages, a crown band dissolving into the room's
+ * own daylight on a phone-shaped one. When the sign-in room became a daylight
+ * room (2026-10-21) this hero kept the dusk lotus, which left "a continuation
+ * of the login scene" standing in a room the login no longer has.
  *
  * Environment, not material: no GlassSurface, no backdrop-filter, no budget
  * instance. No wake either — a wake belongs to a stage that owns the one light
  * (`useGlassSpotlight`), and this hero owns none. Every layer is decorative and
  * hidden from assistive tech; the slot carries the content.
  */
+const wallpaperPng = `${import.meta.env.BASE_URL}images/welcome-bg.png`
+const wallpaperWebp = `${import.meta.env.BASE_URL}images/welcome-bg.webp`
 </script>
 
 <template>
   <div class="glass-scene">
-    <div class="scene-lotus scene-lotus--near" aria-hidden="true">
-      <img class="scene-lotus__art" :src="lotusUrl" alt="" decoding="async" fetchpriority="high" />
-    </div>
-    <div class="scene-lotus scene-lotus--far" aria-hidden="true">
-      <img class="scene-lotus__art" :src="lotusUrl" alt="" decoding="async" />
-    </div>
-    <div class="scene-atmosphere" aria-hidden="true"></div>
+    <picture class="scene-wallpaper" aria-hidden="true">
+      <source type="image/webp" :srcset="wallpaperWebp" />
+      <img
+        class="scene-wallpaper__art"
+        :src="wallpaperPng"
+        alt=""
+        decoding="async"
+        fetchpriority="high"
+      />
+    </picture>
     <div class="scene-content">
       <slot />
     </div>
@@ -35,92 +38,66 @@ import lotusUrl from '@/assets/environment/lotus.webp'
 </template>
 
 <style scoped>
+/* The room's own colour is the picture's mean, seen only while it loads. */
 .glass-scene {
   position: relative;
   overflow: hidden;
   isolation: isolate;
-  background-color: var(--environment-field);
+  background-color: var(--environment-daylight-field);
 }
 
-.scene-lotus,
-.scene-atmosphere {
+/* E1 — the sign-in room's picture, placed as the sign-in room places it
+   (LoginView): cover-fit, centred, a peony either side of the copy. */
+.scene-wallpaper {
   position: absolute;
+  inset: 0;
+  display: block;
   pointer-events: none;
 }
 
-/* E1 — the Login stage's wallpaper, placed as the Login stage places it: each
-   bloom by the centre of its cup and its width (see LoginView), screen-blended
-   so the artwork's black ground is the field. */
-.scene-lotus {
-  left: calc(var(--lotus-x) - 0.397 * var(--lotus-width));
-  top: calc(var(--lotus-y) - 0.307 * var(--lotus-width) * 880 / 760);
-  width: var(--lotus-width);
-  aspect-ratio: 760 / 880;
-  mix-blend-mode: screen;
-  opacity: calc(var(--environment-lotus-light) * var(--lotus-depth, 1));
-}
-
-.scene-lotus__art {
+.scene-wallpaper__art {
   display: block;
   width: 100%;
   height: 100%;
-  transform-origin: 39.7% 30.7%;
-  transform: scaleX(var(--lotus-mirror, 1)) rotate(var(--lotus-turn, 0deg));
-}
-
-.scene-lotus--near {
-  --lotus-x: calc(100% - 10.4vw);
-  --lotus-y: 24.5vh;
-  --lotus-width: 62vh;
-  --lotus-turn: -4deg;
-}
-
-.scene-lotus--far {
-  --lotus-x: 11.8vw;
-  --lotus-y: 62vh;
-  --lotus-width: 52vh;
-  --lotus-mirror: -1;
-  --lotus-turn: 8deg;
-  --lotus-depth: 0.8;
-}
-
-@media (max-width: 1180px) and (min-aspect-ratio: 4/5) {
-  .scene-lotus--near {
-    --lotus-x: calc(100% - 7vw);
-    --lotus-width: 56vh;
-  }
-
-  .scene-lotus--far {
-    --lotus-x: 8vw;
-    --lotus-width: 46vh;
-  }
-}
-
-@media (max-aspect-ratio: 4/5) {
-  .scene-lotus--near {
-    --lotus-x: calc(100% - 66px);
-    --lotus-y: 44px;
-    --lotus-width: min(96vw, 500px);
-    --lotus-mirror: -1;
-    --lotus-turn: -2deg;
-  }
-
-  .scene-lotus--far {
-    --lotus-x: 60px;
-    --lotus-y: calc(100% - 142px);
-    --lotus-width: min(84vw, 440px);
-  }
-}
-
-/* E2 — the shared dusk: graded from above, never blurred, never white. */
-.scene-atmosphere {
-  inset: 0;
-  background: var(--environment-atmosphere);
+  object-fit: cover;
+  object-position: var(--wallpaper-x, 50%) var(--wallpaper-y, 50%);
 }
 
 .scene-content {
   position: relative;
   z-index: 1;
   height: 100%;
+}
+
+/* A phone-shaped stage: the sign-in room's crown — the right peony in a band
+   across the top half, dissolving into the picture's sky and mean — so the
+   copy and its actions rest on calm daylight. */
+@media (max-width: 640px), (max-aspect-ratio: 3/5) {
+  .glass-scene {
+    background-image: linear-gradient(
+      to bottom,
+      var(--environment-daylight-sky) 30%,
+      var(--environment-daylight-field)
+    );
+  }
+
+  .scene-wallpaper {
+    inset: 0 0 auto;
+    height: 50%;
+    mask-image: linear-gradient(to bottom, black 45%, transparent);
+    --wallpaper-x: 100%;
+    --wallpaper-y: 0%;
+  }
+}
+
+/* Forced colours: the system owns every colour; the picture steps back. */
+@media (forced-colors: active) {
+  .scene-wallpaper {
+    display: none;
+  }
+
+  .glass-scene {
+    background-image: none;
+  }
 }
 </style>

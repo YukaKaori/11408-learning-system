@@ -329,6 +329,21 @@ watch(mobileNavOpen, (open, wasOpen) => {
         calc(100% - var(--app-dock-space) + var(--scroll-edge-band) / 2)
     );
   }
+
+  /*
+   * A slab inside the container keeps its backdrop (2026-10-23). A mask makes
+   * the element carrying it a backdrop root, and a GlassSurface inside it —
+   * the note editor's toolbar and `[[` list — then refracted and diffused
+   * nothing: on phones the line under the toolbar showed through its smoke
+   * crisp and unbent, beside the labels (the trap `implementation.md` §9
+   * names for an animated wrapper). While a slab is mounted here the band
+   * steps aside. The view that hosts them (Notes) never scrolls this
+   * container — it is a `height: 100%` workspace — so the band had nothing
+   * to dissolve there; it returns the moment the slab leaves.
+   */
+  .content:has(.glass-surface) {
+    mask-image: none;
+  }
 }
 </style>
 

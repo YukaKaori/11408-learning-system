@@ -123,6 +123,14 @@ one `feDisplacementMap` at the middle channel's scale → the recipe's output
 blur), and tier A uses it under `[data-material-backdrop='light']`. The bend is
 unchanged; only the split is gone. Dark backdrops keep the three-channel chain.
 
+**The Regular rank refracts in one pass on every backdrop — Shipped (2026-10-23).**
+It floats over arbitrary content, and that content is text: the split turns the
+thin, high-contrast strokes of a line it crosses into three coloured copies. In the
+dark theme a white heading under the note toolbar came through as orange, yellow and
+violet smears (chroma p99 50, against 22 in one pass, which leaves a neutral haze).
+The dispersion whisper stays with the Clear slabs over dark backdrops, whose scenes
+are designed or dissolved before they reach the glass.
+
 ### Fresnel rim arc
 
 Glass reflects most at grazing angles, so only the light-facing rim glows:
@@ -220,8 +228,8 @@ Three token families the presets do not yet carry. Each is a **stage** or
 
 | Token | Phase | Meaning |
 |---|---|---|
-| `data-material-backdrop="dark \| light"` on the stage → `--material-backdrop` → the primitive's `color-scheme` (its `light-dark()` pairs follow the backdrop, not the theme); `light` flips the chrome rank's on-glass labels/indicator to ink | **shipped B4** | the environmental contract (`environment.md` §1 E5, `adaptive-material.md` §6) |
-| `[data-material-backdrop='light']` remaps per rank: `chrome` → `--glass-rim-polarity: 1` (density unchanged); `floating` → `--material-density-regular-light` (.86); tier A → the one-pass filter; tier C → `--material-density-dense-floor-light` (.86), dusk labels and light rims kept | **shipped B5.3** (decision L-A) | the light-backdrop optics, measured against the shell content the app dock and the toolbar cross (`adaptive-material.md` §6) |
+| `data-material-backdrop="dark \| light"` on the stage → `--material-backdrop` → the primitive's `color-scheme` (its `light-dark()` pairs follow the backdrop, not the theme); `light` flips the chrome rank's on-glass labels/indicator to ink. **Since 2026-10-23 each declared value is also written as a literal `color-scheme` on the slab** (`[data-material-backdrop='light'] .glass-surface { color-scheme: light }`, and `dark`): the production build's CSS minifier rewrites `light-dark()` as `var(--lightningcss-light, A) var(--lightningcss-dark, B)` and sets that switch only beside a literal `color-scheme`, so through the variable alone a built app drew the theme's pairs (the dev server, native, never did). A pair kept in a root token (`--material-tint-*`) still resolves by the theme in a build | **shipped B4** (literal schemes 2026-10-23) | the environmental contract (`environment.md` §1 E5, `adaptive-material.md` §6) |
+| `[data-material-backdrop='light']` remaps per rank: `chrome` → `--glass-rim-polarity: 1` (density unchanged); `floating` → `--material-density-regular-light` (.86, over a base of .78 since 2026-10-23 — .62 before); tier A → the one-pass filter; tier C → `--material-density-dense-floor-light` (.86), dusk labels and light rims kept | **shipped B5.3** (decision L-A) | the light-backdrop optics, measured against the shell content the app dock and the toolbar cross (`adaptive-material.md` §6) |
 | `--material-radius-chrome` / `-hero` / `-floating` (30 / 28 / 16px) → each preset's `--glass-radius`, read by the primitive for its map and its corners | **shipped B1** | a slab's radius belongs to its recipe (`components.md` §7); the `borderRadius` prop is now an override, not the source |
 | `--material-inset` (the primitive's content padding, `0.5rem`) | **shipped B1** | the contributor to every nested inset; concentricity is derived from it |
 | `--material-diffusion` (10px) · `--material-density-dense-floor` (.72) | **shipped B1** | the two dials of tiers B and C (§8) |
@@ -264,7 +272,8 @@ attribute-less pre-hydration state is the legible diffuse slab), adds the SVG
 chain under `html[data-glass-tier='refract']`, and under
 `html[data-glass-tier='dense']` paints the body as
 `tint × (floor + (1 − floor) × density)` with no backdrop work — chrome .765,
-hero .815, floating .894. The retired fallback (`rgba(255,255,255,.25)` +
+hero .815, floating .938 (.894 until the Regular base density rose to .78 on
+2026-10-23). The retired fallback (`rgba(255,255,255,.25)` +
 `blur(12px) saturate(1.8)` + a uniform white border + a `0 8px 32px` halo) is
 gone; `materialTier.spec.ts` keeps it out. Verified at the real surface in
 Chrome, Edge and bundled Chromium (all `refract`; `diffuse`/`dense` forced via

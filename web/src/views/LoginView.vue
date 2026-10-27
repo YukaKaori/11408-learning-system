@@ -23,7 +23,9 @@ import type { MaterialBackdrop } from '@/components/experience/materials'
 //
 //   E1 wallpaper    the supplied artwork — icy-blue peonies, a translucent
 //                   ribbon, droplets and petals on an ice-white ground —
-//                   cover-fit and cropped per stage shape; present at rest
+//                   cover-fit and cropped per stage shape; present at rest.
+//                   On a phone-shaped stage, a crown band over the room's
+//                   own daylight instead of a whole picture behind the form
 //   E4 wake         RefractionField — where the pointer is, a small liquid lens
 //                   bends the wallpaper; its residue relaxes (desktop only)
 //   M  glass        the sign-in slab (hero) and the dock (chrome)
@@ -363,12 +365,27 @@ function toggleLocale() {
  * The stage — a room, not a void. A single column (short viewports scroll
  * instead of clipping): sign-in slab → dock → colophon. Its own colour is the
  * wallpaper's mean, seen only while the picture loads.
+ *
+ * The slab stands in the room above the dock, a little above its middle —
+ * the room's free height is shared 2 : 3 above and below it (2026-10-23). It
+ * used to hang from a top margin of 12vh with the dock pushed to the floor:
+ * on a 768px-tall laptop the dock then sat 9px under the slab, and on a
+ * 1440px-tall screen 600px of empty room opened between them. Each share has
+ * a floor, so a short screen keeps a gap and scrolls rather than touching.
+ * The floors keep the shares' proportion (16px a share): a grid that outgrows
+ * its min-height sizes every flexible row from the largest floor per share,
+ * so a floor out of proportion would inflate the other row.
  */
 .login-stage {
   position: relative;
-  display: flex;
-  flex-direction: column;
-  align-items: center;
+  display: grid;
+  grid-template-rows:
+    minmax(var(--space-8), 2fr)
+    auto
+    minmax(var(--space-12), 3fr)
+    auto
+    auto;
+  justify-items: center;
   min-height: 100vh;
   min-height: 100dvh;
   padding: var(--space-6);
@@ -392,7 +409,8 @@ function toggleLocale() {
  * Shown as it is: no opacity, no blend, no filter, no tone curve. The wake
  * re-draws it pixel for pixel (the plate reads its box, `object-fit` and
  * `object-position`), and anything applied here would misregister the lens.
- * Static by rule for the same reason.
+ * Static by rule for the same reason. (On a phone-shaped stage it is a crown
+ * band that dissolves through a mask — a stage no wake runs on; see below.)
  */
 .stage-wallpaper {
   position: absolute;
@@ -419,9 +437,9 @@ function toggleLocale() {
  */
 .login-card {
   position: relative;
+  grid-row: 2;
   width: 100%;
   max-width: 520px;
-  margin-top: clamp(72px, 12vh, 160px);
   animation: app-slide-up 640ms var(--ease-out) 60ms both;
   /* Optics come from `material="hero"` (styles/glass.css). Over the stage's
      light backdrop the preset falls to the Clear density the dock carries and
@@ -538,7 +556,7 @@ function toggleLocale() {
 /*
  * Dock anchor — parks the glass bar at the bottom of the stage. FluidGlass bar geometry: the anchor owns the
  * bar's width — ~90% of the stage, capped — and the slab inside fills it,
- * locked to the bottom edge by margin-top: auto; on short viewports it
+ * held at the floor by the room's rows above it; on short viewports it
  * follows the flow and the page scrolls. The z-index keeps the bar
  * floating above the gallery layers (z 40): a persistent dock, never
  * covered by the rooms it navigates. Since A1 the bar is a segmented control
@@ -548,8 +566,8 @@ function toggleLocale() {
 .dock-anchor {
   position: relative;
   z-index: 50;
+  grid-row: 4;
   width: min(100%, 780px);
-  margin-top: auto;
 }
 
 .landing-dock {
@@ -609,6 +627,7 @@ function toggleLocale() {
    secondary ink read 3.1 : 1 on phones; the old dusk line, ~2.9 : 1). */
 .stage-colophon {
   position: relative;
+  grid-row: 5;
   margin: var(--space-3) 0 0;
   font-size: var(--text-xs);
   color: var(--landing-ink);
@@ -630,10 +649,6 @@ function toggleLocale() {
 @media (max-width: 640px) {
   .login-stage {
     padding: var(--space-4);
-  }
-
-  .login-card {
-    margin-top: clamp(64px, 12vh, 140px);
   }
 
   .card-body {
@@ -658,17 +673,43 @@ function toggleLocale() {
 }
 
 /*
- * Tall phones: a quarter of the picture's width, and the slab takes most of
- * the screen, so a flower can only stand in the open in part. The crop takes
- * the picture's left edge whole: the small blossom above the slab, the large
- * peony seen through its lower half — bent at its rim — with its outer petals
- * and stem in the band above the dock. (A frame run past the stage's foot
- * lowered the bloom into that band, but put its darkest petals behind the
- * dock's ink labels and the colophon: 3.3 : 1 and 2.9 : 1, measured.)
+ * Phone-shaped stages — ≤ 640px wide, or taller than 3 : 5 — get a
+ * composition of their own (2026-10-23), not the room squeezed in. A phone
+ * holds a quarter of the picture's width and the slab covers most of the
+ * screen, so every whole-picture crop put a peony behind the form: busy under
+ * the fields, and upscaled to a blur. Here the picture is a crown instead: a
+ * band across the top half of the stage, cropped to the right peony, which
+ * stands above the slab's upper corner and bends at its rim, and dissolves
+ * into the room's own daylight — the picture's sky above, its mean below.
+ * The form, the dock and the colophon rest on that calm light. A smaller
+ * frame also asks less of the 1691px artwork: about half the upscale.
+ *
+ * The room's free height is shared evenly here: the crown wants air above the
+ * slab. The fade is a mask, which the wake's plate could not reproduce — the
+ * wake's gate excludes this same query (`useRefractionField.ts`), and touch
+ * never had one.
  */
-@media (max-aspect-ratio: 3/5) {
+@media (max-width: 640px), (max-aspect-ratio: 3/5) {
+  .login-stage {
+    grid-template-rows:
+      minmax(var(--space-8), 1fr)
+      auto
+      minmax(var(--space-8), 1fr)
+      auto
+      auto;
+    background-image: linear-gradient(
+      to bottom,
+      var(--environment-daylight-sky) 30%,
+      var(--environment-daylight-field)
+    );
+  }
+
   .stage-wallpaper {
-    --wallpaper-x: 0%;
+    inset: 0 0 auto;
+    height: 50%;
+    mask-image: linear-gradient(to bottom, black 45%, transparent);
+    --wallpaper-x: 100%;
+    --wallpaper-y: 0%;
   }
 }
 
@@ -680,6 +721,10 @@ function toggleLocale() {
 @media (forced-colors: active) {
   .stage-wallpaper {
     display: none;
+  }
+
+  .login-stage {
+    background-image: none;
   }
 }
 </style>

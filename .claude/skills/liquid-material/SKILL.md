@@ -129,7 +129,8 @@ deliberate, documented renegotiation — never a side effect.
    dock and its selection lens (A1), the mobile app dock (B5), the sign-in slab,
    the note selection toolbar, the note editor's `[[` link popover (2026-10-21,
    never on screen with the toolbar); at most 3 primitives on one screen (the
-   login stage). Environment layers, the indicator light, `.glass-material`
+   login stage). The 2026-10-23 pass added none: the welcome hero joined the
+   daylight room as environment (`GlassScene`, no primitive). Environment layers, the indicator light, `.glass-material`
    skins and adaptive states are **never** instances. Note that
    the shipped guard counts *files*, not surfaces — a recipe mounted twice is
    invisible to it — so B5 adds a surface registry the guard reads.
@@ -181,7 +182,18 @@ labels; tier A refracts in one pass (no channel split) over a light backdrop; ti
 C keeps the dusk palette. **Shipped (2026-10-21):** the hero's answer — on the
 daylight sign-in room it takes the dock's Clear density and its ink (rims, text,
 controls), and over a picture the ink's idle step is .8 with a tight near halo
-under dock labels. Floating chrome over scrolling content also owes its
+under dock labels. **Shipped (2026-10-23):** a phone-shaped stage (≤ 640px wide, or
+taller than 3 : 5) wears its picture as a crown — a band across the top half,
+masked into the room's own daylight — on the sign-in room and the welcome hero
+alike, and the wake's gate excludes the same query; the Regular rank's body is `.78`
+and it refracts in one pass over every backdrop; a slab inside the shell's scroll
+container keeps its backdrop (the container drops its scroll-edge mask while one is
+mounted); on smoke a brand fill takes the anchor's steps (`--on-glass-brand-fill*`)
+and every slab declares its own keyboard ring — smoke the brand's light step, both
+clear slabs over a light stage (the dock, the sign-in slab) the rim ink;
+and the declared backdrop is also written as a literal `color-scheme` per value,
+because the production build's minifier rewrites `light-dark()` and switches it
+only beside a literal (`references/materials.md` §7). Floating chrome over scrolling content also owes its
 container the scroll edge (`references/scroll-edge.md`, shipped B5.2 under the app
 dock). On a coarse pointer every on-glass control answers within an invisible
 44px hit area (`glass.css`, "Touch reach"), stacked neighbours sharing what
@@ -286,5 +298,15 @@ Before shipping any material work:
 - [ ] Concentricity: the slab's radius is its recipe's token; nested controls use
       `max(radius − inset, --radius-md)` (`references/components.md` §7)
 - [ ] Focus rings, contrast, keyboard paths, 44px touch targets intact
+- [ ] Contrast measured **bare** — the glyphs hidden *and* the text's own
+      `text-shadow` removed — against what is rendered behind the text; a
+      halo-assisted figure is reported beside it, never instead of it. Rings
+      against the pixels under their band, ≥ 3 : 1
 - [ ] Every color obeys `references/color.md` — no new hex/rgba literals
-- [ ] Verified at the real surface with the `verify` skill, both themes
+- [ ] Verified at the real surface with the `verify` skill, both themes — and on a
+      **production build** (`vite build` + `vite preview`), not only the dev
+      server: the build's CSS minifier rewrites `light-dark()`, and the
+      2026-10-23 backdrop defect existed only there. It also rewrites a custom
+      property's text (`oklch(48% .128 275)`): compare a colour only as the
+      browser resolves it, never against a token read raw (2026-10-27: a
+      harness failed every focused field that way)

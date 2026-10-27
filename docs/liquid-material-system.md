@@ -56,7 +56,7 @@ All in `src/styles/tokens.css`.
 |---|---|---|
 | `--material-density-clear` | `.16` | Clear, over a stage that dims for it |
 | `--material-density-clear-stage` | `.34` | Clear, stage-tuned for brighter artwork |
-| `--material-density-regular` | `.62` | Regular, carries legibility alone |
+| `--material-density-regular` | `.78` | Regular, carries legibility alone (`.62` until 2026-10-23: a white heading under the note toolbar in the dark theme brought its labels to 3.65 : 1) |
 
 Density is how much smoke is in the slab. **Legibility is bought by darkening,
 never by whitening** — there is no white-fill dial and there will not be one.
@@ -69,8 +69,13 @@ never by whitening** — there is no white-fill dial and there will not be one.
 | `--material-tint-hero` | `rgb(17 18 24)` | `rgb(7 9 15)` |
 | `--material-tint-floating` | `rgb(12 13 19)` | `rgb(7 8 14)` |
 
-Resolved per theme with `light-dark()`, which is safe here because `tokens.css`
-declares `color-scheme` in both `:root` and `html.dark`.
+Resolved with `light-dark()`, which is safe here because `tokens.css` declares
+`color-scheme` in both `:root` and `html.dark`. In development (native
+`light-dark()`) the pair resolves where the slab paints, so it follows the
+stage's declared backdrop; in a production build the CSS minifier rewrites it as
+a variable pair resolved where the token is declared — the root — so the tints
+follow the **theme** there (a few levels of near-black apart; the slab's own
+pairs follow the backdrop in both, see §6).
 
 ### Thickness and edge
 
@@ -119,7 +124,7 @@ the whole optical prescription; it never hand-types dials.
 |---|---|---|---|---|---|---|
 | `data-material="chrome"` | Clear | `.16` | chrome | `.85` | `.65` | `GlassDock` — permanent navigation, the lowest optical drama in the system |
 | `data-material="hero"` | Clear | `.34` | hero | `.68` | `.55` | `LoginView` card — the flagship slab, denser because the lotus artwork behind it was brighter than the dock's backdrop |
-| `data-material="floating"` | Regular | `.62` | floating | `.7` | `.5` | `NoteSelectionToolbar` and `WikiLinkSuggestions` — transient, over arbitrary note content |
+| `data-material="floating"` | Regular | `.78` | floating | `.7` | `.5` | `NoteSelectionToolbar` and `WikiLinkSuggestions` — transient, over arbitrary note content; refracts in one pass on every backdrop (2026-10-23) |
 
 The hero's `.34` is a **documented stage override inside the Clear band**, not a
 magic number and not a third variant. Over a declared light backdrop each rank
@@ -135,7 +140,17 @@ moved.
 
 ## 6. Theme behaviour
 
-- The **body tint** resolves per theme via `light-dark()`.
+- The **body tint** resolves via `light-dark()` (§3: by the backdrop in
+  development, by the theme in a production build).
+- The slab's **own `light-dark()` pairs** — its frost, rims, depth and Fresnel
+  tints — follow the stage's **declared backdrop**, not the theme
+  (`data-material-backdrop`, B4): the primitive takes its `color-scheme` from
+  `--material-backdrop`, and since 2026-10-23 it also writes each declared value as
+  a literal `color-scheme` (`[data-material-backdrop='light'] .glass-surface`),
+  because the production minifier switches its `light-dark()` fallback only beside
+  a literal. Before that fix, a built app drew the dark theme's pairs on the light
+  login stage (a black frost and violet rims; the sign-in title 5.4 : 1 instead
+  of 7.0 on a 320px phone).
 - The **density and geometry dials are deliberately theme-invariant.** The house
   material is smoked in *both* themes — never white in light mode — which is
   exactly what lets on-glass text use one fixed dusk palette (`--on-glass-text*`
@@ -163,11 +178,13 @@ per-frame state.
 1. Does it qualify — elevated, transient or premium? If it is a reading surface,
    a form, an editor, a dashboard or a canvas, **the answer is no**. Use
    `--color-surface` and the elevation scale.
-2. Does it need the *primitive*? The displacement budget is **5** logical
+2. Does it need the *primitive*? The displacement budget is **6** logical
    surfaces (the registry in `experience/__tests__/materialSurfaces.ts`, checked
-   by `glassBudget.spec.ts`). A sixth is a deliberate renegotiation with a
-   written justification, not an implementation detail — the way the app dock
-   (B5) and the landing dock's selection lens (Amendment A1, 2026-10-02) were.
+   by `glassBudget.spec.ts`; fork count 4, at most 3 on one screen). A seventh is
+   a deliberate renegotiation with a written justification, not an
+   implementation detail — the way the app dock (B5), the landing dock's
+   selection lens (Amendment A1, 2026-10-02) and the note editor's `[[` list
+   (2026-10-21) were. (This line read "5" until 2026-10-23.)
 3. If it sits **on** an existing slab, it needs no primitive at all — use
    `.glass-material` and extend `glass.css` if a control skin is missing.
 
@@ -214,6 +231,26 @@ per-frame state.
 > the toolbar (budget 5 → 6), and both editor surfaces now play their entrance on
 > the slab — on the wrapper it had cut the toolbar off from its backdrop since
 > Phase 16. Record: `docs/liquid-material-global-reassessment.md` §25.
+>
+> **2026-10-23 (committed 2026-10-27, branch `welcome-room-crown-verification`):** the welcome hero left the
+> dusk lotus for the sign-in room's daylight — environment only, the route mounts
+> no glass — and phone-shaped stages wear the picture as a crown band; the
+> sign-in room shares its free height 2 : 3. The Regular rank's body went
+> .62 → .78 and it refracts in one pass on every backdrop; the shell's scroll
+> container drops its mask while a slab is mounted. On smoke a brand fill takes
+> the anchor's steps and every slab declares its own keyboard ring (both clear
+> slabs over a light stage: the rim ink). A production build now honours the declared
+> backdrop (a literal `color-scheme` per value — the minifier's `light-dark()`
+> fallback had followed the theme). The sign-in error line's ink went one step
+> deeper. No surface added (budget 6). Record and measurements:
+> `docs/liquid-material-global-reassessment.md` §26.
+> **Verified 2026-10-27** on production builds, in Chrome only: the unit suite
+> (463), type-check, lint and build, 564 interaction checks and the contrast
+> tables of §26.4. **Open, all pre-existing:** the landing dock's current label on
+> upright tablets (3.4–4.3 : 1 bare), the app-wide dark-theme primary button
+> (3.27 : 1), and in tier C the dock's focus rings (1.3–3.1) and, at desktop
+> widths, three of the slab's (2.6–3.0) and the sign-in error line (4.2–4.3).
+> **Not tested:** Gecko and WebKit, real Windows High Contrast, physical devices.
 
 Phase 17.2 delivers material *coherence*. What it deliberately does not do:
 

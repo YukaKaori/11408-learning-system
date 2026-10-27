@@ -1,6 +1,6 @@
 # Roadmap — 11408 Learning System
 
-**Canonical as of 2026-10-03; M2 updated 2026-10-16.** This replaces the general-purpose "AI Learning
+**Canonical as of 2026-10-03; M2 updated 2026-10-16; carry-forward 2026-10-23, verified 2026-10-27 (M3 not started).** This replaces the general-purpose "AI Learning
 Platform" roadmap (Phases 15–28), archived at
 [`archive/roadmap-ai-learning-platform.md`](archive/roadmap-ai-learning-platform.md).
 Historical documents that cite "`docs/roadmap.md` § Phase N" refer to that
@@ -152,7 +152,26 @@ Not met, carried forward:
   glass beyond the toolbar, fixed the toolbar's lost refraction, added a
   forced-colours state, 44px touch reach on glass controls and English dock
   labels at 320px (§25 of `docs/liquid-material-global-reassessment.md`).
-  Still open: the Product room's scroll edge and the Gecko/WebKit checks.
+  The 2026-10-23 pass (committed 2026-10-27 on branch `welcome-room-crown-verification`) moved the welcome
+  hero into the same daylight room, gave phone-shaped stages a composition of
+  their own (the crown), raised the Regular rank's body to .78 with one-pass
+  refraction, kept the note toolbar's backdrop on phones, declared keyboard
+  rings on each slab, made a production build honour the declared backdrop
+  (its CSS minifier had made the light-stage slabs follow the theme) and
+  deepened the sign-in error ink; no surface was added (§26). Its verification
+  finished on 2026-10-27 on production builds, in Chrome only: 463 unit tests,
+  type-check, lint and build, 564 interaction checks, the contrast tables of
+  §26.4. Still open: the Product room's scroll edge; the Gecko/WebKit, Windows
+  High Contrast and device checks; the landing dock's current label on upright
+  tablets (3.4–4.3 : 1 bare, 4.6–6.4 with its halo); the note toolbar, its
+  proposal panel and the `[[` list clipping inside a scrolled editor pane
+  (pre-existing positioning); the app-wide dark-theme primary button (a white
+  label on `#7b86e8`, 3.27 : 1 — pre-existing, an app-wide restyle); tier C
+  (reduced transparency) focus rings — the docks' 1.3–3.1 : 1 and, at desktop
+  widths, three of the slab's 2.6–3.0 — and its desktop error line, 4.2–4.3
+  (pre-existing; better than before the pass in every compared figure but one
+  dock ring; deferred — a two-tone ring is the likely fix); and the root-token
+  smoke tints a build still resolves by the theme.
 - The local folder rename to `11408-Learning-System` (it cannot be renamed
   while an editor or Claude Code holds it open) and the hosted repository
   renames by the account owner — see README § Repository.

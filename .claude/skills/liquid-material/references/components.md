@@ -70,6 +70,23 @@ glass-appropriate skin **without** new glass primitives:
   the remap reaches them through scoped custom properties.
 - New on-glass control needs? Extend `glass.css`. No private glass styles in
   components.
+- **Brand on smoke has two roles** (2026-10-23). As *text* and hairlines it
+  takes the pinned dusk steps (`--color-primary` #7b86e8 …); as a *fill* under
+  a white label — the solid primary button — it takes the anchor's own steps
+  (`--on-glass-brand-fill*` → `--landing-accent` / `--landing-accent-ink`):
+  the text steps carried a white label at only 4.0–4.4 : 1. A clear slab over
+  a bright room keeps its own ladder (the hero remap re-points the fill).
+- **The keyboard ring is declared on the slab** (2026-10-23).
+  `--color-focus-ring` resolves where it is declared, so a ring inherited from
+  the root is the page's brand, not the slab's: on smoke it is
+  `--landing-accent-soft` (≥ 4.7 : 1 on the lightest smoke); on both clear
+  slabs over a bright room — the dock and the sign-in slab — the rim ink
+  (`--material-rim-ink`, like their labels and rims: the brand anchor measured
+  1.6–2.3 : 1 against the landing dock's glass and lens at every stage shape,
+  the sign-in slab's brand ink 2.8–3.0 at some; the rim ink 5.9–8.5 and ≥ 7.1).
+  A focused field on the slab still turns its frame to the brand. A page
+  outside glass that stands in a bright room declares its own ring the same way
+  (`/welcome` on `.hero`, the daylight brand ink, which clears 5 : 1 there).
 
 ## 3. Component catalogue
 
@@ -142,6 +159,29 @@ never a new refraction implementation. Optical dials refer to `materials.md` §7
   slab refracted an empty backdrop and the note line under it showed through
   the smoke as crisp type. Played by the slab, the line arrives as the haze the
   recipe's diffusion intended (`implementation.md` §9).
+- **No masked ancestor either (2026-10-23).** On phones the shell's scroll
+  edge put a `mask-image` on `.content`, the toolbar's ancestor — the same
+  backdrop-root trap at rest: the note's heading showed through the bar crisp
+  and unbent beside the labels. The container drops its mask while a slab is
+  mounted inside it (`scroll-edge.md` §7).
+- **Over a heading, in one pass (2026-10-23).** Selecting in a note's first
+  paragraph stands the bar over the note's title. In the dark theme the white
+  heading came through `.62` smoke at 3.65 : 1 beside the labels, and through
+  the three-channel split as coloured smears; the rank now carries `.78` there
+  (5.7 : 1) and refracts in one pass on every backdrop
+  (`adaptive-material.md` §6).
+- **Known defect — open, pre-existing (found 2026-10-23).** The bar, its
+  proposal panel and the `[[` list place themselves from the editor *shell's*
+  top (`anchor.top − height − GAP ≥ 0` → above, else below), not from the
+  visible box of the pane that scrolls the editor (`.canvas-body`). Scrolled even
+  a little — on a phone that pane is ~290px tall — the room above the first lines
+  is scrolled off, and the slab is placed there and clipped by the pane: 24 of
+  the bar's 60px rows visible after an 81px scroll on a 390 × 844 phone; a
+  proposal panel opened under a selection near the pane's top is cut by its
+  bottom edge; a list under a caret low in the pane, the same. The flip also
+  assumes a 48px bar, which renders 60px. Identical in `75e4e30`. The fix belongs
+  to the positioning (flip and clamp against the pane's visible rect), not to the
+  material (`docs/liquid-material-global-reassessment.md` §26).
 
 ### `GlassPopover` (exists as `WikiLinkSuggestions.vue` — the note editor's `[[` list, 2026-10-21)
 
@@ -156,7 +196,10 @@ never a new refraction implementation. Optical dials refer to `materials.md` §7
   editor suppresses the toolbar while the list is open), so the editor's two
   transient surfaces are one material and one at a time. Results that are
   *read* (a command palette's) are solid rows inside the slab instead
-  (`navigation.md` §4).
+  (`navigation.md` §4). Everything the toolbar learned on 2026-10-23 holds here
+  too — the rank's one-pass refraction and `.78` body, and the scroll
+  container that drops its mask while the list is open — and so does its open
+  positioning defect (the list can open into the clipped part of the pane).
 
 ### `GlassNavigation.vue` (exists as `GlassDock.vue` — the pattern, one recipe, two hosts)
 
@@ -197,7 +240,7 @@ in `experience/materials.ts` and resolve to `--material-*` bundles in
 |---|---|---|---|---|
 | `chrome` | Clear | permanent navigation | lowest drama; the scene shows through it; density ~0.16 | GlassDock |
 | `hero` | Clear | the flagship slab | stage-tuned denser (~0.34) over a dark stage; over a light one the Clear 0.16 in its ink polarity; full depth + Fresnel | LoginView card |
-| `floating` | Regular | transient over arbitrary content | carries legibility in its own body (density ~0.62, 0.86 over a light page) | NoteSelectionToolbar, WikiLinkSuggestions |
+| `floating` | Regular | transient over arbitrary content | carries legibility in its own body (density 0.78, 0.86 over a light page — 0.62 until 2026-10-23); refracts in one pass on every backdrop | NoteSelectionToolbar, WikiLinkSuggestions |
 
 The Clear/Regular rule is about legibility, not looks: **Clear** may only be used
 where the stage supplies its own dimming (a shroud, a dark stage, a controlled

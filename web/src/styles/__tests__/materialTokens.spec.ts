@@ -49,7 +49,10 @@ const SHIPPED: Record<string, Record<Dial, string>> = {
     'inner-glow': '0.55',
   },
   floating: {
-    density: '0.62',
+    // .62 until 2026-10-23: over the dark theme's page a white heading under
+    // the note toolbar brought its dusk labels to 3.65 : 1 (worst 5 % of
+    // pixels); .78 measured 5.7 there (`docs/liquid-material-global-reassessment.md` §26)
+    density: '0.78',
     tint: 'light-dark(rgb(12 13 19), rgb(7 8 14))',
     depth: '1',
     fresnel: '1',
@@ -138,7 +141,7 @@ describe('liquid material tokens', () => {
     // Clear = the stage supplies the dimming; Regular = the material does.
     expect(density('clear')).toBe('0.16') // dock, over its dark stage
     expect(density('clear-stage')).toBe('0.34') // login, stage-tuned for brighter art
-    expect(density('regular')).toBe('0.62') // toolbar, over arbitrary note content
+    expect(density('regular')).toBe('0.78') // toolbar, over arbitrary note content
   })
 
   it('every glass surface declares a valid material — no anonymous glass', () => {
@@ -272,7 +275,7 @@ describe('liquid material tokens', () => {
 
   it('the undeclared backdrop follows the theme', () => {
     const root = tokens.slice(tokens.indexOf(':root {'), tokens.indexOf('html.dark {'))
-    const dark = tokens.slice(tokens.indexOf('html.dark {'), tokens.indexOf('@media (prefers-reduced-transparency'))
+    const dark = tokens.slice(tokens.indexOf('html.dark {'))
     expect(root).toMatch(/--material-backdrop:\s*light;/)
     expect(dark).toMatch(/--material-backdrop:\s*dark;/)
   })
@@ -291,6 +294,20 @@ describe('liquid material tokens', () => {
     expect(read('components/experience/GlassSurface.vue')).toMatch(
       /\.glass-surface \{[^}]*color-scheme: var\(--material-backdrop\);/,
     )
+  })
+
+  it('and spells each declared backdrop out as a literal scheme — a built app flips light-dark() only on a literal', () => {
+    // 2026-10-23: the production minifier rewrites light-dark() as
+    // `var(--lightningcss-light, A) var(--lightningcss-dark, B)` and sets those
+    // switches only beside a literal `color-scheme`; through the variable alone, a
+    // slab on a declared light stage drew the dark theme's pairs in a built app
+    // (the development server serves light-dark() natively and was never wrong)
+    const primitive = read('components/experience/GlassSurface.vue')
+    for (const backdrop of MATERIAL_BACKDROPS) {
+      expect(primitive).toMatch(
+        new RegExp(`\\[data-material-backdrop='${backdrop}'\\] \\.glass-surface \\{\\s*color-scheme: ${backdrop};\\s*\\}`),
+      )
+    }
   })
 
   it('nothing else sets color-scheme — the theme and the primitive are its only owners', () => {
@@ -439,8 +456,13 @@ describe('liquid material tokens', () => {
     // the brand takes the daylight ladder's ink step, the error line its danger twin
     expect(remap['--color-primary']).toBe('var(--landing-accent-ink)')
     expect(remap['--color-danger']).toBe('var(--material-danger-ink)')
-    expect(remap['--color-focus-ring']).toBe('var(--color-primary)')
-    expect(tokens).toMatch(/--material-danger-ink:\s*oklch\(0\.49 0\.173 27\.3\);/)
+    // the ring in the rim ink, like the dock's: the brand ink step read 2.8–3.0 : 1
+    // at some stage shapes, the rim ink ≥ 7.2 at all (2026-10-23)
+    expect(remap['--color-focus-ring']).toBe('var(--material-rim-ink)')
+    // .49 / .173 until 2026-10-23: measured bare behind the line it read 3.1–4.4 : 1
+    // across stage shapes; this step reads ≥ 4.6 at the deepest backdrop it crosses
+    // (an upright tablet, the "forgot password" hint open above the line)
+    expect(tokens).toMatch(/--material-danger-ink:\s*oklch\(0\.375 0\.13 27\.3\);/)
   })
 
   it('B5.3: the primitive reads the rim polarity with an inert default — exactly its shipped rims at 0', () => {
@@ -475,6 +497,58 @@ describe('liquid material tokens', () => {
     expect(mono).toContain(':stdDeviation="displace"')
     const chain = filters.find((filter) => filter.includes(':id="filterId"')) ?? ''
     expect(chain.match(/<feDisplacementMap/g)).toHaveLength(3)
+  })
+
+  it('the Regular rank refracts in one pass over every backdrop — the split turns text into colour', () => {
+    // 2026-10-23: under the note toolbar a white heading came through the
+    // three-channel split as orange, yellow and violet smears (chroma p99 50
+    // against 22 in one pass); the Clear ranks keep their dispersion
+    const primitive = read('components/experience/GlassSurface.vue')
+    expect(primitive).toMatch(
+      /html\[data-glass-tier='refract'\] \.glass-surface\[data-material='floating'\] \{\s*backdrop-filter: var\(--filter-id-mono\) /,
+    )
+    expect(primitive).not.toMatch(/\[data-material='(chrome|hero)'\] \{\s*backdrop-filter: var\(--filter-id-mono\)/)
+  })
+
+  // ---- Smoke: the brand as a fill, and the keyboard ring (2026-10-23) -------
+
+  /** The body of the bare `.glass-material` rule — the dusk palette, comments stripped. */
+  const dusk = () => cssRules().find(([selector]) => selector === '.glass-material')?.[1] ?? ''
+
+  it('smoke: a brand fill under a white label takes the anchor’s steps, not the text steps', () => {
+    // the pinned dusk steps are brand text; as a fill they read 4.0–4.4 : 1
+    expect(dialsOf(dusk())).toMatchObject({
+      '--color-primary': '#7b86e8',
+      '--on-glass-brand-fill': 'var(--landing-accent)',
+      '--on-glass-brand-fill-hover': 'var(--landing-accent)',
+      '--on-glass-brand-fill-active': 'var(--landing-accent-ink)',
+    })
+    // every on-glass brand button paints from the fill steps, never from --color-primary*
+    const button = cssRules().filter(([selector]) =>
+      selector.startsWith('.glass-material.glass-material .app-button.variant-solid.tone-primary'),
+    )
+    expect(button).toHaveLength(3)
+    for (const [selector, body] of button) {
+      expect(body, selector).toMatch(/var\(--on-glass-brand-fill(-hover|-active)?\)/)
+      expect(body, selector).not.toMatch(/var\(--color-primary/)
+    }
+    // a clear slab over a bright room keeps its own ladder — its button is unchanged
+    expect(dialsOf(heroRule(INK_FLIP_HERO))).toMatchObject({
+      '--on-glass-brand-fill': 'var(--color-primary)',
+      '--on-glass-brand-fill-hover': 'var(--color-primary-hover)',
+      '--on-glass-brand-fill-active': 'var(--color-primary-active)',
+    })
+  })
+
+  it('smoke: the keyboard ring is declared on the slab — a root-resolved ring was the page’s brand', () => {
+    // the brand ladder's light step on smoke; the rim ink on both clear slabs over
+    // a bright room — the dock (the brand anchor measured 1.6–2.3 : 1 there, the
+    // rim ink ≥ 5.9) and the sign-in slab (its brand ink 2.8–3.0 at some shapes,
+    // the rim ink ≥ 7.2)
+    expect(dialsOf(dusk())['--color-focus-ring']).toBe('var(--landing-accent-soft)')
+    const chromeRing = cssRules().find(([selector]) => selector === INK_FLIP_CHROME)?.[1] ?? ''
+    expect(dialsOf(chromeRing)).toEqual({ '--color-focus-ring': 'var(--material-rim-ink)' })
+    expect(dialsOf(heroRule(INK_FLIP_HERO))['--color-focus-ring']).toBe('var(--material-rim-ink)')
   })
 
   // ---- Phase B5.1: the app dock's authored geometry ------------------------

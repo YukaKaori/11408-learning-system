@@ -11,8 +11,9 @@ import {
  * The refraction wake — environment layer E4 of a stage (`environment.md` §1).
  *
  * Not glass and not a budget instance: a 2D canvas laid directly over the
- * wallpaper (under the atmosphere, so the dusk falls on it exactly as on the
- * wallpaper) that re-draws the wallpaper bent — a small liquid lens where the
+ * wallpaper (under any atmosphere a stage might have, so a dusk would fall on it
+ * exactly as on the wallpaper — the daylight room has none) that re-draws the
+ * wallpaper bent — a small liquid lens where the
  * pointer is, relaxing residue where it has just been. Every pixel it draws is
  * a wallpaper pixel; it never lights, dims or reveals. It owns no pointer
  * listener: it reads the stage's one listener's raw position from
@@ -20,10 +21,12 @@ import {
  * sit on the hand, not chase it).
  *
  * Gated to nothing: the canvas is only mounted for a fine hovering pointer with
- * motion allowed and the system's own colours not forced, decided after mount
- * and re-decided when any of those preferences changes. Touch, keyboard-only,
- * reduced-motion and high-contrast users get the stage at rest, which is
- * complete without it.
+ * motion allowed, the system's own colours not forced, and a stage that is not
+ * phone-shaped (there the picture is a masked crown the plate cannot re-draw,
+ * 2026-10-23), decided after mount and re-decided when any of those queries
+ * changes — a window resized across the phone shape included. Touch,
+ * keyboard-only, reduced-motion and high-contrast users get the stage at rest,
+ * which is complete without it.
  */
 const props = defineProps<{
   /** The stage's spotlight (or anything carrying its raw pointer). */

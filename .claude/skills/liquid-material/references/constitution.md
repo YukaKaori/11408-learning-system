@@ -370,7 +370,11 @@ Five consequences, each enforced somewhere:
    transmit; they are not the thing that transmits.
 2. **The environment is present at rest.** A stage that is a void until the
    pointer arrives has no environment, only a flashlight. The wallpaper is
-   visible — faintly, through the atmosphere — with nobody touching anything.
+   visible with nobody touching anything — faintly through an atmosphere on a
+   dark stage, at full exposure in a daylight room. *(Wording clarified
+   2026-10-23, rule unchanged: every stage this product has is a daylight room
+   since then, and a daylight stage whose glass answers in ink needs no
+   atmosphere — `environment.md` §1.)*
 3. **The pointer wakes the wallpaper; it does not illuminate the page.** The
    reveal is local, transient and decaying (a *wake*), never a stage-scale
    spotlight. It reads the stage's one eased cursor, never a second listener.
@@ -378,6 +382,8 @@ Five consequences, each enforced somewhere:
    material obeys. Declaration, never sampling. In the authenticated shell the
    declaration's source is the theme; on the landing it is authored per gallery.
    Theme and backdrop are different things.
-5. **Mobile gets the environment without the wake.** Wallpaper + atmosphere +
-   ambient light must read as a place with all motion and all pointer input
-   removed.
+5. **Mobile gets the environment without the wake.** Its static layers — the
+   wallpaper, and an atmosphere or ambient light where a stage has them — must
+   read as a place with all motion and all pointer input removed. (A phone may be
+   given a composition of its own rather than the room squeezed in: the
+   daylight room's crown, 2026-10-23.)

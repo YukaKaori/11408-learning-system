@@ -301,7 +301,13 @@ transition: all 0.2s ease-in-out;
   pixel-identical with `both` or `backwards`). Wrappers carry no animation;
   slabs settle with `backwards` (`glassBudget.spec.ts` guards both toolbars of
   the editor). The landing dock's entrance is played by its layers for the
-  same reason.
+  same reason. **A mask is the same trap at rest** (2026-10-23): the scroll
+  edge's `mask-image` on `.content` made the shell's scroll container a
+  backdrop root, and on phones the note toolbar and the `[[` list inside it
+  showed the line under them crisp and unbent beside their labels. A container
+  that hosts a slab drops its mask while the slab is mounted
+  (`.content:has(.glass-surface)`, §14). Any `mask`, `filter`, `opacity < 1`
+  or `clip-path` on an element *around* a slab is suspect.
 - **Nothing loops under a slab that is not there to be seen.** Any animation
   behind or inside a refracting slab re-runs its filter every frame: the dusk
   login's drifting ambient pools and the landing dock's flow band (under the
@@ -457,6 +463,8 @@ paint        mask-image: linear-gradient(to bottom,
 rest         remaining = 0 → band fully open (nothing left to dissolve); the page's last row is readable
 reachability scroll-padding-bottom: BAR so the last row is reachable above the bar
 pinned foot  .content:has([data-scroll-edge='pinned']) moves the band below the bar's top edge (scroll-edge.md §7)
+slab inside  .content:has(.glass-surface) drops the mask while a slab is mounted in the container — a masked
+             ancestor is a backdrop root (§9); the view that hosts one (Notes) never scrolls .content anyway
 inactive     desktop (no dock): no listener, no property, no mask
 ```
 

@@ -119,4 +119,15 @@ describe('the scroll edge lives on the content side', () => {
       /<footer class="scoring-foot" data-scroll-edge="pinned">/,
     )
   })
+
+  it('steps aside while a glass slab is mounted inside — a mask would cut the slab off from its backdrop', () => {
+    // A masked ancestor is a backdrop root: the note toolbar and the `[[` list
+    // inside `.content` refracted nothing on phones until 2026-10-23.
+    const css = compact.replace(/\/\*[\s\S]*?\*\//g, '')
+    expect(css).toMatch(/\.content:has\(\.glass-surface\) \{\s*mask-image: none;\s*\}/)
+    // declared after every rule that sets the band, so it wins whichever matches
+    expect(css.lastIndexOf('.content:has(.glass-surface)')).toBeGreaterThan(
+      css.lastIndexOf('mask-image: linear-gradient('),
+    )
+  })
 })

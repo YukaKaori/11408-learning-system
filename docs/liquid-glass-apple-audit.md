@@ -15,6 +15,37 @@
 > the live HIG before committing to anything in §4 that depends on a specific
 > Apple behavior.
 
+> **Status since this audit (as of 2026-10-23).** Everything below is the
+> 2026-07-27 audit, kept as written. Where its recommendations stand now:
+>
+> | | Recommendation | Status |
+> |---|---|---|
+> | R1 | Retire the second glass material | **Shipped** — Phase 17.2 (2026-07-28). The legacy `--glass-bg/border/blur/highlight` family, `backdrop-filter` outside the primitive and hand-rolled facets are gone; `glassBudget.spec.ts` guards all three, each migration allowance empty |
+> | R2 | Make the budget test measure the right thing | **Shipped** — B5.1: the logical-surface registry (`materialSurfaces.ts`): budget 6, fork count 4, at most 3 primitives on one screen |
+> | R3 | Promote the optical dials to tokens | **Shipped** — Phase 17.2: `--material-*` in `tokens.css`, presets in `glass.css`, pinned by `materialTokens.spec.ts` |
+> | R4 | A backdrop contract | **Shipped** — B4 (`data-material-backdrop`), B5.3 (the light-backdrop optics per rank), 2026-10-21 (the hero on the daylight sign-in room), 2026-10-23 (a production build honours it: a literal `color-scheme` per declared value) |
+> | R5 | The performance defect and the fallback | **Shipped** — B1: maps measured once settled and memoised; tier B (`diffuse`) replaced the white-frost fallback |
+> | R6 | Complete the interaction loop | **Shipped** — B2: press and focus illumination, the navigation indicator |
+> | R7 | Re-decide morphing | **Deferred** — still a constitution decision; the only geometry change in the system is the A1 selection lens's damped lift |
+> | R8 | `prefers-reduced-transparency` | **Shipped** — B1: tier C (`dense`); forced colours joined it on 2026-10-21. **Still short:** in tier C the docks' focus rings (1.3–3.1 : 1) and, at desktop widths, three of the sign-in slab's rings (2.6–3.0) and its error line (4.2–4.3) — open, §26 finding 11 |
+> | R9 | Defuse the motion traps | **Partly** — B1 removed every `filter` transition (guarded); on 2026-10-23 `app-float` and `--ease-spring` were marked solid-UI-only in their comments (not guarded) |
+> | R10 | Resolve `yChannel` by eye | **Open** — left at `G`, carried to B6 |
+>
+> Reach (§0): 6 logical surfaces — the landing dock and its selection lens, the
+> app dock, the sign-in slab, the note toolbar and the `[[` list. Concentricity
+> (§2.4): radius tokens per recipe since B1. Adaptivity (§2.1) is declared by the
+> stage, never sampled. Records: `docs/liquid-material-global-reassessment.md`
+> §19–§26. Gecko and WebKit have still not been executed.
+>
+> **Verification of the 2026-10-23 pass** (finished 2026-10-27, on production
+> builds, in Chrome only — §26.4–26.6): every text on the glass surfaces and the
+> welcome route clears 4.5 : 1 bare and every ring 3 : 1, except these, all
+> pre-existing and open: the landing dock's current label on the 744, 820 and
+> 834 px upright tablets (3.4–4.3 bare, 4.6–6.4 with its halo), the tier C rings
+> and error line above, and — outside glass — the app-wide dark-theme primary
+> button (3.27; the welcome route's closing CTA is one). Not tested: Gecko,
+> WebKit, real Windows High Contrast, devices.
+
 ---
 
 ## 0. Headline verdict

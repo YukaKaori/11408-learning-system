@@ -223,6 +223,13 @@ bar declares nothing about it; the container knows the bar's height and inset.
   controls. A view that pins a foot marks it `data-scroll-edge="pinned"`; while
   it is there the band moves below it, under the glass. One view does so today
   (the scoring bar of a handed-in paper).
+- **A slab inside the container keeps its backdrop** (2026-10-23): a mask makes
+  the element carrying it a backdrop root, so a glass surface *inside* the
+  masked container refracts nothing (`implementation.md` §9). While a slab is
+  mounted in `.content` — the note editor's toolbar or `[[` list — the band
+  steps aside (`.content:has(.glass-surface)`). Notes is a `height: 100%`
+  workspace that never scrolls `.content`, so there was nothing for the band
+  to dissolve there.
 
 ## 8. Anti-patterns
 

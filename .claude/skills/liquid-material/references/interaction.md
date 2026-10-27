@@ -62,11 +62,14 @@ Rules:
 - **The spotlight is the light; the wake is the reveal.** On a stage with an
   environment (`environment.md`), the pointer does two things at once: it
   steers reflections across the material (the spotlight) and it wakes the
-  wallpaper beneath (the reveal wake). Both read the **same eased cursor**.
-  Neither is a second light: the wake opens the atmosphere, it does not emit.
-  A stage-scale radial that follows the pointer is neither — it is a
-  spotlight-as-reveal, and it is the pattern retired in B3 (shipped: `RevealField`
-  reads `useGlassSpotlight().smoothedCursor`; `useSpotlight` is deleted).
+  wallpaper beneath (the wake). Both come from the stage's **one pointer
+  listener**: the spotlight eases it; the refraction wake (round 3, 2026-09-28)
+  takes it raw — a light may drift after the hand, a wake may not. Neither is a
+  second light: the wake bends the wallpaper (the B3 reveal opened an
+  atmosphere), it does not emit. A stage-scale radial that follows the pointer is
+  neither — it is a spotlight-as-reveal, and it is the pattern retired in B3
+  (shipped: `RefractionField` reads `useGlassSpotlight`'s pointer; `useSpotlight`
+  is deleted).
 
 ## 4. Press — settle plus illumination
 

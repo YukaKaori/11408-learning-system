@@ -225,12 +225,30 @@ html[data-glass-tier='dense'] [data-material-backdrop='light'] {
 
   /* Brand steps fixed to the dark-theme values: the smoked slab is
      theme-agnostic, and the light theme's deeper primary loses contrast on
-     dark glass. Focus ring follows via --color-focus-ring. */
+     dark glass. These are the brand as TEXT and as a hairline on smoke. */
   --color-primary: #7b86e8;
   --color-primary-hover: #8b95ee;
   --color-primary-active: #6a76dd;
   --color-primary-soft: rgba(123, 134, 232, 0.24);
   --color-danger: #f87171;
+
+  /* The brand as a FILL under a white label — the solid primary button
+     (2026-10-23). The pinned steps above are tuned for brand text on smoke;
+     under a white label they read 4.0–4.4 : 1 (measured: the note toolbar's
+     proposal button in tier A, the sign-in button in tier C). The fill takes
+     the anchor's own step and its ink step, which carry the label. A clear
+     slab over a bright room keeps its own brand ladder (the hero remap). */
+  --on-glass-brand-fill: var(--landing-accent);
+  --on-glass-brand-fill-hover: var(--landing-accent);
+  --on-glass-brand-fill-active: var(--landing-accent-ink);
+
+  /* Keyboard focus on smoke (2026-10-23). `--color-focus-ring` resolves where
+     it is declared — at the root — so on this slab the ring was the page's
+     brand, not the slab's: the light theme's #5e6ad2 on the note toolbar's
+     smoke, under the 3 : 1 a focus indicator needs. Smoke draws it in the
+     brand ladder's light step, legible on every smoke the system has; a clear
+     slab over a bright room draws it darker (the ink rules below). */
+  --color-focus-ring: var(--landing-accent-soft);
 
   color: var(--on-glass-text);
 }
@@ -276,6 +294,20 @@ html:not([data-glass-tier='dense']) [data-material-backdrop='light'] [data-mater
 }
 
 /*
+ * The docks' keyboard ring over a bright room: the rim ink, like their labels
+ * and rims (2026-10-23). A ring two pixels out from a cell lies on the bar's
+ * clear glass over whatever the room puts there, and on the current cell over
+ * the lens and its bloom: the brand anchor the docks drew before measured
+ * 1.6–2.3 : 1 against what is behind it on the landing dock, at every stage
+ * shape; the anchor's ink step 2.3–3.3; the rim ink 5.9–8.5. (The light step
+ * smoke uses would read 2 : 1 on paper.) The sign-in slab beside it draws its
+ * ring in the same ink, below.
+ */
+html:not([data-glass-tier='dense']) [data-material-backdrop='light'] [data-material='chrome'] .glass-material {
+  --color-focus-ring: var(--material-rim-ink);
+}
+
+/*
  * The rest of the remap, for the hero alone — the dock has no hairlines, panes
  * or brand fills to flip. Hairlines and hover pools turn from light to ink
  * (`--material-rim-ink`, the ink the rims are drawn in). The brand steps go the
@@ -303,7 +335,17 @@ html:not([data-glass-tier='dense']) [data-material-backdrop='light'] [data-mater
   --color-primary-active: color-mix(in oklch, var(--landing-accent-ink), var(--material-rim-ink) 18%);
   --color-primary-soft: color-mix(in oklch, var(--landing-accent) 22%, transparent);
   --color-danger: var(--material-danger-ink);
-  --color-focus-ring: var(--color-primary);
+  /* The keyboard ring in the rim ink, as on the dock beside it (2026-10-23):
+     in the brand ink step above it read 2.8–3.0 : 1 at some stage shapes —
+     the picture's mid-tones behind clear glass are the brand ink's own
+     lightness — and the rim ink ≥ 7.2 at every one. A focused field still
+     turns its frame to the brand (`--color-primary`). */
+  --color-focus-ring: var(--material-rim-ink);
+  /* On a clear slab the brand button is filled from the ladder above, as it
+     always was: its label measured ≥ 5.3 : 1 over the picture. */
+  --on-glass-brand-fill: var(--color-primary);
+  --on-glass-brand-fill-hover: var(--color-primary-hover);
+  --on-glass-brand-fill-active: var(--color-primary-active);
 }
 
 /* ------------------------------------------------------------------ */
@@ -372,8 +414,8 @@ html:not([data-glass-tier='dense']) [data-material-backdrop='light'] [data-mater
     ),
     linear-gradient(
       to bottom,
-      color-mix(in srgb, var(--color-primary) 82%, transparent),
-      color-mix(in srgb, var(--color-primary-active) 88%, transparent)
+      color-mix(in srgb, var(--on-glass-brand-fill) 82%, transparent),
+      color-mix(in srgb, var(--on-glass-brand-fill-active) 88%, transparent)
     );
   box-shadow:
     var(--shadow-glow-primary),
@@ -396,8 +438,8 @@ html:not([data-glass-tier='dense']) [data-material-backdrop='light'] [data-mater
     ),
     linear-gradient(
       to bottom,
-      color-mix(in srgb, var(--color-primary-hover) 86%, transparent),
-      color-mix(in srgb, var(--color-primary) 90%, transparent)
+      color-mix(in srgb, var(--on-glass-brand-fill-hover) 86%, transparent),
+      color-mix(in srgb, var(--on-glass-brand-fill) 90%, transparent)
     );
 }
 
@@ -411,8 +453,8 @@ html:not([data-glass-tier='dense']) [data-material-backdrop='light'] [data-mater
     ),
     linear-gradient(
       to bottom,
-      color-mix(in srgb, var(--color-primary-active) 90%, transparent),
-      color-mix(in srgb, var(--color-primary-active) 94%, transparent)
+      color-mix(in srgb, var(--on-glass-brand-fill-active) 90%, transparent),
+      color-mix(in srgb, var(--on-glass-brand-fill-active) 94%, transparent)
     );
 }
 
